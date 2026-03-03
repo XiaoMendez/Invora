@@ -33,7 +33,7 @@ export async function GET() {
 
     // Low stock alerts
     const lowStockCount = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM producto WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo",
+      "SELECT COUNT(*) as count FROM producto WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo AND stock_minimo > 0",
       [empresaId]
     )
 
@@ -45,7 +45,7 @@ export async function GET() {
       cantidad: number
       creado_en: string
     }>(
-      `SELECT m.id, p.nombre as producto, m.tipo, m.cantidad, m.creado_en
+      `SELECT m.id, p.nombre as producto, m.tipo::text, m.cantidad, m.creado_en
        FROM movimiento_inventario m
        JOIN producto p ON p.id = m.id_producto
        WHERE m.id_empresa = $1
@@ -62,8 +62,8 @@ export async function GET() {
     }>(
       `SELECT nombre, stock, stock_minimo
        FROM producto
-       WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo
-       ORDER BY (stock_minimo - stock) DESC
+       WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo AND stock_minimo > 0
+       ORDER BY (stock::float / NULLIF(stock_minimo, 0)::float) ASC
        LIMIT 5`,
       [empresaId]
     )
@@ -91,8 +91,8 @@ export async function GET() {
     }>(
       `SELECT
          TO_CHAR(DATE_TRUNC('month', creado_en), 'Mon') as mes,
-         COALESCE(SUM(CASE WHEN tipo IN ('entrada', 'ajuste_positivo', 'devolucion_venta') THEN cantidad ELSE 0 END), 0)::int as entradas,
-         COALESCE(SUM(CASE WHEN tipo IN ('salida', 'ajuste_negativo', 'devolucion_compra') THEN cantidad ELSE 0 END), 0)::int as salidas
+         COALESCE(SUM(CASE WHEN tipo::text IN ('entrada', 'ajuste_positivo', 'devolucion_venta') THEN cantidad ELSE 0 END), 0)::int as entradas,
+         COALESCE(SUM(CASE WHEN tipo::text IN ('salida', 'ajuste_negativo', 'devolucion_compra') THEN cantidad ELSE 0 END), 0)::int as salidas
        FROM movimiento_inventario
        WHERE id_empresa = $1 AND creado_en >= NOW() - INTERVAL '7 months'
        GROUP BY DATE_TRUNC('month', creado_en), TO_CHAR(DATE_TRUNC('month', creado_en), 'Mon')

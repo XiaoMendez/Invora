@@ -6,7 +6,8 @@ import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
   try {
-    const { nombre, email, password } = await request.json()
+    const body = await request.json()
+    const { nombre, email, password } = body
 
     if (!nombre || !email || !password) {
       return NextResponse.json(
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
       )
     }
 
+    // Check if email already exists
     const existing = await queryOne(
       "SELECT id FROM empresa WHERE email = $1",
       [email.toLowerCase().trim()]
@@ -34,8 +36,10 @@ export async function POST(request: Request) {
       )
     }
 
+    // Hash password
     const passwordHash = await bcrypt.hash(password, 12)
 
+    // Create empresa
     const rows = await query<{ id: string; nombre: string; email: string }>(
       `INSERT INTO empresa (nombre, email, password_hash)
        VALUES ($1, $2, $3)
@@ -45,16 +49,28 @@ export async function POST(request: Request) {
 
     const empresa = rows[0]
 
-    // Create some default categories for the new empresa
-    await query(
-      `INSERT INTO categoria (id_empresa, nombre, descripcion)
-       VALUES ($1, 'General', 'Categoria general'),
-              ($1, 'Alimentos', 'Productos alimenticios'),
-              ($1, 'Bebidas', 'Bebidas y liquidos'),
-              ($1, 'Limpieza', 'Productos de limpieza')`,
-      [empresa.id]
-    )
+    if (!empresa) {
+      return NextResponse.json(
+        { error: "Error al crear la empresa" },
+        { status: 500 }
+      )
+    }
 
+    // Create default categories - wrapped in try/catch so registration doesn't fail
+    try {
+      await query(
+        `INSERT INTO categoria (id_empresa, nombre, descripcion)
+         VALUES ($1, 'General', 'Categoria general'),
+                ($1, 'Alimentos', 'Productos alimenticios'),
+                ($1, 'Bebidas', 'Bebidas y liquidos'),
+                ($1, 'Limpieza', 'Productos de limpieza')`,
+        [empresa.id]
+      )
+    } catch (catError) {
+      console.error("Error creating default categories:", catError)
+    }
+
+    // Create session token
     const token = await createSession({
       empresaId: empresa.id,
       empresaNombre: empresa.nombre,
@@ -80,9 +96,8 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Register error:", error)
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : "Error interno del servidor"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

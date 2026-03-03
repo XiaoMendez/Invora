@@ -6,7 +6,8 @@ import { cookies } from "next/headers"
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json()
+    const body = await request.json()
+    const { email, password } = body
 
     if (!email || !password) {
       return NextResponse.json(
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     })
 
@@ -81,9 +82,8 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Login error:", error)
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : "Error interno del servidor"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

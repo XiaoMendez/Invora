@@ -90,9 +90,9 @@ export default function RegisterPage() {
             <Image
               src="/images/invora-logo.png"
               alt="INVORA"
-              width={220}
-              height={73}
-              className="h-16 w-auto mb-6"
+              width={400}
+              height={133}
+              className="h-24 w-auto mb-6"
             />
             <h1 className="text-2xl font-bold text-foreground">Crear Cuenta</h1>
             <p className="text-sm text-muted-foreground mt-1">

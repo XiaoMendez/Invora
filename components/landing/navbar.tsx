@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 const navLinks = [
   { label: "Inicio", href: "#hero" },
   { label: "Funciones", href: "#features" },
-  { label: "Precios", href: "#pricing" },
   { label: "Contacto", href: "#contact" },
 ]
 
@@ -38,9 +37,9 @@ export function Navbar() {
           <Image
             src="/images/invora-logo.png"
             alt="INVORA Logo"
-            width={180}
-            height={60}
-            className="h-12 w-auto"
+            width={360}
+            height={120}
+            className="h-20 w-auto"
             priority
           />
         </Link>
