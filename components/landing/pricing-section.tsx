@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 const plans = [
   {
     name: "Starter",
-    price: "Gratis",
-    period: "",
+    price: "4,900",
+    period: "/mes",
     description: "Perfecto para comenzar a organizar tu inventario.",
     features: [
       "Hasta 100 productos",
@@ -17,7 +17,7 @@ const plans = [
       "Reportes basicos",
       "Soporte por email",
     ],
-    cta: "Comenzar Gratis",
+    cta: "Comenzar Ahora",
     highlighted: false,
   },
   {
@@ -33,7 +33,7 @@ const plans = [
       "Escaneo de codigos",
       "Soporte prioritario",
     ],
-    cta: "Probar 14 dias gratis",
+    cta: "Elegir Profesional",
     highlighted: true,
   },
   {
@@ -49,7 +49,7 @@ const plans = [
       "Gestor de cuenta dedicado",
       "SLA garantizado",
     ],
-    cta: "Contactar Ventas",
+    cta: "Contactar",
     highlighted: false,
   },
 ]
@@ -101,7 +101,7 @@ export function PricingSection() {
               </div>
               <div className="mb-6">
                 <span className="text-3xl font-bold text-foreground">
-                  {plan.price === "Gratis" ? plan.price : `\u20A1${plan.price}`}
+                  {`\u20A1${plan.price}`}
                 </span>
                 {plan.period && (
                   <span className="text-sm text-muted-foreground">{plan.period}</span>
@@ -115,7 +115,7 @@ export function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link href="/dashboard">
+              <Link href="/register">
                 <Button
                   className={`w-full ${
                     plan.highlighted

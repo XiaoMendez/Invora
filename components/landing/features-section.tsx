@@ -37,9 +37,9 @@ const features = [
   },
   {
     icon: Users,
-    title: "Multi-usuario",
+    title: "Gestion de Proveedores",
     description:
-      "Asigna roles y permisos a tu equipo. Cada miembro accede solo a lo que necesita.",
+      "Administra tus proveedores, compara precios de compra y mantiene un historial completo de cada pedido.",
   },
   {
     icon: Shield,
