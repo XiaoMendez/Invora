@@ -44,11 +44,11 @@ const categoryDistribution = [
 ]
 
 const topProducts = [
-  { nombre: "Cafe Britt", ventas: 340 },
-  { nombre: "Arroz T.Pelon", ventas: 280 },
-  { nombre: "Leche D.Pinos", ventas: 245 },
-  { nombre: "Detergente Irex", ventas: 190 },
-  { nombre: "Jugo Del Valle", ventas: 165 },
+  { nombre: "Cafe Britt", salidas: 340 },
+  { nombre: "Arroz T.Pelon", salidas: 280 },
+  { nombre: "Leche D.Pinos", salidas: 245 },
+  { nombre: "Detergente Irex", salidas: 190 },
+  { nombre: "Jugo Del Valle", salidas: 165 },
 ]
 
 function CustomTooltipContent({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; dataKey: string; color: string }>; label?: string }) {
@@ -220,7 +220,7 @@ export default function ReportesPage() {
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-primary" />
-            Productos Mas Vendidos
+            Productos con Mayor Rotacion
           </CardTitle>
           <CardDescription>Top 5 por cantidad de salidas este mes</CardDescription>
         </CardHeader>
@@ -232,7 +232,7 @@ export default function ReportesPage() {
                 <XAxis dataKey="nombre" tick={{ fill: "oklch(0.6 0.01 280)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: "oklch(0.6 0.01 280)", fontSize: 11 }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltipContent />} />
-                <Bar dataKey="ventas" fill="oklch(0.72 0.19 310)" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="salidas" fill="oklch(0.72 0.19 310)" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>

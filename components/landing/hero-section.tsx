@@ -2,24 +2,13 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function HeroSection() {
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs text-primary mb-8"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>Nuevo: Alertas de stock inteligentes</span>
-        </motion.div>
-
         {/* Heading */}
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
@@ -53,12 +42,12 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/dashboard">
+          <Link href="/register">
             <Button
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base group animate-pulse-glow"
             >
-              Comenzar Gratis
+              Comenzar Ahora
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>

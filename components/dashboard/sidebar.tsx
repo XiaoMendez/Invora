@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
 import {
   LayoutDashboard,
@@ -38,7 +38,13 @@ const sidebarLinks = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.push("/login")
+  }
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -55,9 +61,9 @@ export function DashboardSidebar() {
               <Image
                 src="/images/invora-logo.png"
                 alt="INVORA"
-                width={100}
-                height={33}
-                className="h-6 w-auto"
+                width={160}
+                height={53}
+                className="h-10 w-auto"
               />
             </Link>
           )}
@@ -135,16 +141,16 @@ export function DashboardSidebar() {
         <div className="border-t border-sidebar-border p-3">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link
-                href="/"
+              <button
+                onClick={handleLogout}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors w-full",
                   collapsed && "justify-center px-2"
                 )}
               >
                 <LogOut className="h-4 w-4 flex-shrink-0" />
                 {!collapsed && <span>Cerrar Sesion</span>}
-              </Link>
+              </button>
             </TooltipTrigger>
             {collapsed && (
               <TooltipContent side="right" className="bg-popover text-popover-foreground">
@@ -158,7 +164,21 @@ export function DashboardSidebar() {
   )
 }
 
-export function DashboardHeader() {
+interface EmpresaData {
+  id: string
+  nombre: string
+  email: string
+}
+
+export function DashboardHeader({ empresa }: { empresa?: EmpresaData }) {
+  const initials = empresa?.nombre
+    ? empresa.nombre
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "IN"
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/30 glass px-6">
       <div className="flex items-center gap-4 flex-1">
@@ -189,11 +209,11 @@ export function DashboardHeader() {
 
         <div className="flex items-center gap-2 rounded-lg bg-secondary/30 px-3 py-1.5">
           <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
-            CR
+            {initials}
           </div>
           <div className="hidden sm:block">
-            <p className="text-xs font-medium text-foreground">Mi PYME</p>
-            <p className="text-[10px] text-muted-foreground">Plan Profesional</p>
+            <p className="text-xs font-medium text-foreground">{empresa?.nombre || "Mi Empresa"}</p>
+            <p className="text-[10px] text-muted-foreground">{empresa?.email || ""}</p>
           </div>
         </div>
       </div>

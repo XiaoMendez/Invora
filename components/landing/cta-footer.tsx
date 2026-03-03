@@ -17,7 +17,6 @@ export function CTASection() {
           transition={{ duration: 0.8 }}
           className="glass-card rounded-2xl p-10 md:p-16 text-center relative overflow-hidden"
         >
-          {/* Subtle glow background */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
 
           <div className="relative z-10">
@@ -29,7 +28,7 @@ export function CTASection() {
               para gestionar su inventario de forma inteligente.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/dashboard">
+              <Link href="/register">
                 <Button
                   size="lg"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base group"
@@ -46,6 +45,23 @@ export function CTASection() {
   )
 }
 
+const footerProducto = [
+  { label: "Funciones", href: "/funciones" },
+  { label: "Guia", href: "/guia" },
+]
+
+const footerEmpresa = [
+  { label: "Sobre Nosotros", href: "/sobre-nosotros" },
+  { label: "Contacto", href: "/contacto" },
+  { label: "Soporte", href: "/soporte" },
+]
+
+const footerLegal = [
+  { label: "Terminos de Servicio", href: "/terminos" },
+  { label: "Privacidad", href: "/privacidad" },
+  { label: "Cookies", href: "/cookies" },
+]
+
 export function Footer() {
   return (
     <footer className="border-t border-border/30 py-12">
@@ -55,9 +71,9 @@ export function Footer() {
             <Image
               src="/images/invora-logo.png"
               alt="INVORA Logo"
-              width={100}
-              height={33}
-              className="h-7 w-auto mb-4"
+              width={320}
+              height={106}
+              className="h-16 w-auto mb-4"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
               Sistema de inventario inteligente para PYMEs en Costa Rica.
@@ -66,11 +82,14 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4">Producto</h4>
             <ul className="flex flex-col gap-2">
-              {["Funciones", "Precios", "Integraciones", "Actualizaciones"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
+              {footerProducto.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -78,11 +97,14 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4">Empresa</h4>
             <ul className="flex flex-col gap-2">
-              {["Sobre Nosotros", "Blog", "Contacto", "Soporte"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
+              {footerEmpresa.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -90,11 +112,14 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-foreground mb-4">Legal</h4>
             <ul className="flex flex-col gap-2">
-              {["Terminos de Servicio", "Privacidad", "Cookies"].map((item) => (
-                <li key={item}>
-                  <a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    {item}
-                  </a>
+              {footerLegal.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>

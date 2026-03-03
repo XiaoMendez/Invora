@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button"
 const navLinks = [
   { label: "Inicio", href: "#hero" },
   { label: "Funciones", href: "#features" },
-  { label: "Precios", href: "#pricing" },
   { label: "Contacto", href: "#contact" },
 ]
 
@@ -38,9 +37,9 @@ export function Navbar() {
           <Image
             src="/images/invora-logo.png"
             alt="INVORA Logo"
-            width={120}
-            height={40}
-            className="h-8 w-auto"
+            width={360}
+            height={120}
+            className="h-20 w-auto"
             priority
           />
         </Link>
@@ -59,14 +58,14 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/dashboard">
+          <Link href="/login">
             <Button variant="ghost" className="text-sm text-muted-foreground hover:text-foreground">
               Iniciar Sesion
             </Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/register">
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-6">
-              Probar Gratis
+              Registrarse
             </Button>
           </Link>
         </div>
@@ -101,9 +100,14 @@ export function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <Link href="/dashboard">
-                <Button className="w-full bg-primary text-primary-foreground mt-2">
-                  Probar Gratis
+              <Link href="/login">
+                <Button variant="ghost" className="w-full text-muted-foreground mt-2">
+                  Iniciar Sesion
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button className="w-full bg-primary text-primary-foreground">
+                  Registrarse
                 </Button>
               </Link>
             </div>
