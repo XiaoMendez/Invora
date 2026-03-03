@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================= */
+/* INVORA - Space Theme Variables */
+/* ============================= */
+
+:root {
+  --background: oklch(0.08 0.01 280);
+  --foreground: oklch(0.95 0 0);
+
+  --card: oklch(0.12 0.015 280);
+  --card-foreground: oklch(0.95 0 0);
+
+  --primary: oklch(0.72 0.19 310);
+  --primary-foreground: oklch(0.98 0 0);
+
+  --secondary: oklch(0.18 0.02 280);
+  --secondary-foreground: oklch(0.9 0 0);
+
+  --muted: oklch(0.15 0.015 280);
+  --muted-foreground: oklch(0.6 0.01 280);
+
+  --accent: oklch(0.72 0.19 310);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --destructive: oklch(0.55 0.22 25);
+
+  --border: oklch(0.22 0.02 280);
+  --input: oklch(0.18 0.02 280);
+  --ring: oklch(0.72 0.19 310);
+
+  --radius: 0.75rem;
+}
+
+/* ============================= */
+/* Base Layer                    */
+/* ============================= */
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: oklch(0.08 0.01 280);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.3 0.04 280);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.72 0.19 310);
+  }
+}
+
+/* ============================= */
+/* Animations                    */
+/* ============================= */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px oklch(0.72 0.19 310 / 0.2); }
+  50% { box-shadow: 0 0 40px oklch(0.72 0.19 310 / 0.4); }
+}
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Utility classes */
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-star-twinkle {
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.8s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+/* ============================= */
+/* Glass Utilities               */
+/* ============================= */
+
+.glass {
+  background: oklch(0.12 0.015 280 / 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(0.3 0.03 280 / 0.3);
+}
+
+.glass-card {
+  background: oklch(0.1 0.012 280 / 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.25 0.03 280 / 0.4);
+}
+
+/* ============================= */
+/* Noise Overlay                 */
+/* ============================= */
+
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
