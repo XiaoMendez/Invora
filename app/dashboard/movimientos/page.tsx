@@ -28,14 +28,14 @@ import {
 
 const movements = [
   { id: "MOV-001", producto: "Cafe Britt Clasico 500g", tipo: "Entrada", cantidad: 50, fecha: "2 Mar 2026, 14:30", usuario: "Maria Lopez", nota: "Reabastecimiento semanal" },
-  { id: "MOV-002", producto: "Detergente Irex 1L", tipo: "Salida", cantidad: 25, fecha: "2 Mar 2026, 13:15", usuario: "Carlos Ramirez", nota: "Venta al por mayor" },
+  { id: "MOV-002", producto: "Detergente Irex 1L", tipo: "Salida", cantidad: 25, fecha: "2 Mar 2026, 13:15", usuario: "Carlos Ramirez", nota: "Despacho al por mayor" },
   { id: "MOV-003", producto: "Arroz Tio Pelon 1kg", tipo: "Entrada", cantidad: 100, fecha: "2 Mar 2026, 11:00", usuario: "Maria Lopez", nota: "Pedido proveedor" },
   { id: "MOV-004", producto: "Leche Dos Pinos 1L", tipo: "Salida", cantidad: 40, fecha: "2 Mar 2026, 10:45", usuario: "Ana Sanchez", nota: "Distribucion tiendas" },
-  { id: "MOV-005", producto: "Jabon Palmolive 100g", tipo: "Salida", cantidad: 15, fecha: "1 Mar 2026, 17:30", usuario: "Carlos Ramirez", nota: "Venta directa" },
+  { id: "MOV-005", producto: "Jabon Palmolive 100g", tipo: "Salida", cantidad: 15, fecha: "1 Mar 2026, 17:30", usuario: "Carlos Ramirez", nota: "Despacho directo" },
   { id: "MOV-006", producto: "Jugo Del Valle 1L", tipo: "Entrada", cantidad: 80, fecha: "1 Mar 2026, 15:00", usuario: "Maria Lopez", nota: "Restock" },
   { id: "MOV-007", producto: "Papel Higienico Scott x4", tipo: "Salida", cantidad: 20, fecha: "1 Mar 2026, 14:20", usuario: "Ana Sanchez", nota: "Pedido cliente" },
   { id: "MOV-008", producto: "Frijoles Ducal 400g", tipo: "Entrada", cantidad: 60, fecha: "1 Mar 2026, 09:30", usuario: "Maria Lopez", nota: "Compra urgente" },
-  { id: "MOV-009", producto: "Aceite Clover 750ml", tipo: "Salida", cantidad: 10, fecha: "28 Feb 2026, 16:00", usuario: "Carlos Ramirez", nota: "Venta" },
+  { id: "MOV-009", producto: "Aceite Clover 750ml", tipo: "Salida", cantidad: 10, fecha: "28 Feb 2026, 16:00", usuario: "Carlos Ramirez", nota: "Despacho" },
   { id: "MOV-010", producto: "Azucar Dona Maria 1kg", tipo: "Entrada", cantidad: 50, fecha: "28 Feb 2026, 10:00", usuario: "Maria Lopez", nota: "Restock mensual" },
 ]
 

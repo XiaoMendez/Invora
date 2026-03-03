@@ -55,9 +55,9 @@ export function Footer() {
             <Image
               src="/images/invora-logo.png"
               alt="INVORA Logo"
-              width={100}
-              height={33}
-              className="h-7 w-auto mb-4"
+              width={160}
+              height={53}
+              className="h-10 w-auto mb-4"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
               Sistema de inventario inteligente para PYMEs en Costa Rica.
