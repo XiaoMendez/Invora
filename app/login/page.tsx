@@ -9,7 +9,7 @@ import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { StarsBackground } from "@/components/space-scene"
+import { Auth3DScene } from "@/components/auth-3d-scene"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -33,13 +33,15 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || "Error al iniciar sesion")
+        setError(data.error || "Error al iniciar sesión")
         return
       }
 
+      // Success - redirect to dashboard
       router.push("/dashboard")
-    } catch {
-      setError("Error de conexion. Intenta de nuevo.")
+    } catch (err) {
+      console.error("[v0] Login error:", err)
+      setError("Error de conexión. Intenta de nuevo.")
     } finally {
       setLoading(false)
     }
@@ -47,7 +49,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
-      <StarsBackground />
+      <Auth3DScene variant="login" />
 
       <div className="absolute top-6 left-6 z-20">
         <Link

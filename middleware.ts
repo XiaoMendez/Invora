@@ -1,50 +1,20 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import { jwtVerify } from "jose"
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "invora-secret-key-change-in-production"
-)
-
-const protectedRoutes = ["/dashboard"]
-const authRoutes = ["/login", "/register"]
+import { updateSession } from '@/lib/supabase/middleware'
+import { type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const sessionToken = request.cookies.get("session")?.value
-
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
-
-  let isAuthenticated = false
-
-  if (sessionToken) {
-    try {
-      await jwtVerify(sessionToken, JWT_SECRET)
-      isAuthenticated = true
-    } catch {
-      // Token invalid or expired
-      isAuthenticated = false
-    }
-  }
-
-  // Redirect to login if not authenticated and accessing protected route
-  if (isProtectedRoute && !isAuthenticated) {
-    const loginUrl = new URL("/login", request.url)
-    loginUrl.searchParams.set("redirect", pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Redirect to dashboard if authenticated and accessing auth routes
-  if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
-
-  return NextResponse.next()
+  return await updateSession(request)
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - images - .svg, .png, .jpg, .jpeg, .gif, .webp
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }

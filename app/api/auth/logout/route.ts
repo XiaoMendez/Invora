@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST() {
-  const cookieStore = await cookies()
-  cookieStore.delete("session")
-  return NextResponse.json({ success: true })
+  try {
+    const supabase = await createClient()
+    
+    await supabase.auth.signOut()
+
+    return NextResponse.json(
+      { success: true, message: "Sesión cerrada exitosamente" },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("[v0] Logout error:", error)
+    return NextResponse.json(
+      { error: "Error al cerrar sesión" },
+      { status: 500 }
+    )
+  }
 }

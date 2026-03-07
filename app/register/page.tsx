@@ -9,7 +9,7 @@ import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { StarsBackground } from "@/components/space-scene"
+import { Auth3DScene } from "@/components/auth-3d-scene"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -28,12 +28,12 @@ export default function RegisterPage() {
     setError("")
 
     if (form.password !== form.confirmPassword) {
-      setError("Las contrasenas no coinciden")
+      setError("Las contraseñas no coinciden")
       return
     }
 
     if (form.password.length < 6) {
-      setError("La contrasena debe tener al menos 6 caracteres")
+      setError("La contraseña debe tener al menos 6 caracteres")
       return
     }
 
@@ -57,9 +57,11 @@ export default function RegisterPage() {
         return
       }
 
+      // Redirect to dashboard after successful registration
       router.push("/dashboard")
-    } catch {
-      setError("Error de conexion. Intenta de nuevo.")
+    } catch (err) {
+      console.error("[v0] Register error:", err)
+      setError("Error de conexión. Intenta de nuevo.")
     } finally {
       setLoading(false)
     }
@@ -67,7 +69,7 @@ export default function RegisterPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center py-12">
-      <StarsBackground />
+      <Auth3DScene variant="register" />
 
       <div className="absolute top-6 left-6 z-20">
         <Link

@@ -1,119 +1,88 @@
 import { NextResponse } from "next/server"
-import { verifySession } from "@/lib/auth"
-import { queryOne, query } from "@/lib/db"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
-  const session = await verifySession()
-
-  if (!session) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-  }
-
-  const empresaId = session.empresaId
-
   try {
-    // Total products count
-    const productCount = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM producto WHERE id_empresa = $1 AND activo = true",
-      [empresaId]
-    )
+    const supabase = await createClient()
 
-    // Inventory value
-    const inventoryValue = await queryOne<{ total: string }>(
-      "SELECT COALESCE(SUM(stock * precio_costo), 0) as total FROM producto WHERE id_empresa = $1 AND activo = true",
-      [empresaId]
-    )
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
 
-    // Movements today
-    const movementsToday = await queryOne<{ count: string }>(
-      `SELECT COUNT(*) as count FROM movimiento_inventario
-       WHERE id_empresa = $1 AND creado_en >= CURRENT_DATE`,
-      [empresaId]
-    )
+    if (userError || !user) {
+      return NextResponse.json(
+        { error: "Usuario no autenticado" },
+        { status: 401 }
+      )
+    }
 
-    // Low stock alerts
-    const lowStockCount = await queryOne<{ count: string }>(
-      "SELECT COUNT(*) as count FROM producto WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo AND stock_minimo > 0",
-      [empresaId]
-    )
+    const empresaId = user.id
 
-    // Recent movements
-    const recentMovements = await query<{
-      id: string
-      producto: string
-      tipo: string
-      cantidad: number
-      creado_en: string
-    }>(
-      `SELECT m.id, p.nombre as producto, m.tipo::text, m.cantidad, m.creado_en
-       FROM movimiento_inventario m
-       JOIN producto p ON p.id = m.id_producto
-       WHERE m.id_empresa = $1
-       ORDER BY m.creado_en DESC
-       LIMIT 5`,
-      [empresaId]
-    )
+    // Get all productos for the empresa
+    const { data: productos, error: prodError } = await supabase
+      .from("producto")
+      .select("id, nombre, stock, stock_minimo, precio_costo, activo")
+      .eq("id_empresa", empresaId)
 
-    // Low stock products
-    const lowStockProducts = await query<{
-      nombre: string
-      stock: number
-      stock_minimo: number
-    }>(
-      `SELECT nombre, stock, stock_minimo
-       FROM producto
-       WHERE id_empresa = $1 AND activo = true AND stock <= stock_minimo AND stock_minimo > 0
-       ORDER BY (stock::float / NULLIF(stock_minimo, 0)::float) ASC
-       LIMIT 5`,
-      [empresaId]
-    )
+    if (prodError) throw prodError
 
-    // Products by category
-    const categoryData = await query<{
-      categoria: string
-      cantidad: number
-    }>(
-      `SELECT COALESCE(c.nombre, 'Sin categoria') as categoria, COUNT(p.id)::int as cantidad
-       FROM producto p
-       LEFT JOIN categoria c ON c.id = p.id_categoria
-       WHERE p.id_empresa = $1 AND p.activo = true
-       GROUP BY c.nombre
-       ORDER BY cantidad DESC
-       LIMIT 5`,
-      [empresaId]
+    const totalProductos = productos?.length || 0
+    const valorInventario = (productos || []).reduce(
+      (sum, p) => sum + (p.stock * (p.precio_costo || 0)),
+      0
     )
+    const lowStockProducts = (productos || []).filter(
+      (p) => p.activo && p.stock <= p.stock_minimo && p.stock_minimo > 0
+    )
+    const alertasActivas = lowStockProducts.length
 
-    // Monthly inventory trend (last 7 months)
-    const monthlyTrend = await query<{
-      mes: string
-      entradas: number
-      salidas: number
-    }>(
-      `SELECT
-         TO_CHAR(DATE_TRUNC('month', creado_en), 'Mon') as mes,
-         COALESCE(SUM(CASE WHEN tipo::text IN ('entrada', 'ajuste_positivo', 'devolucion_venta') THEN cantidad ELSE 0 END), 0)::int as entradas,
-         COALESCE(SUM(CASE WHEN tipo::text IN ('salida', 'ajuste_negativo', 'devolucion_compra') THEN cantidad ELSE 0 END), 0)::int as salidas
-       FROM movimiento_inventario
-       WHERE id_empresa = $1 AND creado_en >= NOW() - INTERVAL '7 months'
-       GROUP BY DATE_TRUNC('month', creado_en), TO_CHAR(DATE_TRUNC('month', creado_en), 'Mon')
-       ORDER BY DATE_TRUNC('month', creado_en) ASC`,
-      [empresaId]
-    )
+    // Get recent movements
+    const { data: recentMovements, error: movError } = await supabase
+      .from("movimiento_inventario")
+      .select("id, tipo, cantidad, creado_en, producto(nombre)")
+      .eq("id_empresa", empresaId)
+      .order("creado_en", { ascending: false })
+      .limit(10)
+
+    if (movError) throw movError
+
+    // Get movements today count
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const movimientosHoy = (recentMovements || []).filter(
+      (m) => new Date(m.creado_en) >= today
+    ).length
+
+    // Get categories data
+    const { data: categorias, error: catError } = await supabase
+      .from("categoria")
+      .select("id, nombre")
+      .eq("id_empresa", empresaId)
+
+    if (catError) throw catError
+
+    const categoryData = (categorias || []).map((cat) => ({
+      categoria: cat.nombre,
+      cantidad: (productos || []).filter(
+        (p) => p.id === cat.id
+      ).length,
+    }))
 
     return NextResponse.json({
       stats: {
-        totalProductos: parseInt(productCount?.count || "0"),
-        valorInventario: parseFloat(inventoryValue?.total || "0"),
-        movimientosHoy: parseInt(movementsToday?.count || "0"),
-        alertasActivas: parseInt(lowStockCount?.count || "0"),
+        totalProductos,
+        valorInventario,
+        movimientosHoy,
+        alertasActivas,
       },
-      recentMovements,
-      lowStockProducts,
-      categoryData,
-      monthlyTrend,
+      recentMovements: recentMovements || [],
+      lowStockProducts: lowStockProducts.slice(0, 5),
+      categoryData: categoryData.slice(0, 5),
+      monthlyTrend: [],
     })
   } catch (error) {
-    console.error("Dashboard API error:", error)
+    console.error("[v0] Dashboard API error:", error)
     return NextResponse.json(
       { error: "Error al cargar datos del dashboard" },
       { status: 500 }
