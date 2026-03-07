@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server"
-import bcrypt from "bcryptjs"
-import { query, queryOne } from "@/lib/db"
-import { createSession } from "@/lib/auth"
-import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: Request) {
   try {
@@ -18,84 +15,76 @@ export async function POST(request: Request) {
 
     if (password.length < 6) {
       return NextResponse.json(
-        { error: "La contrasena debe tener al menos 6 caracteres" },
+        { error: "La contraseña debe tener al menos 6 caracteres" },
         { status: 400 }
       )
     }
 
-    // Check if email already exists
-    const existing = await queryOne(
-      "SELECT id FROM empresa WHERE email = $1",
-      [email.toLowerCase().trim()]
-    )
+    const supabase = await createClient()
 
-    if (existing) {
+    // Sign up user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email: email.toLowerCase().trim(),
+      password,
+      options: {
+        data: {
+          empresa_nombre: nombre.trim(),
+        },
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
+      },
+    })
+
+    if (error) {
       return NextResponse.json(
-        { error: "Ya existe una cuenta con este correo" },
-        { status: 409 }
+        { error: error.message || "Error al crear la cuenta" },
+        { status: 400 }
       )
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 12)
-
-    // Create empresa
-    const rows = await query<{ id: string; nombre: string; email: string }>(
-      `INSERT INTO empresa (nombre, email, password_hash)
-       VALUES ($1, $2, $3)
-       RETURNING id, nombre, email`,
-      [nombre.trim(), email.toLowerCase().trim(), passwordHash]
-    )
-
-    const empresa = rows[0]
-
-    if (!empresa) {
+    if (!data.user) {
       return NextResponse.json(
-        { error: "Error al crear la empresa" },
+        { error: "Error al crear la cuenta" },
         { status: 500 }
       )
     }
 
-    // Create default categories - wrapped in try/catch so registration doesn't fail
+    // Create empresa record in database with the user's ID
     try {
-      await query(
-        `INSERT INTO categoria (id_empresa, nombre, descripcion)
-         VALUES ($1, 'General', 'Categoria general'),
-                ($1, 'Alimentos', 'Productos alimenticios'),
-                ($1, 'Bebidas', 'Bebidas y liquidos'),
-                ($1, 'Limpieza', 'Productos de limpieza')`,
-        [empresa.id]
+      await supabase.from("empresa").insert({
+        id: data.user.id,
+        nombre: nombre.trim(),
+        email: email.toLowerCase().trim(),
+      })
+
+      // Create default categories
+      const categorias = [
+        { nombre: "General", descripcion: "Categoría general" },
+        { nombre: "Alimentos", descripcion: "Productos alimenticios" },
+        { nombre: "Bebidas", descripcion: "Bebidas y líquidos" },
+        { nombre: "Limpieza", descripcion: "Productos de limpieza" },
+      ]
+
+      await supabase.from("categoria").insert(
+        categorias.map((cat) => ({
+          id_empresa: data.user.id,
+          ...cat,
+        }))
       )
-    } catch (catError) {
-      console.error("Error creating default categories:", catError)
+    } catch (dbError) {
+      console.error("[v0] Error creating empresa or categories:", dbError)
+      // Don't fail registration if db creation fails
     }
-
-    // Create session token
-    const token = await createSession({
-      empresaId: empresa.id,
-      empresaNombre: empresa.nombre,
-      email: empresa.email,
-    })
-
-    const cookieStore = await cookies()
-    cookieStore.set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    })
 
     return NextResponse.json({
       success: true,
-      empresa: {
-        id: empresa.id,
-        nombre: empresa.nombre,
-        email: empresa.email,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
       },
+      message: "Cuenta creada exitosamente. Verifica tu correo para confirmar.",
     })
   } catch (error) {
-    console.error("Register error:", error)
+    console.error("[v0] Register error:", error)
     const message =
       error instanceof Error ? error.message : "Error interno del servidor"
     return NextResponse.json({ error: message }, { status: 500 })

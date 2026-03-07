@@ -1,6 +1,11 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 import { Package, BarChart3, Bell, QrCode, Shield, Users } from "lucide-react"
 
+export const metadata = {
+  title: "Funciones - INVORA",
+  description: "Descubre todas las funciones y herramientas que INVORA ofrece para tu negocio.",
+}
+
 const features = [
   {
     icon: Package,
@@ -42,11 +47,10 @@ const features = [
 
 export default function FuncionesPage() {
   return (
-    <StaticPageLayout title="Funciones">
-      <p className="text-lg mb-12">
-        INVORA ofrece todas las herramientas que tu PYME necesita para gestionar
-        el inventario de forma eficiente y sin complicaciones.
-      </p>
+    <StaticPageLayout 
+      title="Funciones y Herramientas"
+      subtitle="INVORA ofrece todo lo que tu PYME necesita para gestionar el inventario de forma eficiente y sin complicaciones."
+    >
 
       <div className="grid md:grid-cols-2 gap-8">
         {features.map((feature) => (

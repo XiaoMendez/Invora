@@ -9,7 +9,8 @@ import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { StarsBackground } from "@/components/space-scene"
+import { Auth3DScene } from "@/components/auth-3d-scene"
+import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,21 +25,28 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+      const supabase = createClient()
+      
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: form.email.toLowerCase().trim(),
+        password: form.password,
       })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Error al iniciar sesion")
+      if (authError) {
+        setError(authError.message || "Credenciales invalidas")
         return
       }
 
+      if (!data.user || !data.session) {
+        setError("Error al iniciar sesion")
+        return
+      }
+
+      // Refresh to let middleware pick up the session
+      router.refresh()
       router.push("/dashboard")
-    } catch {
+    } catch (err) {
+      console.error("[v0] Login error:", err)
       setError("Error de conexion. Intenta de nuevo.")
     } finally {
       setLoading(false)
@@ -47,7 +55,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
-      <StarsBackground />
+      <Auth3DScene variant="login" />
 
       <div className="absolute top-6 left-6 z-20">
         <Link

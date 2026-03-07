@@ -26,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { createClient } from "@/lib/supabase/client"
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -42,7 +43,9 @@ export function DashboardSidebar() {
   const [collapsed, setCollapsed] = useState(false)
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.refresh()
     router.push("/login")
   }
 

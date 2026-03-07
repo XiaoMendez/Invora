@@ -1,5 +1,10 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 
+export const metadata = {
+  title: "Guia de Inicio - INVORA",
+  description: "Aprende a usar INVORA paso a paso con nuestra guia de inicio rapido.",
+}
+
 const steps = [
   {
     number: "01",
@@ -35,11 +40,10 @@ const steps = [
 
 export default function GuiaPage() {
   return (
-    <StaticPageLayout title="Guia de Inicio Rapido">
-      <p className="text-lg mb-12">
-        Sigue estos pasos para comenzar a gestionar tu inventario con INVORA de
-        forma rapida y sencilla.
-      </p>
+    <StaticPageLayout 
+      title="Guia de Inicio Rapido"
+      subtitle="Sigue estos pasos para comenzar a gestionar tu inventario con INVORA de forma rapida y sencilla."
+    >
 
       <div className="flex flex-col gap-8">
         {steps.map((step) => (

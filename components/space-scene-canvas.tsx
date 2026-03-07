@@ -19,6 +19,7 @@ function Planet({
   speed?: number
 }) {
   const meshRef = useRef<THREE.Mesh>(null!)
+  const atmosphereRef = useRef<THREE.Mesh>(null!)
 
   useFrame((_, delta) => {
     if (meshRef.current) meshRef.current.rotation.y += delta * speed
@@ -26,25 +27,58 @@ function Planet({
 
   return (
     <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
+      {/* Main planet */}
       <mesh ref={meshRef} position={position}>
-        <sphereGeometry args={[size, 64, 64]} />
+        <sphereGeometry args={[size, 128, 128]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
           emissiveIntensity={emissiveIntensity}
-          roughness={0.7}
-          metalness={0.3}
+          roughness={0.5}
+          metalness={0.4}
+          wireframe={false}
         />
       </mesh>
-      <mesh position={position} rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[size * 1.2, size * 1.5, 64]} />
+
+      {/* Atmosphere glow */}
+      <mesh ref={atmosphereRef} position={position} scale={1.1}>
+        <sphereGeometry args={[size, 128, 128]} />
         <meshStandardMaterial
           color={color}
           transparent
           opacity={0.15}
+          emissive={color}
+          emissiveIntensity={0.15}
+          side={THREE.BackSide}
+        />
+      </mesh>
+
+      {/* Primary rings */}
+      <mesh position={position} rotation={[Math.PI / 2.5, 0.3, 0.1]}>
+        <ringGeometry args={[size * 1.3, size * 1.6, 128, 8]} />
+        <meshStandardMaterial
+          color={color}
+          transparent
+          opacity={0.25}
+          side={THREE.DoubleSide}
+          emissive={color}
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+
+      {/* Secondary rings (subtle) */}
+      <mesh position={position} rotation={[Math.PI / 3.2, 0.5, -0.2]}>
+        <ringGeometry args={[size * 1.15, size * 1.35, 128, 4]} />
+        <meshStandardMaterial
+          color={color}
+          transparent
+          opacity={0.1}
           side={THREE.DoubleSide}
         />
       </mesh>
+
+      {/* Glow light */}
+      <pointLight position={position} color={color} intensity={0.8} distance={size * 3} />
     </Float>
   )
 }
@@ -99,33 +133,96 @@ function Rocket({
 
   return (
     <group ref={groupRef} position={position} scale={scale} rotation={[0, 0, Math.PI / 12]}>
+      {/* Main body with enhanced detail */}
       <mesh>
-        <cylinderGeometry args={[0.15, 0.2, 1, 16]} />
-        <meshStandardMaterial color="#e2e8f0" metalness={0.8} roughness={0.2} />
+        <cylinderGeometry args={[0.15, 0.2, 1, 32]} />
+        <meshStandardMaterial 
+          color="#e2e8f0" 
+          metalness={0.8} 
+          roughness={0.1}
+          emissive="#1e293b"
+          emissiveIntensity={0.2}
+        />
       </mesh>
+
+      {/* Nose cone with gradient */}
       <mesh position={[0, 0.65, 0]}>
-        <coneGeometry args={[0.15, 0.4, 16]} />
-        <meshStandardMaterial color="#a855f7" metalness={0.6} roughness={0.3} />
+        <coneGeometry args={[0.15, 0.4, 32]} />
+        <meshStandardMaterial 
+          color="#a855f7" 
+          metalness={0.7} 
+          roughness={0.2}
+          emissive="#7c3aed"
+          emissiveIntensity={0.3}
+        />
       </mesh>
+
+      {/* Window glow */}
       <mesh position={[0, 0.2, 0.16]}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color="#60a5fa" emissive="#60a5fa" emissiveIntensity={0.5} />
+        <sphereGeometry args={[0.08, 32, 32]} />
+        <meshStandardMaterial 
+          color="#60a5fa" 
+          emissive="#60a5fa" 
+          emissiveIntensity={1}
+          metalness={0.4}
+          roughness={0.1}
+        />
       </mesh>
+
+      {/* Enhanced fins */}
       {[0, (2 * Math.PI) / 3, (4 * Math.PI) / 3].map((angle, i) => (
-        <mesh
-          key={i}
-          position={[Math.sin(angle) * 0.2, -0.4, Math.cos(angle) * 0.2]}
-          rotation={[0, angle, 0]}
-        >
-          <boxGeometry args={[0.02, 0.3, 0.15]} />
-          <meshStandardMaterial color="#a855f7" metalness={0.5} roughness={0.4} />
-        </mesh>
+        <group key={i} position={[Math.sin(angle) * 0.25, -0.35, Math.cos(angle) * 0.25]}>
+          <mesh rotation={[0, angle, 0]}>
+            <boxGeometry args={[0.03, 0.4, 0.2]} />
+            <meshStandardMaterial 
+              color="#a855f7" 
+              metalness={0.6} 
+              roughness={0.3}
+              emissive="#7c3aed"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          {/* Fin glow */}
+          <mesh rotation={[0, angle, 0]}>
+            <boxGeometry args={[0.035, 0.41, 0.21]} />
+            <meshStandardMaterial 
+              color="#a855f7" 
+              metalness={0.4}
+              roughness={0.6}
+              transparent
+              opacity={0.3}
+            />
+          </mesh>
+        </group>
       ))}
-      <mesh position={[0, -0.6, 0]}>
-        <coneGeometry args={[0.12, 0.3, 16]} />
-        <meshStandardMaterial color="#f97316" emissive="#f97316" emissiveIntensity={2} transparent opacity={0.8} />
+
+      {/* Enhanced engine nozzle */}
+      <mesh position={[0, -0.65, 0]}>
+        <coneGeometry args={[0.18, 0.35, 32]} />
+        <meshStandardMaterial 
+          color="#f97316" 
+          emissive="#f97316" 
+          emissiveIntensity={2.5}
+          transparent 
+          opacity={0.9}
+        />
       </mesh>
-      <pointLight position={[0, -0.7, 0]} color="#f97316" intensity={2} distance={3} />
+
+      {/* Engine glow */}
+      <mesh position={[0, -0.7, 0]}>
+        <sphereGeometry args={[0.25, 16, 16]} />
+        <meshStandardMaterial 
+          color="#f97316" 
+          transparent
+          opacity={0.2}
+          emissive="#f97316"
+          emissiveIntensity={1}
+        />
+      </mesh>
+
+      {/* Enhanced engine light */}
+      <pointLight position={[0, -0.7, 0]} color="#f97316" intensity={3} distance={4} />
+      <pointLight position={[0, 0.2, 0.16]} color="#60a5fa" intensity={1.5} distance={2} />
     </group>
   )
 }

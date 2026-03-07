@@ -40,12 +40,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-background">
       <StarsBackground />
       <DashboardSidebar />
       <div className="pl-64 transition-all duration-300">
-        <DashboardHeader empresa={session.empresa} />
-        <main className="p-6">{children}</main>
+        <DashboardHeader empresa={session?.empresa || { nombre: "Mi Empresa", email: session?.user?.email }} />
+        <main className="p-6 min-h-screen">{children}</main>
       </div>
     </div>
   )
