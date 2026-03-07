@@ -10,12 +10,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
+import { createClient } from "@/lib/supabase/client"
 
 export default function RegisterPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
   const [form, setForm] = useState({
     nombre: "",
     email: "",
@@ -28,40 +30,79 @@ export default function RegisterPage() {
     setError("")
 
     if (form.password !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden")
+      setError("Las contrasenas no coinciden")
       return
     }
 
     if (form.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
+      setError("La contrasena debe tener al menos 6 caracteres")
       return
     }
 
     setLoading(true)
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: form.nombre,
-          email: form.email,
-          password: form.password,
-        }),
+      const supabase = createClient()
+
+      // Sign up with Supabase Auth
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: form.email.toLowerCase().trim(),
+        password: form.password,
+        options: {
+          data: {
+            empresa_nombre: form.nombre.trim(),
+          },
+        },
       })
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error || "Error al crear la cuenta")
+      if (authError) {
+        setError(authError.message || "Error al crear la cuenta")
         return
       }
 
-      // Redirect to dashboard after successful registration
-      router.push("/dashboard")
+      if (!data.user) {
+        setError("Error al crear la cuenta")
+        return
+      }
+
+      // Create empresa record in database
+      const { error: empresaError } = await supabase.from("empresa").insert({
+        id: data.user.id,
+        nombre: form.nombre.trim(),
+        email: form.email.toLowerCase().trim(),
+      })
+
+      if (empresaError) {
+        console.error("[v0] Error creating empresa:", empresaError)
+      }
+
+      // Create default categories
+      const categorias = [
+        { nombre: "General", descripcion: "Categoria general" },
+        { nombre: "Alimentos", descripcion: "Productos alimenticios" },
+        { nombre: "Bebidas", descripcion: "Bebidas y liquidos" },
+        { nombre: "Limpieza", descripcion: "Productos de limpieza" },
+      ]
+
+      await supabase.from("categoria").insert(
+        categorias.map((cat) => ({
+          id_empresa: data.user.id,
+          ...cat,
+        }))
+      )
+
+      // Check if email confirmation is required
+      if (data.session) {
+        // Auto confirmed - redirect to dashboard
+        router.refresh()
+        router.push("/dashboard")
+      } else {
+        // Email confirmation required
+        setSuccess(true)
+      }
     } catch (err) {
       console.error("[v0] Register error:", err)
-      setError("Error de conexión. Intenta de nuevo.")
+      setError("Error de conexion. Intenta de nuevo.")
     } finally {
       setLoading(false)
     }
@@ -105,6 +146,12 @@ export default function RegisterPage() {
           {error && (
             <div className="mb-4 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-red-400">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-400">
+              Cuenta creada exitosamente. Revisa tu correo para confirmar tu cuenta.
             </div>
           )}
 

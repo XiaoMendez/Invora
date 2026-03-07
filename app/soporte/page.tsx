@@ -3,13 +3,17 @@ import Link from "next/link"
 import { Mail, MessageCircle, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+export const metadata = {
+  title: "Soporte - INVORA",
+  description: "Obtiene ayuda y soporte para tu cuenta de INVORA.",
+}
+
 export default function SoportePage() {
   return (
-    <StaticPageLayout title="Soporte">
-      <p className="text-lg mb-12">
-        Estamos aqui para ayudarte. Encuentra respuestas a tus preguntas o
-        contacta a nuestro equipo de soporte.
-      </p>
+    <StaticPageLayout 
+      title="Centro de Soporte"
+      subtitle="Estamos aqui para ayudarte. Encuentra respuestas a tus preguntas o contacta a nuestro equipo."
+    >
 
       <div className="grid md:grid-cols-3 gap-6 mb-16">
         <div className="glass-card rounded-xl p-6 flex flex-col items-center text-center gap-4">

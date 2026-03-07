@@ -1,8 +1,16 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 
+export const metadata = {
+  title: "Sobre Nosotros - INVORA",
+  description: "Conoce la mision y valores de INVORA, el sistema de inventario para PYMEs.",
+}
+
 export default function SobreNosotrosPage() {
   return (
-    <StaticPageLayout title="Sobre Nosotros">
+    <StaticPageLayout 
+      title="Sobre Nosotros"
+      subtitle="Conoce la mision y los valores que impulsan a INVORA."
+    >
       <div className="flex flex-col gap-8">
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-4">

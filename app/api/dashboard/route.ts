@@ -37,37 +37,50 @@ export async function GET() {
     )
     const alertasActivas = lowStockProducts.length
 
-    // Get recent movements
-    const { data: recentMovements, error: movError } = await supabase
-      .from("movimiento_inventario")
-      .select("id, tipo, cantidad, creado_en, producto(nombre)")
+    // Get recent movements with product info
+    const { data: rawMovements, error: movError } = await supabase
+      .from("v_historial_inventario")
+      .select("id, tipo, cantidad, creado_en, producto")
       .eq("id_empresa", empresaId)
       .order("creado_en", { ascending: false })
       .limit(10)
 
     if (movError) throw movError
 
+    const recentMovements = (rawMovements || []).map((m) => ({
+      id: m.id,
+      tipo: m.tipo,
+      cantidad: m.cantidad,
+      creado_en: m.creado_en,
+      producto: m.producto,
+    }))
+
     // Get movements today count
     const today = new Date()
     today.setHours(0, 0, 0, 0)
-    const movimientosHoy = (recentMovements || []).filter(
+    const movimientosHoy = recentMovements.filter(
       (m) => new Date(m.creado_en) >= today
     ).length
 
-    // Get categories data
-    const { data: categorias, error: catError } = await supabase
-      .from("categoria")
-      .select("id, nombre")
+    // Get categories data with product counts
+    const { data: productosConCategoria, error: catError } = await supabase
+      .from("producto")
+      .select("id_categoria, categoria(nombre)")
       .eq("id_empresa", empresaId)
+      .eq("activo", true)
 
     if (catError) throw catError
 
-    const categoryData = (categorias || []).map((cat) => ({
-      categoria: cat.nombre,
-      cantidad: (productos || []).filter(
-        (p) => p.id === cat.id
-      ).length,
-    }))
+    // Group products by category
+    const categoryMap = new Map<string, number>()
+    ;(productosConCategoria || []).forEach((p) => {
+      const catName = (p.categoria as { nombre: string } | null)?.nombre || "Sin categoria"
+      categoryMap.set(catName, (categoryMap.get(catName) || 0) + 1)
+    })
+
+    const categoryData = Array.from(categoryMap.entries())
+      .map(([categoria, cantidad]) => ({ categoria, cantidad }))
+      .sort((a, b) => b.cantidad - a.cantidad)
 
     return NextResponse.json({
       stats: {

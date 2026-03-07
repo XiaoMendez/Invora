@@ -1,9 +1,16 @@
 import { StaticPageLayout } from "@/components/static-page-layout"
 
+export const metadata = {
+  title: "Politica de Cookies - INVORA",
+  description: "Conoce como utilizamos las cookies en INVORA.",
+}
+
 export default function CookiesPage() {
   return (
-    <StaticPageLayout title="Politica de Cookies">
-      <p className="text-sm mb-8">Ultima actualizacion: 3 de marzo de 2026</p>
+    <StaticPageLayout 
+      title="Politica de Cookies"
+      subtitle="Conoce como utilizamos las cookies para mejorar tu experiencia en INVORA."
+    >
 
       <div className="flex flex-col gap-8">
         <section>
