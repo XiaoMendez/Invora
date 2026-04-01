@@ -46,6 +46,7 @@ export default function RegisterPage() {
       const supabase = createClient()
 
       // Sign up with Supabase Auth
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email.toLowerCase().trim(),
         password: form.password,
@@ -53,6 +54,7 @@ export default function RegisterPage() {
           data: {
             empresa_nombre: form.nombre.trim(),
           },
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
 
