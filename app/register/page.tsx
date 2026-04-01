@@ -17,7 +17,6 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
   const [form, setForm] = useState({
     nombre: "",
     email: "",
@@ -97,8 +96,8 @@ export default function RegisterPage() {
         router.refresh()
         router.push("/dashboard")
       } else {
-        // Email confirmation required
-        setSuccess(true)
+        // Email confirmation required - redirect to confirm page
+        router.push("/auth/confirm")
       }
     } catch (err) {
       console.error("[v0] Register error:", err)
@@ -146,12 +145,6 @@ export default function RegisterPage() {
           {error && (
             <div className="mb-4 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-red-400">
               {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-400">
-              Cuenta creada exitosamente. Revisa tu correo para confirmar tu cuenta.
             </div>
           )}
 
