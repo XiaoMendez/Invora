@@ -44,12 +44,12 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion } = body
 
-    if (!nombre) {
+    if (!nombre?.trim()) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
     }
 
     const insertData: Record<string, unknown> = {
-      id_empresa: user.id,
+      id_empresa: empresaId,
       nombre: nombre.trim(),
       stock: parseInt(stock) || 0,
       stock_minimo: parseInt(stock_minimo) || 0,
@@ -62,15 +62,25 @@ export async function POST(request: Request) {
 
     const { data: producto, error } = await supabase
       .from("producto")
-      .insert({
-        id_empresa: empresaId,
-        id_producto: producto.id,
-        tipo: "entrada",
-        cantidad: insertData.stock,
-        stock_antes: 0,
-        stock_despues: insertData.stock,
-        motivo: "Stock inicial al crear producto",
-      })
+      .insert(insertData)
+      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
+      .single()
+
+    if (error) throw error
+
+    // Record initial stock movement
+    if (parseInt(stock) > 0) {
+      await supabase
+        .from("movimiento_inventario")
+        .insert({
+          id_empresa: empresaId,
+          id_producto: producto.id,
+          tipo: "entrada",
+          cantidad: parseInt(stock),
+          stock_antes: 0,
+          stock_despues: parseInt(stock),
+          motivo: "Stock inicial al crear producto",
+        })
     }
 
     return NextResponse.json({ producto, success: true })
@@ -106,7 +116,7 @@ export async function PUT(request: Request) {
       .from("producto")
       .update(updateData)
       .eq("id", id)
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
       .single()
 
@@ -135,7 +145,7 @@ export async function DELETE(request: Request) {
       .from("producto")
       .delete()
       .eq("id", id)
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
 
     if (error) throw error
 
