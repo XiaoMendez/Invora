@@ -10,14 +10,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
+import { PasswordRequirements, isPasswordValid } from "@/components/password-requirements"
 import { createClient } from "@/lib/supabase/client"
 
 export default function RegisterPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
   const [form, setForm] = useState({
     nombre: "",
     email: "",
@@ -34,8 +35,8 @@ export default function RegisterPage() {
       return
     }
 
-    if (form.password.length < 6) {
-      setError("La contrasena debe tener al menos 6 caracteres")
+    if (!isPasswordValid(form.password)) {
+      setError("La contrasena no cumple con los requisitos minimos")
       return
     }
 
@@ -97,8 +98,8 @@ export default function RegisterPage() {
         router.refresh()
         router.push("/dashboard")
       } else {
-        // Email confirmation required
-        setSuccess(true)
+        // Email confirmation required - redirect to confirm page
+        router.push("/auth/confirm")
       }
     } catch (err) {
       console.error("[v0] Register error:", err)
@@ -149,12 +150,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {success && (
-            <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/20 px-4 py-3 text-sm text-green-400">
-              Cuenta creada exitosamente. Revisa tu correo para confirmar tu cuenta.
-            </div>
-          )}
-
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="nombre" className="text-sm text-foreground">
@@ -194,9 +189,11 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Minimo 8 caracteres"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   required
                   className="bg-secondary/50 border-border/30 h-11 pr-10"
                 />
@@ -209,6 +206,10 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <PasswordRequirements
+                password={form.password}
+                visible={passwordFocused || form.password.length > 0}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
