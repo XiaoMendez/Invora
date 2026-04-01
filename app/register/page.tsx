@@ -10,11 +10,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
+import { PasswordRequirements, isPasswordValid } from "@/components/password-requirements"
 import { createClient } from "@/lib/supabase/client"
 
 export default function RegisterPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({
@@ -33,8 +35,8 @@ export default function RegisterPage() {
       return
     }
 
-    if (form.password.length < 6) {
-      setError("La contrasena debe tener al menos 6 caracteres")
+    if (!isPasswordValid(form.password)) {
+      setError("La contrasena no cumple con los requisitos minimos")
       return
     }
 
@@ -187,9 +189,11 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Minimo 8 caracteres"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onFocus={() => setPasswordFocused(true)}
+                  onBlur={() => setPasswordFocused(false)}
                   required
                   className="bg-secondary/50 border-border/30 h-11 pr-10"
                 />
@@ -202,6 +206,10 @@ export default function RegisterPage() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <PasswordRequirements
+                password={form.password}
+                visible={passwordFocused || form.password.length > 0}
+              />
             </div>
 
             <div className="flex flex-col gap-2">
