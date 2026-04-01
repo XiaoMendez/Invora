@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get("periodo") || "7m"
@@ -21,7 +19,7 @@ export async function GET(request: Request) {
     const { data: productos } = await supabase
       .from("producto")
       .select("id, stock, precio_costo, precio_venta, activo")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .eq("activo", true)
 
     const prods = productos || []
@@ -35,7 +33,7 @@ export async function GET(request: Request) {
     const { data: movimientos } = await supabase
       .from("movimiento_inventario")
       .select("tipo, cantidad, creado_en")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .gte("creado_en", fechaDesde.toISOString())
       .order("creado_en", { ascending: true })
 
@@ -62,7 +60,7 @@ export async function GET(request: Request) {
     const { data: productosCat } = await supabase
       .from("producto")
       .select("stock, precio_costo, id_categoria, categoria(nombre)")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .eq("activo", true)
 
     const catMap = new Map<string, { name: string; value: number; valorTotal: number }>()
@@ -89,7 +87,7 @@ export async function GET(request: Request) {
     const { data: topMovs } = await supabase
       .from("movimiento_inventario")
       .select("id_producto, cantidad, tipo, producto:producto(nombre, sku)")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .in("tipo", ["salida", "ajuste_negativo"])
       .gte("creado_en", fechaDesde.toISOString())
 

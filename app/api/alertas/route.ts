@@ -1,27 +1,25 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { data: empresa } = await supabase
       .from("empresa")
       .select("nombre, email")
-      .eq("id", user.id)
+      .eq("id", empresaId)
       .single()
 
     // Get products with low stock
     const { data: productos, error } = await supabase
       .from("producto")
       .select("id, nombre, sku, stock, stock_minimo, id_categoria, categoria(nombre)")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .eq("activo", true)
       .gt("stock_minimo", 0)
 

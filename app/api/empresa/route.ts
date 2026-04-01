@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
@@ -7,14 +8,17 @@ export async function GET() {
   try {
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
     if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+      return NextResponse.json({ error: "Usuario no autenticado" }, { status: 401 })
     }
+
+    const empresaId = await getEmpresaId(supabase)
 
     const { data: empresa, error } = await supabase
       .from("empresa")
       .select("id, nombre, email, telefono, direccion, id_fiscal, logo_url")
-      .eq("id", user.id)
+      .eq("id", empresaId)
       .single()
 
     if (error && error.code !== "PGRST116") throw error
@@ -30,9 +34,12 @@ export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
     if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+      return NextResponse.json({ error: "Usuario no autenticado" }, { status: 401 })
     }
+
+    const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
     const { nombre, telefono, direccion, id_fiscal } = body
@@ -45,7 +52,7 @@ export async function PUT(request: Request) {
     const { data: existing } = await supabase
       .from("empresa")
       .select("id")
-      .eq("id", user.id)
+      .eq("id", empresaId)
       .single()
 
     let empresa
@@ -59,29 +66,19 @@ export async function PUT(request: Request) {
           direccion: direccion?.trim() || null,
           id_fiscal: id_fiscal?.trim() || null,
         })
-        .eq("id", user.id)
+        .eq("id", empresaId)
         .select("id, nombre, email, telefono, direccion, id_fiscal")
         .single()
 
       if (error) throw error
       empresa = data
     } else {
-      // Create new
-      const { data, error } = await supabase
-        .from("empresa")
-        .insert({
-          id: user.id,
-          nombre: nombre.trim(),
-          email: user.email,
-          telefono: telefono?.trim() || null,
-          direccion: direccion?.trim() || null,
-          id_fiscal: id_fiscal?.trim() || null,
-        })
-        .select("id, nombre, email, telefono, direccion, id_fiscal")
-        .single()
-
-      if (error) throw error
-      empresa = data
+      // Create new - this is for first-time setup, user creates their empresa
+      // In normal flow, empresa is created during registration
+      return NextResponse.json(
+        { error: "Debe crear la empresa primero durante el registro" },
+        { status: 404 }
+      )
     }
 
     return NextResponse.json({ empresa, success: true })

@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
@@ -18,7 +16,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("producto")
       .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria, categoria(id, nombre)")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .order("nombre", { ascending: true })
 
     if (search) {
@@ -41,10 +39,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
     const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion } = body
@@ -67,16 +62,8 @@ export async function POST(request: Request) {
 
     const { data: producto, error } = await supabase
       .from("producto")
-      .insert(insertData)
-      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
-      .single()
-
-    if (error) throw error
-
-    // If initial stock > 0, record an entry movement
-    if (insertData.stock && (insertData.stock as number) > 0) {
-      await supabase.from("movimiento_inventario").insert({
-        id_empresa: user.id,
+      .insert({
+        id_empresa: empresaId,
         id_producto: producto.id,
         tipo: "entrada",
         cantidad: insertData.stock,
@@ -97,10 +84,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
     const { id, nombre, sku, id_categoria, stock_minimo, precio_costo, precio_venta, activo } = body
@@ -138,10 +122,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")

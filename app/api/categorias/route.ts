@@ -1,20 +1,18 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { data: categorias, error } = await supabase
       .from("categoria")
       .select("id, nombre, descripcion")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .order("nombre", { ascending: true })
 
     if (error) throw error
@@ -28,10 +26,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
     const { nombre, descripcion } = body
@@ -42,7 +37,7 @@ export async function POST(request: Request) {
 
     const { data: categoria, error } = await supabase
       .from("categoria")
-      .insert({ id_empresa: user.id, nombre: nombre.trim(), descripcion: descripcion?.trim() || null })
+      .insert({ id_empresa: empresaId, nombre: nombre.trim(), descripcion: descripcion?.trim() || null })
       .select("id, nombre, descripcion")
       .single()
 

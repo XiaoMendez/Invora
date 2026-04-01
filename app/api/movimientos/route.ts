@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const { searchParams } = new URL(request.url)
     const tipo = searchParams.get("tipo") || "todos"
@@ -33,7 +31,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("v_historial_inventario")
       .select("id, creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo")
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .order("creado_en", { ascending: false })
 
     if (tipo && tipo !== "todos") {
@@ -96,10 +94,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
-    }
+    const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
     const { id_producto, tipo, cantidad, motivo } = body
@@ -118,7 +113,7 @@ export async function POST(request: Request) {
       .from("producto")
       .select("id, stock, nombre")
       .eq("id", id_producto)
-      .eq("id_empresa", user.id)
+      .eq("id_empresa", empresaId)
       .single()
 
     if (prodError || !producto) {
@@ -149,7 +144,7 @@ export async function POST(request: Request) {
     const { data: movimiento, error: movError } = await supabase
       .from("movimiento_inventario")
       .insert({
-        id_empresa: user.id,
+        id_empresa: empresaId,
         id_producto,
         tipo,
         cantidad: cantidadInt,
