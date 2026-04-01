@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
@@ -13,6 +13,32 @@ import { createClient } from "@/lib/supabase/client"
 type ConfirmationStatus = "loading" | "success" | "error" | "already_confirmed"
 
 export default function EmailConfirmPage() {
+  return (
+    <Suspense fallback={<ConfirmPageFallback />}>
+      <EmailConfirmContent />
+    </Suspense>
+  )
+}
+
+function ConfirmPageFallback() {
+  return (
+    <div className="relative min-h-screen flex items-center justify-center">
+      <StarsBackgroundCanvas />
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="glass-card rounded-2xl p-8">
+          <div className="flex flex-col items-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 border border-primary/20 mb-6">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            </div>
+            <p className="text-sm text-muted-foreground">Cargando...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function EmailConfirmContent() {
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<ConfirmationStatus>("loading")
   const [errorMessage, setErrorMessage] = useState("")
@@ -38,7 +64,7 @@ export default function EmailConfirmPage() {
 
       try {
         const supabase = createClient()
-        
+
         const { error } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: "email",
@@ -172,7 +198,7 @@ function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean;
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
-        
+
         {!hasToken && (
           <Link href="/" className="w-full">
             <Button variant="outline" className="w-full border-border/30 h-11">
