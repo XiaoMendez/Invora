@@ -68,50 +68,6 @@ export default function RegisterPage() {
         return
       }
 
-      // Create empresa record in database
-      const { data: empresa, error: empresaError } = await supabase.from("empresa").insert({
-        nombre: form.nombre.trim(),
-        email: form.email.toLowerCase().trim(),
-      }).select("id").single()
-
-      if (empresaError) {
-        console.error("[v0] Error creating empresa:", empresaError)
-        setError("Error al crear la empresa")
-        return
-      }
-
-      const empresaId = empresa.id
-
-      // Create usuario_empresa relationship (linking user to empresa with admin role)
-      const { error: userEmpresaError } = await supabase.from("usuario_empresa").insert({
-        id_usuario: data.user.id,
-        id_empresa: empresaId,
-        rol: "admin",
-      })
-
-      if (userEmpresaError) {
-        console.error("[v0] Error creating usuario_empresa:", userEmpresaError)
-        // Try to delete the empresa since the user couldn't be linked
-        await supabase.from("empresa").delete().eq("id", empresaId)
-        setError("Error al vincular usuario con empresa")
-        return
-      }
-
-      // Create default categories
-      const categorias = [
-        { nombre: "General", descripcion: "Categoria general" },
-        { nombre: "Alimentos", descripcion: "Productos alimenticios" },
-        { nombre: "Bebidas", descripcion: "Bebidas y liquidos" },
-        { nombre: "Limpieza", descripcion: "Productos de limpieza" },
-      ]
-
-      await supabase.from("categoria").insert(
-        categorias.map((cat) => ({
-          id_empresa: empresaId,
-          ...cat,
-        }))
-      )
-
       // Check if email confirmation is required
       if (data.session) {
         // Auto confirmed - redirect to dashboard

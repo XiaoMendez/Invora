@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+export const dynamic = "force-dynamic"
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
@@ -9,13 +11,6 @@ export async function POST(request: Request) {
     if (!nombre || !email || !password) {
       return NextResponse.json(
         { error: "Todos los campos son requeridos" },
-        { status: 400 }
-      )
-    }
-
-    if (password.length < 6) {
-      return NextResponse.json(
-        { error: "La contraseña debe tener al menos 6 caracteres" },
         { status: 400 }
       )
     }
@@ -48,31 +43,51 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create empresa record in database with the user's ID
-    try {
-      await supabase.from("empresa").insert({
-        id: data.user.id,
+    // Create empresa record in database (with auto-generated ID)
+    const { data: empresa, error: empresaError } = await supabase
+      .from("empresa")
+      .insert({
         nombre: nombre.trim(),
         email: email.toLowerCase().trim(),
       })
+      .select("id")
+      .single()
 
-      // Create default categories
-      const categorias = [
-        { nombre: "General", descripcion: "Categoría general" },
-        { nombre: "Alimentos", descripcion: "Productos alimenticios" },
-        { nombre: "Bebidas", descripcion: "Bebidas y líquidos" },
-        { nombre: "Limpieza", descripcion: "Productos de limpieza" },
-      ]
+    if (empresaError) {
+      console.error("[v0] Error creating empresa:", empresaError)
+      // Continue anyway - empresa will be created on first login
+    }
 
-      await supabase.from("categoria").insert(
-        categorias.map((cat) => ({
-          id_empresa: data.user.id,
-          ...cat,
-        }))
-      )
-    } catch (dbError) {
-      console.error("[v0] Error creating empresa or categories:", dbError)
-      // Don't fail registration if db creation fails
+    if (empresa) {
+      // Create usuario_empresa relationship
+      const { error: userEmpresaError } = await supabase
+        .from("usuario_empresa")
+        .insert({
+          id_usuario: data.user.id,
+          id_empresa: empresa.id,
+          rol: "admin",
+        })
+
+      if (userEmpresaError) {
+        console.error("[v0] Error creating usuario_empresa:", userEmpresaError)
+        // Try to delete empresa if linking fails
+        await supabase.from("empresa").delete().eq("id", empresa.id)
+      } else {
+        // Create default categories only if empresa was linked successfully
+        const categorias = [
+          { nombre: "General", descripcion: "Categoría general" },
+          { nombre: "Alimentos", descripcion: "Productos alimenticios" },
+          { nombre: "Bebidas", descripcion: "Bebidas y líquidos" },
+          { nombre: "Limpieza", descripcion: "Productos de limpieza" },
+        ]
+
+        await supabase.from("categoria").insert(
+          categorias.map((cat) => ({
+            id_empresa: empresa.id,
+            ...cat,
+          }))
+        )
+      }
     }
 
     return NextResponse.json({
