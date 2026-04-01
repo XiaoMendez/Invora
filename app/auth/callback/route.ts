@@ -11,11 +11,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Redirect to confirm page with success indicator, then user can go to dashboard
-      const confirmUrl = new URL("/auth/confirm", origin)
-      confirmUrl.searchParams.set("verified", "true")
-      confirmUrl.searchParams.set("next", next)
-      return NextResponse.redirect(confirmUrl)
+      return NextResponse.redirect(new URL("/auth/verified", origin))
     }
   }
 
