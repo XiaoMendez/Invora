@@ -19,9 +19,17 @@ export default function EmailConfirmPage() {
 
   const tokenHash = searchParams.get("token_hash")
   const type = searchParams.get("type")
+  const verified = searchParams.get("verified")
+  const nextUrl = searchParams.get("next") ?? "/dashboard"
 
   useEffect(() => {
     async function confirmEmail() {
+      // If coming from callback with verified=true, show success
+      if (verified === "true") {
+        setStatus("success")
+        return
+      }
+
       if (!tokenHash || type !== "email") {
         // No token - show the "check your email" state
         setStatus("success")
@@ -78,7 +86,7 @@ export default function EmailConfirmPage() {
           </div>
 
           {status === "loading" && <LoadingState />}
-          {status === "success" && <SuccessState hasToken={!!tokenHash} />}
+          {status === "success" && <SuccessState hasToken={!!tokenHash || verified === "true"} nextUrl={nextUrl} />}
           {status === "already_confirmed" && <AlreadyConfirmedState />}
           {status === "error" && <ErrorState message={errorMessage} />}
         </div>
@@ -117,7 +125,7 @@ function LoadingState() {
   )
 }
 
-function SuccessState({ hasToken }: { hasToken: boolean }) {
+function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean; nextUrl?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -158,7 +166,7 @@ function SuccessState({ hasToken }: { hasToken: boolean }) {
       )}
 
       <div className="flex flex-col gap-3 w-full">
-        <Link href={hasToken ? "/dashboard" : "/login"} className="w-full">
+        <Link href={hasToken ? nextUrl : "/login"} className="w-full">
           <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 gap-2">
             {hasToken ? "Ir al Dashboard" : "Ir a Iniciar Sesion"}
             <ArrowRight className="h-4 w-4" />
