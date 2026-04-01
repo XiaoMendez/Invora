@@ -84,6 +84,40 @@ export async function GET() {
       .map(([categoria, cantidad]) => ({ categoria, cantidad }))
       .sort((a, b) => b.cantidad - a.cantidad)
 
+    // Get monthly trend for the last 6 months
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    const { data: trendMovements, error: trendError } = await supabase
+      .from("movimiento_inventario")
+      .select("tipo, cantidad, creado_en")
+      .eq("id_empresa", empresaId)
+      .gte("creado_en", sixMonthsAgo.toISOString())
+      .order("creado_en", { ascending: true })
+
+    if (trendError) throw trendError
+
+    // Group by month
+    const monthMap = new Map<string, { mes: string; entradas: number; salidas: number }>()
+    ;(trendMovements || []).forEach((m) => {
+      const d = new Date(m.creado_en)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      const mesLabel = d.toLocaleDateString("es-CR", { month: "short" })
+      if (!monthMap.has(key)) {
+        monthMap.set(key, { mes: mesLabel, entradas: 0, salidas: 0 })
+      }
+      const entry = monthMap.get(key)!
+      if (["entrada", "ajuste_positivo", "devolucion_venta"].includes(m.tipo)) {
+        entry.entradas += m.cantidad
+      } else {
+        entry.salidas += m.cantidad
+      }
+    })
+
+    const monthlyTrend = Array.from(monthMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v)
+
     return NextResponse.json({
       stats: {
         totalProductos,
@@ -94,7 +128,7 @@ export async function GET() {
       recentMovements: recentMovements || [],
       lowStockProducts: lowStockProducts.slice(0, 5),
       categoryData: categoryData.slice(0, 5),
-      monthlyTrend: [],
+      monthlyTrend,
     })
   } catch (error) {
     console.error("[v0] Dashboard API error:", error)
