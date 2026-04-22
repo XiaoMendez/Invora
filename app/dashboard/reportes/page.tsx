@@ -109,10 +109,10 @@ export default function ReportesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="glass-card border-border/30">
-              <SelectItem value="30d">Ultimos 30 dias</SelectItem>
-              <SelectItem value="3m">Ultimos 3 meses</SelectItem>
-              <SelectItem value="7m">Ultimos 7 meses</SelectItem>
-              <SelectItem value="1y">Ultimo ano</SelectItem>
+              <SelectItem value="30d">Últimos 30 días</SelectItem>
+              <SelectItem value="3m">Últimos 3 meses</SelectItem>
+              <SelectItem value="7m">Últimos 7 meses</SelectItem>
+              <SelectItem value="1y">Último año</SelectItem>
             </SelectContent>
           </Select>
         </div>
