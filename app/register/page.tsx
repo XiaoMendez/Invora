@@ -68,32 +68,6 @@ export default function RegisterPage() {
         return
       }
 
-      // Create empresa record in database
-      const { error: empresaError } = await supabase.from("empresa").insert({
-        id: data.user.id,
-        nombre: form.nombre.trim(),
-        email: form.email.toLowerCase().trim(),
-      })
-
-      if (empresaError) {
-        console.error("[v0] Error creating empresa:", empresaError)
-      }
-
-      // Create default categories
-      const categorias = [
-        { nombre: "General", descripcion: "Categoria general" },
-        { nombre: "Alimentos", descripcion: "Productos alimenticios" },
-        { nombre: "Bebidas", descripcion: "Bebidas y liquidos" },
-        { nombre: "Limpieza", descripcion: "Productos de limpieza" },
-      ]
-
-      await supabase.from("categoria").insert(
-        categorias.map((cat) => ({
-          id_empresa: data.user.id,
-          ...cat,
-        }))
-      )
-
       // Check if email confirmation is required
       if (data.session) {
         // Auto confirmed - redirect to dashboard

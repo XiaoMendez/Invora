@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import useSWR, { mutate } from "swr"
 import {
   Package,
   Search,
@@ -9,10 +10,10 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Eye,
-  ArrowUpDown,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -48,57 +49,144 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 
-interface Product {
+interface Categoria {
   id: string
   nombre: string
-  sku: string
-  categoria: string
-  stock: number
-  minimo: number
-  precio: number
-  estado: "Disponible" | "Stock Bajo" | "Agotado"
 }
 
-const products: Product[] = [
-  { id: "PRD-001", nombre: "Cafe Britt Clasico 500g", sku: "CB-500", categoria: "Alimentos", stock: 85, minimo: 20, precio: 5200, estado: "Disponible" },
-  { id: "PRD-002", nombre: "Arroz Tio Pelon 1kg", sku: "ATP-1K", categoria: "Alimentos", stock: 120, minimo: 30, precio: 1450, estado: "Disponible" },
-  { id: "PRD-003", nombre: "Frijoles Ducal 400g", sku: "FD-400", categoria: "Alimentos", stock: 8, minimo: 20, precio: 980, estado: "Stock Bajo" },
-  { id: "PRD-004", nombre: "Detergente Irex 1L", sku: "DI-1L", categoria: "Limpieza", stock: 45, minimo: 15, precio: 3200, estado: "Disponible" },
-  { id: "PRD-005", nombre: "Leche Dos Pinos 1L", sku: "LDP-1L", categoria: "Bebidas", stock: 0, minimo: 25, precio: 1100, estado: "Agotado" },
-  { id: "PRD-006", nombre: "Azucar Dona Maria 1kg", sku: "ADM-1K", categoria: "Alimentos", stock: 12, minimo: 30, precio: 1650, estado: "Stock Bajo" },
-  { id: "PRD-007", nombre: "Jabon Palmolive 100g", sku: "JP-100", categoria: "Limpieza", stock: 55, minimo: 20, precio: 750, estado: "Disponible" },
-  { id: "PRD-008", nombre: "Aceite Clover 750ml", sku: "AC-750", categoria: "Alimentos", stock: 5, minimo: 15, precio: 2800, estado: "Stock Bajo" },
-  { id: "PRD-009", nombre: "Jugo Del Valle 1L", sku: "JDV-1L", categoria: "Bebidas", stock: 72, minimo: 20, precio: 1350, estado: "Disponible" },
-  { id: "PRD-010", nombre: "Papel Higienico Scott x4", sku: "PHS-4", categoria: "Limpieza", stock: 30, minimo: 10, precio: 2100, estado: "Disponible" },
-]
+interface Producto {
+  id: string
+  nombre: string
+  sku: string | null
+  stock: number
+  stock_minimo: number
+  precio_costo: number
+  precio_venta: number
+  activo: boolean
+  id_categoria: string | null
+  categoria: Categoria | null
+}
 
-const categories = ["Todas", "Alimentos", "Bebidas", "Limpieza", "Electronica", "Oficina"]
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-function getStatusColor(estado: string) {
-  switch (estado) {
-    case "Disponible":
-      return "bg-green-500/10 text-green-400 border-green-500/20"
-    case "Stock Bajo":
-      return "bg-amber-500/10 text-amber-400 border-amber-500/20"
-    case "Agotado":
-      return "bg-red-500/10 text-red-400 border-red-500/20"
-    default:
-      return ""
-  }
+function getStatusInfo(stock: number, stock_minimo: number) {
+  if (stock === 0) return { label: "Agotado", className: "bg-red-500/10 text-red-400 border-red-500/20" }
+  if (stock <= stock_minimo) return { label: "Stock Bajo", className: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
+  return { label: "Disponible", className: "bg-green-500/10 text-green-400 border-green-500/20" }
 }
 
 export default function ProductosPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("Todas")
+  const [selectedCategory, setSelectedCategory] = useState("todas")
   const [dialogOpen, setDialogOpen] = useState(false)
-
-  const filtered = products.filter((p) => {
-    const matchesSearch =
-      p.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "Todas" || p.categoria === selectedCategory
-    return matchesSearch && matchesCategory
+  const [editingProduct, setEditingProduct] = useState<Producto | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [formData, setFormData] = useState({
+    nombre: "",
+    sku: "",
+    id_categoria: "",
+    stock: "0",
+    stock_minimo: "0",
+    precio_costo: "0",
+    precio_venta: "0",
   })
+
+  const apiUrl = `/api/productos?search=${encodeURIComponent(searchQuery)}&categoria=${selectedCategory}`
+  const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
+  const { data: catData } = useSWR("/api/categorias", fetcher)
+
+  const productos: Producto[] = data?.productos || []
+  const categorias: Categoria[] = catData?.categorias || []
+
+  const resetForm = () => {
+    setFormData({
+      nombre: "",
+      sku: "",
+      id_categoria: "",
+      stock: "0",
+      stock_minimo: "0",
+      precio_costo: "0",
+      precio_venta: "0",
+    })
+    setEditingProduct(null)
+  }
+
+  const openEditDialog = (product: Producto) => {
+    setEditingProduct(product)
+    setFormData({
+      nombre: product.nombre,
+      sku: product.sku || "",
+      id_categoria: product.id_categoria || "",
+      stock: product.stock.toString(),
+      stock_minimo: product.stock_minimo.toString(),
+      precio_costo: product.precio_costo.toString(),
+      precio_venta: product.precio_venta.toString(),
+    })
+    setDialogOpen(true)
+  }
+
+  const handleSubmit = async () => {
+    if (!formData.nombre.trim()) return
+    setSaving(true)
+
+    try {
+      const method = editingProduct ? "PUT" : "POST"
+      const body = editingProduct
+        ? { id: editingProduct.id, ...formData }
+        : formData
+
+      const res = await fetch("/api/productos", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      if (res.ok) {
+        mutate(apiUrl)
+        setDialogOpen(false)
+        resetForm()
+      }
+    } catch (err) {
+      console.error("Error saving product:", err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("¿Estas seguro de eliminar este producto?")) return
+
+    try {
+      const res = await fetch(`/api/productos?id=${id}`, { method: "DELETE" })
+      if (res.ok) {
+        mutate(apiUrl)
+      }
+    } catch (err) {
+      console.error("Error deleting product:", err)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Cargando productos...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || data?.error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <AlertTriangle className="h-8 w-8 text-amber-400" />
+          <p className="text-sm text-muted-foreground">Error al cargar productos</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
@@ -110,7 +198,7 @@ export default function ProductosPage() {
             Gestiona todos los productos de tu inventario.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
               <Plus className="h-4 w-4" />
@@ -119,56 +207,107 @@ export default function ProductosPage() {
           </DialogTrigger>
           <DialogContent className="glass-card border-border/30 sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Agregar Producto</DialogTitle>
+              <DialogTitle>{editingProduct ? "Editar Producto" : "Agregar Producto"}</DialogTitle>
               <DialogDescription>
-                Agrega un nuevo producto a tu inventario.
+                {editingProduct ? "Modifica los datos del producto." : "Agrega un nuevo producto a tu inventario."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="name" className="text-xs">Nombre del Producto</Label>
-                <Input id="name" placeholder="Ej: Cafe Britt 500g" className="bg-secondary/50 border-border/30" />
+                <Input
+                  id="name"
+                  placeholder="Ej: Cafe Britt 500g"
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                  className="bg-secondary/50 border-border/30"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="sku" className="text-xs">SKU</Label>
-                  <Input id="sku" placeholder="CB-500" className="bg-secondary/50 border-border/30" />
+                  <Input
+                    id="sku"
+                    placeholder="CB-500"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    className="bg-secondary/50 border-border/30"
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="category" className="text-xs">Categoria</Label>
-                  <Select>
+                  <Select
+                    value={formData.id_categoria}
+                    onValueChange={(val) => setFormData({ ...formData, id_categoria: val })}
+                  >
                     <SelectTrigger className="bg-secondary/50 border-border/30">
                       <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
                     <SelectContent className="glass-card border-border/30">
-                      {categories.slice(1).map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      {categorias.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.nombre}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="stock" className="text-xs">Stock Inicial</Label>
-                  <Input id="stock" type="number" placeholder="0" className="bg-secondary/50 border-border/30" />
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    className="bg-secondary/50 border-border/30"
+                    disabled={!!editingProduct}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="min" className="text-xs">Stock Minimo</Label>
-                  <Input id="min" type="number" placeholder="10" className="bg-secondary/50 border-border/30" />
+                  <Input
+                    id="min"
+                    type="number"
+                    value={formData.stock_minimo}
+                    onChange={(e) => setFormData({ ...formData, stock_minimo: e.target.value })}
+                    className="bg-secondary/50 border-border/30"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="costo" className="text-xs">Precio Costo</Label>
+                  <Input
+                    id="costo"
+                    type="number"
+                    value={formData.precio_costo}
+                    onChange={(e) => setFormData({ ...formData, precio_costo: e.target.value })}
+                    className="bg-secondary/50 border-border/30"
+                  />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="price" className="text-xs">Precio (CRC)</Label>
-                  <Input id="price" type="number" placeholder="0" className="bg-secondary/50 border-border/30" />
+                  <Label htmlFor="venta" className="text-xs">Precio Venta</Label>
+                  <Input
+                    id="venta"
+                    type="number"
+                    value={formData.precio_venta}
+                    onChange={(e) => setFormData({ ...formData, precio_venta: e.target.value })}
+                    className="bg-secondary/50 border-border/30"
+                  />
                 </div>
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border/30">
+              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="border-border/30">
                 Cancelar
               </Button>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setDialogOpen(false)}>
-                Guardar Producto
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handleSubmit}
+                disabled={saving || !formData.nombre.trim()}
+              >
+                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {editingProduct ? "Guardar Cambios" : "Guardar Producto"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -195,8 +334,9 @@ export default function ProductosPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/30">
-                  {categories.map((cat) => (
-                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {categorias.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.nombre}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -210,76 +350,78 @@ export default function ProductosPage() {
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
-            Inventario ({filtered.length} productos)
+            Inventario ({productos.length} productos)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/30 hover:bg-transparent">
-                <TableHead className="text-xs">SKU</TableHead>
-                <TableHead className="text-xs">
-                  <button className="flex items-center gap-1 hover:text-foreground transition-colors">
-                    Producto <ArrowUpDown className="h-3 w-3" />
-                  </button>
-                </TableHead>
-                <TableHead className="text-xs">Categoria</TableHead>
-                <TableHead className="text-xs text-right">Stock</TableHead>
-                <TableHead className="text-xs text-right">Precio</TableHead>
-                <TableHead className="text-xs">Estado</TableHead>
-                <TableHead className="text-xs w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((product) => (
-                <TableRow key={product.id} className="border-border/20">
-                  <TableCell className="text-xs font-mono text-muted-foreground">
-                    {product.sku}
-                  </TableCell>
-                  <TableCell className="text-xs text-foreground font-medium">
-                    {product.nombre}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-[10px] bg-secondary/50">
-                      {product.categoria}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-right text-foreground">
-                    {product.stock}
-                  </TableCell>
-                  <TableCell className="text-xs text-right text-foreground">
-                    {"\u20A1"}{product.precio.toLocaleString()}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={`text-[10px] ${getStatusColor(product.estado)}`}>
-                      {product.estado}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-secondary/50 transition-colors">
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                          <span className="sr-only">Acciones</span>
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="glass-card border-border/30" align="end">
-                        <DropdownMenuItem className="text-xs gap-2">
-                          <Eye className="h-3.5 w-3.5" /> Ver Detalles
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2">
-                          <Edit className="h-3.5 w-3.5" /> Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-xs gap-2 text-red-400">
-                          <Trash2 className="h-3.5 w-3.5" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+          {productos.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/30 hover:bg-transparent">
+                  <TableHead className="text-xs">SKU</TableHead>
+                  <TableHead className="text-xs">Producto</TableHead>
+                  <TableHead className="text-xs">Categoria</TableHead>
+                  <TableHead className="text-xs text-right">Stock</TableHead>
+                  <TableHead className="text-xs text-right">Precio Venta</TableHead>
+                  <TableHead className="text-xs">Estado</TableHead>
+                  <TableHead className="text-xs w-10" />
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {productos.map((product) => {
+                  const status = getStatusInfo(product.stock, product.stock_minimo)
+                  return (
+                    <TableRow key={product.id} className="border-border/20">
+                      <TableCell className="text-xs font-mono text-muted-foreground">
+                        {product.sku || "—"}
+                      </TableCell>
+                      <TableCell className="text-xs text-foreground font-medium">
+                        {product.nombre}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-[10px] bg-secondary/50">
+                          {product.categoria?.nombre || "Sin categoria"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-right text-foreground">
+                        {product.stock}
+                      </TableCell>
+                      <TableCell className="text-xs text-right text-foreground">
+                        {"\u20A1"}{product.precio_venta.toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={`text-[10px] ${status.className}`}>
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-secondary/50 transition-colors">
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                              <span className="sr-only">Acciones</span>
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="glass-card border-border/30" align="end">
+                            <DropdownMenuItem className="text-xs gap-2" onClick={() => openEditDialog(product)}>
+                              <Edit className="h-3.5 w-3.5" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs gap-2 text-red-400" onClick={() => handleDelete(product.id)}>
+                              <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+              No hay productos registrados. Crea el primero haciendo clic en &quot;Nuevo Producto&quot;.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
