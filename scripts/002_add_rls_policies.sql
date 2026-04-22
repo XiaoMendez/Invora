@@ -93,3 +93,27 @@ CREATE POLICY pol_movimiento_insert ON movimiento_inventario
       SELECT id_empresa FROM usuario_empresa WHERE id_usuario = auth.uid()
     )
   );
+
+-- ============================================
+-- FIX: Helper functions with proper search_path
+-- ============================================
+-- The original functions had empty search_path which caused
+-- "relation usuario_empresa does not exist" errors
+
+CREATE OR REPLACE FUNCTION public.fn_empresa_del_usuario()
+RETURNS uuid
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT id_empresa FROM public.usuario_empresa WHERE id_usuario = auth.uid() LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.fn_rol_del_usuario()
+RETURNS text
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT rol FROM public.usuario_empresa WHERE id_usuario = auth.uid() LIMIT 1;
+$$;
