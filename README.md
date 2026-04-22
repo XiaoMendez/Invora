@@ -19,8 +19,6 @@
   <a href="#-descripción">Descripción</a> •
   <a href="#-características">Características</a> •
   <a href="#-tecnologías">Tecnologías</a> •
-  <a href="#-instalación">Instalación</a> •
-  <a href="#-documentación">Documentación</a>
 </p>
 
 ---
