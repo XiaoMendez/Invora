@@ -58,15 +58,15 @@ export function DashboardSidebar() {
         )}
       >
         {/* Logo Area */}
-        <div className="flex items-center justify-between px-4 h-16 border-b border-sidebar-border">
+        <div className="flex items-center justify-between px-4 h-20 border-b border-sidebar-border">
           {!collapsed && (
             <Link href="/" className="flex items-center">
               <Image
                 src="/images/invora-logo.png"
                 alt="INVORA"
-                width={200}
-                height={67}
-                className="h-14 w-auto"
+                width={280}
+                height={94}
+                className="h-16 w-auto"
               />
             </Link>
           )}
