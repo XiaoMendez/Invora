@@ -103,42 +103,6 @@ Desarrollar una solución web completa que permita a las PYMEs:
 - Cuenta en Supabase
 - Git
 
-## 📸 Capturas de Pantalla
-
-### Landing Page
-<p align="center">
-  <em>Página de inicio con escena 3D interactiva</em>
-</p>
-
-### Dashboard
-<p align="center">
-  <em>Panel de control con métricas en tiempo real</em>
-</p>
-
-### Gestión de Productos
-<p align="center">
-  <em>Interfaz para administrar el catálogo de productos</em>
-</p>
-
-### Movimientos de Inventario
-<p align="center">
-  <em>Registro y seguimiento de entradas/salidas</em>
-</p>
-
----
-
-## 📚 Documentación
-
-| Documento | Descripción |
-|-----------|-------------|
-| [📐 ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Arquitectura del sistema |
-| [🗃️ DATABASE.md](./docs/DATABASE.md) | Diseño de base de datos |
-| [🔌 API.md](./docs/API.md) | Documentación de endpoints |
-| [🚀 DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Guía de despliegue |
-| [🔮 ROADMAP.md](./docs/ROADMAP.md) | Funcionalidades pendientes |
-| [🤖 AI_USAGE.md](./docs/AI_USAGE.md) | Uso de IA en el desarrollo |
-
----
 
 ## 👥 Equipo
 
