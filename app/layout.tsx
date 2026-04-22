@@ -19,13 +19,6 @@ export const metadata: Metadata = {
   title: "Invora",
   description:
     "Invora - Sistema de inventario inteligente para PYMEs en Costa Rica. Gestiona tu inventario con una experiencia fuera de este mundo.",
-  icons: {
-    icon: [
-      { url: "/icon.png", sizes: "any", type: "image/png" },
-      { url: "/icon.png", sizes: "192x192", type: "image/png" },
-    ],
-    apple: "/apple-icon.png",
-  },
 }
 
 export const viewport: Viewport = {
