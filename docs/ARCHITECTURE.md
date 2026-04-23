@@ -242,3 +242,4 @@ El sistema está diseñado para escalar:
 - **Vertical**: Supabase Pro tiers
 - **Cache**: SWR + HTTP caching
 - **CDN**: Assets estáticos en Vercel Edge
+

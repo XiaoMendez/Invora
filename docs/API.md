@@ -10,11 +10,17 @@
 
 ## 🔐 Autenticación
 
-Todos los endpoints (excepto login/register) requieren autenticación mediante cookie de sesión de Supabase.
+Todos los endpoints (excepto login/register) requieren autenticación mediante cookie de sesión de Supabase Auth.
 
 ### Base URL
 ```
 https://invorastock.vercel.app/api
+```
+
+### Headers Requeridos
+```
+Content-Type: application/json
+Cookie: sb-{project-id}-auth-token=...
 ```
 
 ---
@@ -23,16 +29,15 @@ https://invorastock.vercel.app/api
 
 ### 🔑 Autenticación
 
-#### POST `/api/auth/register`
-Registra un nuevo usuario y crea su empresa.
+#### POST `/auth/register`
+Registra un nuevo usuario y crea su empresa automáticamente.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "email": "usuario@ejemplo.com",
   "password": "MiPassword123!",
-  "nombre": "Mi Empresa S.A.",
-  "confirmPassword": "MiPassword123!"
+  "nombre": "Mi Empresa S.A."
 }
 ```
 
@@ -40,22 +45,24 @@ Registra un nuevo usuario y crea su empresa.
 ```json
 {
   "success": true,
-  "message": "Registro exitoso. Revisa tu email para confirmar."
+  "user": {
+    "id": "uuid",
+    "email": "usuario@ejemplo.com"
+  },
+  "message": "Registro exitoso. Verifica tu correo para confirmar."
 }
 ```
 
 **Errores:**
-| Código | Descripción |
-|--------|-------------|
-| 400 | Datos inválidos o email ya existe |
-| 500 | Error del servidor |
+- `400 Bad Request` - Email ya existe o datos inválidos
+- `500 Server Error` - Error interno
 
 ---
 
-#### POST `/api/auth/login`
-Inicia sesión de usuario.
+#### POST `/auth/login`
+Autentica un usuario y crea una sesión.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "email": "usuario@ejemplo.com",
@@ -70,33 +77,6 @@ Inicia sesión de usuario.
   "user": {
     "id": "uuid",
     "email": "usuario@ejemplo.com"
-  }
-}
-```
-
----
-
-#### POST `/api/auth/logout`
-Cierra la sesión actual.
-
-**Response (200):**
-```json
-{
-  "success": true
-}
-```
-
----
-
-#### GET `/api/auth/session`
-Obtiene la sesión actual del usuario.
-
-**Response (200):**
-```json
-{
-  "user": {
-    "id": "uuid",
-    "email": "usuario@ejemplo.com"
   },
   "empresa": {
     "id": "uuid",
@@ -107,16 +87,50 @@ Obtiene la sesión actual del usuario.
 
 ---
 
+#### POST `/auth/logout`
+Cierra la sesión actual del usuario.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Sesión cerrada"
+}
+```
+
+---
+
+#### GET `/auth/session`
+Obtiene la información de la sesión actual.
+
+**Response (200):**
+```json
+{
+  "user": {
+    "id": "uuid",
+    "email": "usuario@ejemplo.com"
+  },
+  "empresa": {
+    "id": "uuid",
+    "nombre": "Mi Empresa S.A.",
+    "email": "contacto@empresa.com"
+  }
+}
+```
+
+---
+
 ### 📦 Productos
 
-#### GET `/api/productos`
+#### GET `/productos`
 Lista todos los productos de la empresa.
 
 **Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `search` | string | Buscar por nombre o SKU |
-| `categoria` | UUID | Filtrar por categoría |
+```
+?search=keyword          # Buscar por nombre o SKU
+&categoria=uuid         # Filtrar por categoría
+&activo=true           # Filtrar por estado
+```
 
 **Response (200):**
 ```json
@@ -124,17 +138,18 @@ Lista todos los productos de la empresa.
   "productos": [
     {
       "id": "uuid",
-      "nombre": "Producto A",
-      "sku": "SKU-001",
-      "stock": 100,
-      "stock_minimo": 10,
-      "precio_costo": 5000,
-      "precio_venta": 7500,
+      "nombre": "Laptop Dell XPS 13",
+      "sku": "LAPTOP-001",
+      "stock": 15,
+      "stock_minimo": 5,
+      "precio_costo": 500000,
+      "precio_venta": 750000,
       "activo": true,
       "categoria": {
         "id": "uuid",
-        "nombre": "Categoría 1"
-      }
+        "nombre": "Electrónica"
+      },
+      "creado_en": "2024-01-15T10:30:00Z"
     }
   ]
 }
@@ -142,17 +157,17 @@ Lista todos los productos de la empresa.
 
 ---
 
-#### POST `/api/productos`
+#### POST `/productos`
 Crea un nuevo producto.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "nombre": "Nuevo Producto",
-  "sku": "SKU-002",
+  "sku": "NEW-001",
   "id_categoria": "uuid",
   "stock": 50,
-  "stock_minimo": 5,
+  "stock_minimo": 10,
   "precio_costo": 3000,
   "precio_venta": 4500,
   "descripcion": "Descripción del producto"
@@ -173,15 +188,16 @@ Crea un nuevo producto.
 
 ---
 
-#### PUT `/api/productos`
+#### PUT `/productos`
 Actualiza un producto existente.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "id": "uuid",
   "nombre": "Producto Actualizado",
   "precio_venta": 5000,
+  "stock_minimo": 15,
   "activo": true
 }
 ```
@@ -196,13 +212,14 @@ Actualiza un producto existente.
 
 ---
 
-#### DELETE `/api/productos?id={uuid}`
-Elimina un producto.
+#### DELETE `/productos?id={id}`
+Elimina un producto (soft delete).
 
 **Response (200):**
 ```json
 {
-  "success": true
+  "success": true,
+  "message": "Producto eliminado"
 }
 ```
 
@@ -210,15 +227,15 @@ Elimina un producto.
 
 ### 🔄 Movimientos de Inventario
 
-#### GET `/api/movimientos`
-Lista movimientos de inventario.
+#### GET `/movimientos`
+Lista todos los movimientos de inventario.
 
 **Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `tipo` | string | `todos`, `entradas`, `salidas` |
-| `periodo` | string | `1d`, `7d`, `30d` |
-| `export` | string | `csv` para exportar |
+```
+?tipo=todos            # todos, entradas, salidas
+&periodo=30d          # 1d, 7d, 30d, 3m, 1y
+&export=csv           # Opcional: exportar como CSV
+```
 
 **Response (200):**
 ```json
@@ -227,36 +244,36 @@ Lista movimientos de inventario.
     {
       "id": "uuid",
       "creado_en": "2024-01-15T10:30:00Z",
-      "producto": "Producto A",
-      "sku": "SKU-001",
+      "producto": "Laptop Dell XPS 13",
+      "sku": "LAPTOP-001",
       "tipo": "entrada",
-      "cantidad": 50,
-      "stock_antes": 100,
-      "stock_despues": 150,
-      "motivo": "Reabastecimiento"
+      "cantidad": 25,
+      "stock_antes": 10,
+      "stock_despues": 35,
+      "motivo": "Reabastecimiento de proveedor"
     }
   ],
   "stats": {
     "entradas": 500,
     "salidas": 300,
     "neto": 200,
-    "total": 50
+    "promedioDiario": 6.67
   }
 }
 ```
 
 ---
 
-#### POST `/api/movimientos`
+#### POST `/movimientos`
 Registra un nuevo movimiento de inventario.
 
-**Request Body:**
+**Request:**
 ```json
 {
   "id_producto": "uuid",
   "tipo": "entrada",
   "cantidad": 25,
-  "motivo": "Compra a proveedor"
+  "motivo": "Compra a proveedor ABC"
 }
 ```
 
@@ -272,8 +289,11 @@ Registra un nuevo movimiento de inventario.
 ```json
 {
   "success": true,
-  "movimiento": { "id": "uuid" },
-  "nuevoStock": 125
+  "movimiento": {
+    "id": "uuid",
+    "creado_en": "2024-01-15T10:30:00Z"
+  },
+  "nuevoStock": 35
 }
 ```
 
@@ -281,8 +301,8 @@ Registra un nuevo movimiento de inventario.
 
 ### 🏷️ Categorías
 
-#### GET `/api/categorias`
-Lista todas las categorías.
+#### GET `/categorias`
+Lista todas las categorías de la empresa.
 
 **Response (200):**
 ```json
@@ -290,8 +310,10 @@ Lista todas las categorías.
   "categorias": [
     {
       "id": "uuid",
-      "nombre": "Electrónicos",
-      "descripcion": "Productos electrónicos"
+      "nombre": "Electrónica",
+      "descripcion": "Productos electrónicos",
+      "activo": true,
+      "creado_en": "2024-01-01T00:00:00Z"
     }
   ]
 }
@@ -299,14 +321,14 @@ Lista todas las categorías.
 
 ---
 
-#### POST `/api/categorias`
+#### POST `/categorias`
 Crea una nueva categoría.
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "nombre": "Nueva Categoría",
-  "descripcion": "Descripción opcional"
+  "nombre": "Ropa",
+  "descripcion": "Prendas de vestir"
 }
 ```
 
@@ -322,8 +344,8 @@ Crea una nueva categoría.
 
 ### 📊 Dashboard
 
-#### GET `/api/dashboard`
-Obtiene estadísticas del dashboard.
+#### GET `/dashboard`
+Obtiene estadísticas y métricas del dashboard.
 
 **Response (200):**
 ```json
@@ -332,12 +354,35 @@ Obtiene estadísticas del dashboard.
     "totalProductos": 150,
     "productosActivos": 142,
     "valorInventario": 5000000,
-    "stockBajo": 8,
-    "sinStock": 2
+    "productosConStockBajo": 8,
+    "productosSinStock": 2,
+    "movimientosHoy": 12,
+    "movimientosEstaSemana": 87
   },
-  "movimientosRecientes": [],
-  "productosBajoStock": [],
-  "distribucionCategorias": []
+  "movimientosRecientes": [
+    {
+      "id": "uuid",
+      "producto": "Laptop",
+      "tipo": "salida",
+      "cantidad": 2,
+      "creado_en": "2024-01-15T14:30:00Z"
+    }
+  ],
+  "productosBajoStock": [
+    {
+      "id": "uuid",
+      "nombre": "Mouse Logitech",
+      "stock": 3,
+      "stock_minimo": 10
+    }
+  ],
+  "distribucionCategorias": [
+    {
+      "nombre": "Electrónica",
+      "cantidad": 52,
+      "porcentaje": 35
+    }
+  ]
 }
 ```
 
@@ -345,8 +390,14 @@ Obtiene estadísticas del dashboard.
 
 ### 🔔 Alertas
 
-#### GET `/api/alertas`
-Obtiene alertas de stock bajo.
+#### GET `/alertas`
+Obtiene alertas de stock bajo y eventos críticos.
+
+**Query Parameters:**
+```
+?estado=activas        # activas, resueltas, ignoradas
+&tipo=stock_bajo      # stock_bajo, caducado
+```
 
 **Response (200):**
 ```json
@@ -354,14 +405,38 @@ Obtiene alertas de stock bajo.
   "alertas": [
     {
       "id": "uuid",
-      "producto": "Producto X",
-      "sku": "SKU-X",
+      "producto": "Mouse Inalámbrico",
+      "sku": "MOUSE-001",
       "stock": 3,
       "stock_minimo": 10,
-      "tipo": "stock_bajo"
+      "tipo": "stock_bajo",
+      "estado": "activa",
+      "creado_en": "2024-01-15T10:00:00Z"
     }
   ],
-  "total": 5
+  "total": 5,
+  "activas": 5,
+  "resueltas": 2
+}
+```
+
+---
+
+#### PUT `/alertas/{id}`
+Marca una alerta como resuelta.
+
+**Request:**
+```json
+{
+  "estado": "resuelta"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "alerta": { "...": "..." }
 }
 ```
 
@@ -369,25 +444,42 @@ Obtiene alertas de stock bajo.
 
 ### 📈 Reportes
 
-#### GET `/api/reportes`
-Genera reportes de inventario.
+#### GET `/reportes`
+Genera reportes de inventario y movimientos.
 
 **Query Parameters:**
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `periodo` | string | `30d`, `3m`, `7m`, `1y` |
+```
+?periodo=30d          # 1d, 7d, 30d, 3m, 7m, 1y
+&tipo=general        # general, movimientos, categorias
+```
 
 **Response (200):**
 ```json
 {
-  "valorTotal": 5000000,
-  "rotacionPromedio": 2.5,
-  "skusActivos": 150,
+  "periodo": "últimos 30 días",
+  "stats": {
+    "valorTotal": 5000000,
+    "rotacionPromedio": 2.5,
+    "skusActivos": 150,
+    "entradastotales": 1200,
+    "salidastotales": 900,
+    "cambioneto": 300
+  },
   "movimientosMensuales": [
-    { "mes": "Ene", "entradas": 500, "salidas": 300 }
+    {
+      "mes": "Enero",
+      "entradas": 500,
+      "salidas": 300,
+      "neto": 200
+    }
   ],
   "distribucionCategorias": [
-    { "nombre": "Electrónicos", "porcentaje": 35, "cantidad": 52 }
+    {
+      "nombre": "Electrónica",
+      "cantidad": 52,
+      "valor": 1750000,
+      "porcentaje": 35
+    }
   ]
 }
 ```
@@ -396,8 +488,8 @@ Genera reportes de inventario.
 
 ### 🏢 Empresa
 
-#### GET `/api/empresa`
-Obtiene datos de la empresa.
+#### GET `/empresa`
+Obtiene datos de la empresa actual.
 
 **Response (200):**
 ```json
@@ -407,21 +499,32 @@ Obtiene datos de la empresa.
     "nombre": "Mi Empresa S.A.",
     "email": "contacto@miempresa.com",
     "telefono": "+506 8888-8888",
-    "direccion": "San José, Costa Rica"
+    "direccion": "San José, Costa Rica",
+    "activo": true,
+    "creado_en": "2024-01-01T00:00:00Z"
   }
 }
 ```
 
 ---
 
-#### PUT `/api/empresa`
+#### PUT `/empresa`
 Actualiza datos de la empresa.
 
-**Request Body:**
+**Request:**
 ```json
 {
-  "nombre": "Nuevo Nombre",
-  "telefono": "+506 9999-9999"
+  "nombre": "Nuevo Nombre S.A.",
+  "telefono": "+506 9999-9999",
+  "direccion": "Nueva dirección"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "empresa": { "...": "..." }
 }
 ```
 
@@ -429,21 +532,25 @@ Actualiza datos de la empresa.
 
 ## ⚠️ Códigos de Error
 
-| Código | Significado |
+| Código | Descripción |
 |--------|-------------|
-| 200 | Éxito |
-| 201 | Creado exitosamente |
-| 400 | Solicitud inválida |
-| 401 | No autenticado |
-| 403 | Sin permisos |
-| 404 | Recurso no encontrado |
-| 500 | Error del servidor |
+| 200 | OK - Éxito |
+| 201 | Created - Recurso creado |
+| 400 | Bad Request - Solicitud inválida |
+| 401 | Unauthorized - No autenticado |
+| 403 | Forbidden - Sin permisos |
+| 404 | Not Found - Recurso no encontrado |
+| 422 | Unprocessable Entity - Validación fallida |
+| 500 | Internal Server Error - Error del servidor |
 
 ---
 
-## 📝 Notas
+## 📝 Notas Generales
 
 - Todas las respuestas son en formato JSON
 - Las fechas usan formato ISO 8601
 - Los IDs son UUID v4
-- Los montos están en la moneda configurada (CRC por defecto)
+- Los montos están en CRC (colones costarricenses)
+- Las sesiones expiran después de 24 horas de inactividad
+- Implementar rate limiting: máx 100 requests/min por IP
+

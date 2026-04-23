@@ -1,275 +1,202 @@
-# 🗃️ Diseño de Base de Datos
+# 🗄️ Documentación de Base de Datos
 
 <p align="center">
-  <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/Supabase-RLS-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase"/>
+  <img src="https://img.shields.io/badge/Base%20de%20Datos-PostgreSQL%2015-336791?style=for-the-badge&logo=postgresql" alt="PostgreSQL"/>
+  <img src="https://img.shields.io/badge/Seguridad-RLS-brightgreen?style=for-the-badge" alt="RLS"/>
 </p>
 
 ---
 
-## 📊 Diagrama Entidad-Relación
+## 📊 Esquema de Base de Datos
 
-```mermaid
-erDiagram
-    EMPRESA ||--o{ USUARIO_EMPRESA : tiene
-    EMPRESA ||--o{ CLIENTE : tiene
-    EMPRESA ||--o{ PROVEEDOR : tiene
-    EMPRESA ||--o{ CATEGORIA : tiene
-    EMPRESA ||--o{ PRODUCTO : tiene
-    EMPRESA ||--o{ VENTA : realiza
-    EMPRESA ||--o{ COMPRA : realiza
-    EMPRESA ||--o{ MOVIMIENTO_INVENTARIO : registra
-    
-    CATEGORIA ||--o{ PRODUCTO : contiene
-    PRODUCTO ||--o{ PRODUCTO_PROVEEDOR : tiene
-    PROVEEDOR ||--o{ PRODUCTO_PROVEEDOR : provee
-    
-    CLIENTE ||--o{ VENTA : realiza
-    VENTA ||--o{ VENTA_DETALLE : contiene
-    PRODUCTO ||--o{ VENTA_DETALLE : incluido
-    
-    PROVEEDOR ||--o{ COMPRA : suministra
-    COMPRA ||--o{ COMPRA_DETALLE : contiene
-    PRODUCTO ||--o{ COMPRA_DETALLE : incluido
-    
-    PRODUCTO ||--o{ MOVIMIENTO_INVENTARIO : afecta
-    VENTA ||--o{ MOVIMIENTO_INVENTARIO : genera
-    COMPRA ||--o{ MOVIMIENTO_INVENTARIO : genera
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       CORE ENTITIES                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  ┌─────────────┐              ┌─────────────────┐               │
+│  │  empresa    │◄─────────────│ usuario_empresa │               │
+│  ├─────────────┤   1:N        ├─────────────────┤               │
+│  │ id (PK)     │              │ id_usuario (FK) │               │
+│  │ nombre      │              │ id_empresa (FK) │               │
+│  │ email       │              │ rol             │               │
+│  │ creado_en   │              │ creado_en       │               │
+│  └──────┬──────┘              └─────────────────┘               │
+│         │                                                         │
+│         │ 1:N                                                     │
+│         └──────────────┬───────────────┬──────────┐              │
+│                        │               │          │              │
+│  ┌───────────────┐  ┌──▼─────────┐ ┌──▼────┐ ┌──▼─────────┐   │
+│  │   categoria   │  │  producto   │ │ alerta│ │  movimien* │   │
+│  ├───────────────┤  ├─────────────┤ ├───────┤ ├────────────┤   │
+│  │ id (PK)       │  │ id (PK)     │ │ id    │ │ id (PK)    │   │
+│  │ id_empresa    │  │ id_empresa  │ │ id_em │ │ id_empresa │   │
+│  │ nombre        │  │ id_categoria│ │ id_pr │ │ id_producto│   │
+│  │ descripcion   │  │ nombre      │ │ tipo  │ │ tipo (E/S) │   │
+│  │ activo        │  │ sku         │ │ estado│ │ cantidad   │   │
+│  │ creado_en     │  │ precio_costo│ │ leido │ │ motivo     │   │
+│  └───────────────┘  │ precio_venta│ │ creado│ │ creado_en  │   │
+│                     │ stock       │ └───────┘ └────────────┘   │
+│                     │ stock_minimo│                              │
+│                     │ activo      │                              │
+│                     │ creado_en   │                              │
+│                     └─────────────┘                              │
+│                                                                   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 📋 Tablas Principales
 
-### 🏢 `empresa`
-Almacena la información de cada empresa/negocio registrado.
+### 1. **empresa**
+Información de las empresas que utilizan el sistema.
 
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id` | UUID | Identificador único (PK) |
-| `nombre` | TEXT | Nombre de la empresa |
-| `email` | TEXT | Email único de contacto |
-| `telefono` | TEXT | Teléfono de contacto |
-| `direccion` | TEXT | Dirección física |
-| `id_fiscal` | TEXT | Cédula jurídica |
-| `logo_url` | TEXT | URL del logo |
-| `activo` | BOOLEAN | Estado de la cuenta |
-| `creado_en` | TIMESTAMPTZ | Fecha de creación |
-| `actualizado_en` | TIMESTAMPTZ | Última actualización |
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id | UUID | PK | Identificador único |
+| nombre | VARCHAR(255) | NOT NULL | Nombre de la empresa |
+| email | VARCHAR(255) | NOT NULL, UNIQUE | Email de contacto |
+| descripcion | TEXT | | Descripción de la empresa |
+| activo | BOOLEAN | DEFAULT true | Estado de la empresa |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha de creación |
+| actualizado_en | TIMESTAMP | DEFAULT NOW() | Última actualización |
 
----
-
-### 👤 `usuario_empresa`
-Tabla de relación entre usuarios de Supabase Auth y empresas (multi-tenant).
-
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id_usuario` | UUID | ID del usuario (auth.uid()) |
-| `id_empresa` | UUID | ID de la empresa (FK) |
-| `rol` | rol_usuario | Rol: admin, operador, viewer |
-| `creado_en` | TIMESTAMPTZ | Fecha de asignación |
-
-**PK**: (id_usuario, id_empresa)
-
----
-
-### 📦 `producto`
-Catálogo de productos de cada empresa.
-
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id` | UUID | Identificador único (PK) |
-| `id_empresa` | UUID | Empresa propietaria (FK) |
-| `id_categoria` | UUID | Categoría del producto (FK) |
-| `nombre` | TEXT | Nombre del producto |
-| `descripcion` | TEXT | Descripción detallada |
-| `sku` | TEXT | Código único por empresa |
-| `precio_costo` | NUMERIC(12,2) | Precio de compra |
-| `precio_venta` | NUMERIC(12,2) | Precio de venta |
-| `stock` | INTEGER | Cantidad actual |
-| `stock_minimo` | INTEGER | Nivel mínimo de alerta |
-| `activo` | BOOLEAN | Producto activo |
-| `creado_en` | TIMESTAMPTZ | Fecha de creación |
-| `actualizado_en` | TIMESTAMPTZ | Última actualización |
-
-**Constraints**:
-- `UNIQUE (id_empresa, sku)`
-- `CHECK (precio_costo >= 0)`
-- `CHECK (precio_venta >= 0)`
-- `CHECK (stock >= 0)`
-
----
-
-### 🏷️ `categoria`
-Categorías para organizar productos.
-
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id` | UUID | Identificador único (PK) |
-| `id_empresa` | UUID | Empresa propietaria (FK) |
-| `nombre` | TEXT | Nombre de categoría |
-| `descripcion` | TEXT | Descripción |
-| `creado_en` | TIMESTAMPTZ | Fecha de creación |
-
-**Constraints**: `UNIQUE (id_empresa, nombre)`
-
----
-
-### 🔄 `movimiento_inventario`
-Registro de todos los movimientos de stock.
-
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id` | UUID | Identificador único (PK) |
-| `id_empresa` | UUID | Empresa (FK) |
-| `id_producto` | UUID | Producto afectado (FK) |
-| `id_venta` | UUID | Venta relacionada (FK, opcional) |
-| `id_compra` | UUID | Compra relacionada (FK, opcional) |
-| `tipo` | tipo_movimiento | Tipo de movimiento |
-| `cantidad` | INTEGER | Cantidad movida |
-| `stock_antes` | INTEGER | Stock antes del movimiento |
-| `stock_despues` | INTEGER | Stock después del movimiento |
-| `motivo` | TEXT | Razón del movimiento |
-| `creado_en` | TIMESTAMPTZ | Fecha del movimiento |
-
----
-
-### 🛒 `venta` y `venta_detalle`
-Ventas y su detalle de productos.
-
-**venta:**
-| Columna | Tipo | Descripción |
-|---------|------|-------------|
-| `id` | UUID | PK |
-| `id_empresa` | UUID | FK |
-| `id_cliente` | UUID | Cliente (FK, opcional) |
-| `numero` | INTEGER | Número de venta |
-| `estado` | estado_venta | pendiente, completada, cancelada |
-| `subtotal` | NUMERIC | Subtotal |
-| `descuento` | NUMERIC | Descuento aplicado |
-| `impuesto` | NUMERIC | Impuesto |
-| `monto_total` | NUMERIC | Total a pagar |
-| `metodo_pago` | metodo_pago_tipo | Forma de pago |
-
----
-
-### 📥 `compra` y `compra_detalle`
-Compras a proveedores y su detalle.
-
-Similar estructura a ventas, con estado: pendiente, recibida, parcial, cancelada.
-
----
-
-## 🔢 Tipos Enumerados
-
+**Índices:**
 ```sql
--- Tipos de movimiento de inventario
-CREATE TYPE tipo_movimiento AS ENUM (
-    'entrada',           -- Ingreso de mercadería
-    'salida',            -- Venta/consumo
-    'ajuste_positivo',   -- Corrección +
-    'ajuste_negativo',   -- Corrección -
-    'devolucion_venta',  -- Cliente devuelve
-    'devolucion_compra'  -- Devuelve a proveedor
-);
-
--- Estados de venta
-CREATE TYPE estado_venta AS ENUM (
-    'pendiente',
-    'completada',
-    'cancelada',
-    'anulada'
-);
-
--- Roles de usuario
-CREATE TYPE rol_usuario AS ENUM (
-    'admin',    -- Control total
-    'operador', -- Operaciones diarias
-    'viewer'    -- Solo lectura
-);
-
--- Métodos de pago
-CREATE TYPE metodo_pago_tipo AS ENUM (
-    'efectivo',
-    'tarjeta',
-    'transferencia',
-    'credito',
-    'otro'
-);
+CREATE INDEX idx_empresa_email ON empresa(email);
+CREATE INDEX idx_empresa_activo ON empresa(activo);
 ```
 
 ---
 
-## ⚡ Funciones y Triggers
+### 2. **usuario_empresa**
+Relación entre usuarios de Supabase Auth y empresas (multi-tenant).
 
-### Funciones Helper
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id_usuario | UUID | FK (auth.users.id) | Usuario autenticado |
+| id_empresa | UUID | FK (empresa.id) | Empresa asignada |
+| rol | ENUM | DEFAULT 'viewer' | admin, editor, viewer |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha de asignación |
+
+**Tipos Enumerados:**
+```sql
+CREATE TYPE usuario_rol AS ENUM ('admin', 'editor', 'viewer');
+```
+
+**Política RLS:**
+- Usuarios solo ven sus propias asignaciones de empresa
+
+---
+
+### 3. **categoria**
+Categorías para clasificar productos.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id | UUID | PK | Identificador único |
+| id_empresa | UUID | FK (empresa.id) | Empresa propietaria |
+| nombre | VARCHAR(100) | NOT NULL | Nombre de categoría |
+| descripcion | TEXT | | Descripción opcional |
+| activo | BOOLEAN | DEFAULT true | Estado |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha de creación |
+| actualizado_en | TIMESTAMP | DEFAULT NOW() | Última actualización |
+
+---
+
+### 4. **producto**
+Catálogo de productos del inventario.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id | UUID | PK | Identificador único |
+| id_empresa | UUID | FK (empresa.id) | Empresa propietaria |
+| id_categoria | UUID | FK (categoria.id) | Categoría |
+| nombre | VARCHAR(255) | NOT NULL | Nombre del producto |
+| descripcion | TEXT | | Descripción completa |
+| sku | VARCHAR(50) | UNIQUE per empresa | Código SKU |
+| stock | INTEGER | DEFAULT 0 | Cantidad actual |
+| stock_minimo | INTEGER | DEFAULT 0 | Stock de alerta |
+| precio_costo | DECIMAL(12,2) | DEFAULT 0 | Precio de costo |
+| precio_venta | DECIMAL(12,2) | DEFAULT 0 | Precio de venta |
+| activo | BOOLEAN | DEFAULT true | Producto activo |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha de creación |
+| actualizado_en | TIMESTAMP | DEFAULT NOW() | Última actualización |
+
+**Índices:**
+```sql
+CREATE INDEX idx_producto_empresa ON producto(id_empresa);
+CREATE INDEX idx_producto_categoria ON producto(id_categoria);
+CREATE INDEX idx_producto_sku ON producto(sku);
+```
+
+---
+
+### 5. **movimiento_inventario**
+Historial de todas las transacciones de inventario.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id | UUID | PK | Identificador único |
+| id_empresa | UUID | FK (empresa.id) | Empresa |
+| id_producto | UUID | FK (producto.id) | Producto afectado |
+| tipo | ENUM | NOT NULL | entrada, salida, ajuste |
+| cantidad | INTEGER | NOT NULL | Cantidad movida |
+| stock_antes | INTEGER | NOT NULL | Stock previo |
+| stock_despues | INTEGER | NOT NULL | Stock posterior |
+| motivo | VARCHAR(255) | | Razón del movimiento |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha del movimiento |
+
+**Tipos Enumerados:**
+```sql
+CREATE TYPE tipo_movimiento AS ENUM ('entrada', 'salida', 'ajuste');
+```
+
+**Índices:**
+```sql
+CREATE INDEX idx_movimiento_empresa_fecha ON movimiento_inventario(id_empresa, creado_en DESC);
+CREATE INDEX idx_movimiento_producto ON movimiento_inventario(id_producto);
+```
+
+---
+
+### 6. **alerta**
+Sistema de alertas para stock bajo y eventos críticos.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|---------------|-------------|
+| id | UUID | PK | Identificador único |
+| id_empresa | UUID | FK (empresa.id) | Empresa |
+| id_producto | UUID | FK (producto.id) | Producto relacionado |
+| tipo_alerta | ENUM | NOT NULL | stock_bajo, caducado |
+| descripcion | TEXT | | Detalles de alerta |
+| estado | ENUM | DEFAULT 'activa' | activa, resuelta, ignorada |
+| leido_en | TIMESTAMP | | Marca de lectura |
+| creado_en | TIMESTAMP | DEFAULT NOW() | Fecha de creación |
+
+---
+
+## 🔒 Row Level Security (RLS)
+
+Todas las tablas están protegidas con políticas RLS para garantizar el aislamiento de datos:
 
 ```sql
--- Obtener empresa del usuario autenticado
+-- Función auxiliar para obtener empresa del usuario actual
 CREATE FUNCTION fn_empresa_del_usuario()
-RETURNS UUID AS $$
-    SELECT id_empresa 
-    FROM usuario_empresa 
-    WHERE id_usuario = auth.uid() 
-    LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+RETURNS UUID LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT id_empresa FROM usuario_empresa 
+  WHERE id_usuario = auth.uid() LIMIT 1;
+$$;
 
--- Obtener rol del usuario autenticado
-CREATE FUNCTION fn_rol_del_usuario()
-RETURNS TEXT AS $$
-    SELECT rol::TEXT 
-    FROM usuario_empresa 
-    WHERE id_usuario = auth.uid() 
-    LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-```
-
-### Trigger: Actualización de Stock Automática
-
-```sql
--- Al completar una venta, descuenta stock automáticamente
-CREATE FUNCTION fn_trigger_venta_estado()
-RETURNS TRIGGER AS $$
-BEGIN
-    IF NEW.estado = 'completada' AND OLD.estado != 'completada' THEN
-        -- Descontar stock de cada producto
-        FOR det IN SELECT * FROM venta_detalle WHERE id_venta = NEW.id LOOP
-            PERFORM fn_registrar_movimiento(...);
-        END LOOP;
-    END IF;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-```
-
-### Trigger: Timestamps Automáticos
-
-```sql
--- Actualiza actualizado_en automáticamente
-CREATE FUNCTION fn_set_actualizado_en()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.actualizado_en = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-```
-
----
-
-## 🔐 Row Level Security (RLS)
-
-### Políticas de Seguridad
-
-Cada tabla tiene políticas que aseguran el aislamiento de datos:
-
-```sql
--- Política SELECT para producto
+-- Políticas de lectura
 CREATE POLICY pol_producto_select ON producto
   FOR SELECT TO public
   USING (id_empresa = fn_empresa_del_usuario());
 
--- Política INSERT para producto
+-- Políticas de inserción
 CREATE POLICY pol_producto_insert ON producto
   FOR INSERT TO public
   WITH CHECK (
@@ -278,13 +205,13 @@ CREATE POLICY pol_producto_insert ON producto
     )
   );
 
--- Política UPDATE para producto
+-- Políticas de actualización
 CREATE POLICY pol_producto_update ON producto
   FOR UPDATE TO public
   USING (id_empresa = fn_empresa_del_usuario())
   WITH CHECK (id_empresa = fn_empresa_del_usuario());
 
--- Política DELETE para producto
+-- Políticas de eliminación
 CREATE POLICY pol_producto_delete ON producto
   FOR DELETE TO public
   USING (id_empresa = fn_empresa_del_usuario());
@@ -294,51 +221,110 @@ CREATE POLICY pol_producto_delete ON producto
 
 ## 📊 Vistas
 
-### `v_historial_inventario`
-Vista para consultar movimientos con datos del producto.
+### v_historial_inventario
+Vista para análisis de movimientos con información enriquecida del producto.
 
 ```sql
 CREATE VIEW v_historial_inventario AS
 SELECT 
-    m.id,
-    m.id_empresa,
-    m.creado_en,
-    p.nombre AS producto,
-    p.sku,
-    m.tipo,
-    m.cantidad,
-    m.stock_antes,
-    m.stock_despues,
-    m.motivo
+  m.id,
+  m.id_empresa,
+  m.id_producto,
+  p.nombre AS producto_nombre,
+  p.sku,
+  c.nombre AS categoria_nombre,
+  m.tipo,
+  m.cantidad,
+  m.stock_antes,
+  m.stock_despues,
+  m.motivo,
+  m.creado_en
 FROM movimiento_inventario m
-JOIN producto p ON m.id_producto = p.id;
+JOIN producto p ON m.id_producto = p.id
+JOIN categoria c ON p.id_categoria = c.id
+ORDER BY m.creado_en DESC;
 ```
 
 ---
 
-## 📈 Índices
+## 🔧 Funciones y Triggers
+
+### Función: fn_rol_del_usuario
+Obtiene el rol del usuario autenticado en su empresa.
 
 ```sql
--- Índices para optimizar consultas frecuentes
-CREATE INDEX idx_producto_empresa ON producto(id_empresa);
-CREATE INDEX idx_producto_categoria ON producto(id_categoria);
-CREATE INDEX idx_producto_sku ON producto(id_empresa, sku);
-CREATE INDEX idx_mov_producto ON movimiento_inventario(id_producto);
-CREATE INDEX idx_mov_empresa_fecha ON movimiento_inventario(id_empresa, creado_en DESC);
+CREATE FUNCTION fn_rol_del_usuario()
+RETURNS TEXT LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT rol::TEXT FROM usuario_empresa 
+  WHERE id_usuario = auth.uid() LIMIT 1;
+$$;
+```
+
+### Trigger: Actualizar timestamp
+Actualiza automáticamente `actualizado_en` en cada modificación.
+
+```sql
+CREATE FUNCTION fn_update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.actualizado_en = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_producto
+  BEFORE UPDATE ON producto
+  FOR EACH ROW
+  EXECUTE FUNCTION fn_update_timestamp();
 ```
 
 ---
 
-## 📝 Justificación del Diseño
+## 📈 Performance
 
-1. **Multi-tenant con RLS**: Permite que múltiples empresas usen la misma base de datos de forma segura y aislada.
+### Recomendaciones
+- Usar índices en foreign keys y campos de búsqueda frecuente
+- Materializar vistas complejas para reportes pesados
+- Archivar movimientos con antigüedad > 2 años
+- Configurar backups automáticos en Supabase Pro
 
-2. **UUIDs como PK**: Evita conflictos en sistemas distribuidos y mejora la seguridad.
+### Monitoreo
+```sql
+-- Ver tamaño de tablas
+SELECT 
+  schemaname, tablename,
+  pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) AS size
+FROM pg_tables
+WHERE schemaname = 'public'
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
+```
 
-3. **Timestamps automáticos**: Triggers mantienen `actualizado_en` siempre correcto.
+---
 
-4. **Stock calculado por triggers**: El stock se actualiza automáticamente con cada movimiento, garantizando integridad.
+## 🔄 Migración de Datos
 
-5. **Tipos enumerados**: Validan datos a nivel de base de datos, previniendo errores.
+Los scripts SQL están en `/scripts/`:
+- `001_create_schema.sql` - Esquema completo
+- `002_add_rls_policies.sql` - Políticas de seguridad
 
-6. **Constraints CHECK**: Aseguran que precios y stocks no sean negativos.
+Para ejecutar:
+```bash
+psql -f scripts/001_create_schema.sql
+psql -f scripts/002_add_rls_policies.sql
+```
+
+---
+
+## 📊 Estadísticas
+
+| Métrica | Valor |
+|---------|-------|
+| Tablas principales | 6 |
+| Vistas | 1 |
+| Funciones | 3+ |
+| Triggers | 3+ |
+| Políticas RLS | 20+ |
+| Índices | 8+ |
+
