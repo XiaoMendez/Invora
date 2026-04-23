@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="public/images/invora-logo.png" alt="Invora Logo" width="300"/>
+  <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Invora-Banner-8CYKOMUQQr0Ei3wdRpcLHH4Sc1EJ3f.png" alt="Invora Banner" width="100%"/>
 </p>
-
-<h1 align="center">INVORA</h1>
 
 <p align="center">
   <strong>Sistema de Gestión de Inventario Inteligente para PYMEs</strong>
