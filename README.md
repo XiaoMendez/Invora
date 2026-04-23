@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/images/invora-logo.png" alt="Invora Logo" width="300"/>
+  <img src="public/images/invora-logo2.png" alt="Invora Logo" width="300"/>
 </p>
 
 <h1 align="center">INVORA</h1>
@@ -13,14 +13,6 @@
   <img src="https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript" alt="TypeScript"/>
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase" alt="Supabase"/>
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind"/>
-</p>
-
-<p align="center">
-  <a href="#-descripción">Descripción</a> •
-  <a href="#-características">Características</a> •
-  <a href="#-tecnologías">Tecnologías</a> •
-  <a href="#-documentación">Documentación</a> •
-  <a href="#-instalación">Instalación</a>
 </p>
 
 ---
