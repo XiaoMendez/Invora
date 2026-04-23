@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/images/Invora-Banner.png" alt="Invora Logo" width="300"/>
+  <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Invora-Banner-8CYKOMUQQr0Ei3wdRpcLHH4Sc1EJ3f.png" alt="Invora Banner" width="100%"/>
 </p>
 
 <p align="center">
