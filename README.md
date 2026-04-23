@@ -19,8 +19,6 @@
   <a href="#-descripción">Descripción</a> •
   <a href="#-características">Características</a> •
   <a href="#-tecnologías">Tecnologías</a> •
-  <a href="#-instalación">Instalación</a> •
-  <a href="#-documentación">Documentación</a>
 </p>
 
 ---
@@ -41,8 +39,6 @@ Desarrollar una solución web completa que permita a las PYMEs:
 
 ## ✨ Características
 
-### Implementadas (75-80%)
-
 | Módulo | Estado | Descripción |
 |--------|--------|-------------|
 | 🔐 **Autenticación** | ✅ Completo | Registro, login, verificación de email con Supabase Auth |
@@ -50,7 +46,7 @@ Desarrollar una solución web completa que permita a las PYMEs:
 | 📊 **Dashboard** | ✅ Completo | Métricas en tiempo real, gráficos de rendimiento |
 | 🔄 **Movimientos** | ✅ Completo | Entradas, salidas, ajustes con historial completo |
 | 📈 **Reportes** | ✅ Completo | Análisis por período, exportación CSV |
-| 🔔 **Alertas** | ✅ Completo | Notificaciones de stock bajo |
+| 🔔 **Alertas** | 🔄 En Proceso | Notificaciones de stock bajo |
 | ⚙️ **Configuración** | ✅ Completo | Perfil de empresa, preferencias |
 | 🌐 **Landing Page** | ✅ Completo | Página de presentación con escena 3D |
 
@@ -105,75 +101,6 @@ Desarrollar una solución web completa que permita a las PYMEs:
 - Cuenta en Supabase
 - Git
 
-### Pasos de Instalación
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/XiaoMendez/Invora.git
-cd Invora
-
-# 2. Instalar dependencias
-pnpm install
-
-# 3. Configurar variables de entorno
-cp .env.example .env.local
-# Editar .env.local con tus credenciales de Supabase
-
-# 4. Ejecutar migraciones de base de datos
-# En Supabase SQL Editor, ejecutar:
-# - scripts/001_create_schema.sql
-# - scripts/002_add_rls_policies.sql
-
-# 5. Iniciar servidor de desarrollo
-pnpm dev
-```
-
-### Variables de Entorno Requeridas
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=tu-url-de-supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
-```
-
----
-
-## 📸 Capturas de Pantalla
-
-### Landing Page
-<p align="center">
-  <em>Página de inicio con escena 3D interactiva</em>
-</p>
-
-### Dashboard
-<p align="center">
-  <em>Panel de control con métricas en tiempo real</em>
-</p>
-
-### Gestión de Productos
-<p align="center">
-  <em>Interfaz para administrar el catálogo de productos</em>
-</p>
-
-### Movimientos de Inventario
-<p align="center">
-  <em>Registro y seguimiento de entradas/salidas</em>
-</p>
-
----
-
-## 📚 Documentación
-
-| Documento | Descripción |
-|-----------|-------------|
-| [📐 ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Arquitectura del sistema |
-| [🗃️ DATABASE.md](./docs/DATABASE.md) | Diseño de base de datos |
-| [🔌 API.md](./docs/API.md) | Documentación de endpoints |
-| [🚀 DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Guía de despliegue |
-| [🔮 ROADMAP.md](./docs/ROADMAP.md) | Funcionalidades pendientes |
-| [🤖 AI_USAGE.md](./docs/AI_USAGE.md) | Uso de IA en el desarrollo |
-
----
 
 ## 👥 Equipo
 
@@ -185,7 +112,7 @@ SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
 
 ## 📄 Licencia
 
-Este proyecto fue desarrollado como parte del curso de Desarrollo Web en la Universidad.
+Este proyecto fue desarrollado como parte del curso de Desarrollo Web.
 
 ---
 
