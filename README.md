@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/images/invora-logo2.png" alt="Invora Logo" width="300"/>
+  <img src="public/images/Invora-logo2.png" alt="Invora Logo" width="300"/>
 </p>
 
 <h1 align="center">INVORA</h1>
