@@ -9,7 +9,10 @@ export async function POST(request: Request) {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    console.log("[v0] Setup API - User:", user?.id, "Auth Error:", authError?.message)
+
     if (authError || !user) {
+      console.log("[v0] Setup API - Not authenticated")
       return NextResponse.json(
         { error: "No autenticado" },
         { status: 401 }
@@ -17,11 +20,13 @@ export async function POST(request: Request) {
     }
 
     // Check if user already has an empresa
-    const { data: existingRelation } = await supabase
+    const { data: existingRelation, error: checkError } = await supabase
       .from("usuario_empresa")
       .select("id_empresa")
       .eq("id_usuario", user.id)
       .single()
+
+    console.log("[v0] Setup API - Existing relation check:", existingRelation, "Error:", checkError?.message)
 
     if (existingRelation?.id_empresa) {
       return NextResponse.json(
@@ -32,6 +37,8 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { nombre, email, telefono, direccion, id_fiscal } = body
+
+    console.log("[v0] Setup API - Creating empresa:", { nombre, email })
 
     if (!nombre?.trim()) {
       return NextResponse.json(
@@ -60,10 +67,12 @@ export async function POST(request: Request) {
       .select("id")
       .single()
 
+    console.log("[v0] Setup API - Empresa created:", empresa, "Error:", empresaError?.message, empresaError?.code, empresaError?.details)
+
     if (empresaError) {
       console.error("[v0] Error creating empresa:", empresaError)
       return NextResponse.json(
-        { error: "Error al crear la empresa" },
+        { error: "Error al crear la empresa: " + empresaError.message },
         { status: 500 }
       )
     }
