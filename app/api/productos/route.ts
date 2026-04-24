@@ -48,16 +48,32 @@ export async function POST(request: Request) {
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion } = body
+    const {
+      nombre,
+      sku,
+      id_categoria,
+      stock_minimo,
+      precio_costo,
+      precio_venta,
+      descripcion,
+      cantidad_inicial,
+      id_proveedor,
+      precio_compra,
+    } = body
 
     if (!nombre?.trim()) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
     }
 
+    const cantidadInicial = parseInt(cantidad_inicial) || 0
+    if (cantidadInicial > 0 && !id_proveedor) {
+      return NextResponse.json({ error: "Para stock inicial debes seleccionar un proveedor" }, { status: 400 })
+    }
+
     const insertData: Record<string, unknown> = {
       id_empresa: empresaId,
       nombre: nombre.trim(),
-      stock: parseInt(stock) || 0,
+      stock: 0,
       stock_minimo: parseInt(stock_minimo) || 0,
       precio_costo: parseFloat(precio_costo) || 0,
       precio_venta: parseFloat(precio_venta) || 0,
@@ -72,21 +88,55 @@ export async function POST(request: Request) {
       .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
       .single()
 
-    if (error) throw error
+    if (error || !producto) throw error
 
-    // Record initial stock movement
-    if (parseInt(stock) > 0) {
-      await supabase
-        .from("movimiento_inventario")
+    if (cantidadInicial > 0) {
+      const { data: proveedor, error: proveedorError } = await supabase
+        .from("proveedor")
+        .select("id")
+        .eq("id", id_proveedor)
+        .eq("id_empresa", empresaId)
+        .single()
+
+      if (proveedorError || !proveedor) {
+        return NextResponse.json({ error: "Proveedor no encontrado" }, { status: 404 })
+      }
+
+      const precioCompra = parseFloat(precio_compra) || parseFloat(precio_costo) || 0
+
+      const { data: compra, error: compraError } = await supabase
+        .from("compra")
         .insert({
           id_empresa: empresaId,
-          id_producto: producto.id,
-          tipo: "entrada",
-          cantidad: parseInt(stock),
-          stock_antes: 0,
-          stock_despues: parseInt(stock),
-          motivo: "Stock inicial al crear producto",
+          id_proveedor,
+          estado: "recibida",
+          notas: `Compra inicial al crear producto ${producto.nombre}`,
         })
+        .select("id")
+        .single()
+
+      if (compraError || !compra) throw compraError
+
+      const { error: detalleError } = await supabase.from("compra_detalle").insert({
+        id_compra: compra.id,
+        id_producto: producto.id,
+        cantidad: cantidadInicial,
+        precio_unitario: precioCompra,
+      })
+
+      if (detalleError) throw detalleError
+
+      await supabase
+        .from("producto_proveedor")
+        .upsert(
+          {
+            id_producto: producto.id,
+            id_proveedor,
+            precio_compra: precioCompra,
+            es_principal: true,
+          },
+          { onConflict: "id_producto,id_proveedor" }
+        )
     }
 
     return NextResponse.json({ producto, success: true })
