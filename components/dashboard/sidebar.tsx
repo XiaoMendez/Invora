@@ -7,6 +7,8 @@ import Image from "next/image"
 import {
   LayoutDashboard,
   Package,
+  Users,
+  Truck,
   BarChart3,
   ArrowLeftRight,
   Bell,
@@ -31,6 +33,8 @@ import { createClient } from "@/lib/supabase/client"
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Productos", href: "/dashboard/productos", icon: Package },
+  { label: "Clientes", href: "/dashboard/clientes", icon: Users },
+  { label: "Proveedores", href: "/dashboard/proveedores", icon: Truck },
   { label: "Movimientos", href: "/dashboard/movimientos", icon: ArrowLeftRight },
   { label: "Reportes", href: "/dashboard/reportes", icon: BarChart3 },
   { label: "Alertas", href: "/dashboard/alertas", icon: Bell, badge: 3 },
