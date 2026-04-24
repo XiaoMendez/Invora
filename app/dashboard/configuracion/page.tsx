@@ -9,6 +9,8 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle,
+  Users,
+  Truck,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -25,6 +27,8 @@ export default function ConfiguracionPage() {
   const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null)
 
   const { data, error, isLoading } = useSWR("/api/empresa", fetcher)
+  const { data: clientesData } = useSWR("/api/clientes", fetcher)
+  const { data: proveedoresData } = useSWR("/api/proveedores", fetcher)
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -32,6 +36,9 @@ export default function ConfiguracionPage() {
     direccion: "",
     id_fiscal: "",
   })
+  const [clienteForm, setClienteForm] = useState({ nombre: "", apellido: "", correo: "", telefono: "" })
+  const [proveedorForm, setProveedorForm] = useState({ nombre: "", correo: "", telefono: "" })
+  const [savingTerceros, setSavingTerceros] = useState(false)
 
   useEffect(() => {
     if (data?.empresa) {
@@ -74,6 +81,46 @@ export default function ConfiguracionPage() {
       setSaving(false)
     }
   }
+
+
+  const handleAddCliente = async () => {
+    if (!clienteForm.nombre.trim()) return
+    setSavingTerceros(true)
+    try {
+      const res = await fetch("/api/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(clienteForm),
+      })
+      if (res.ok) {
+        setClienteForm({ nombre: "", apellido: "", correo: "", telefono: "" })
+        mutate("/api/clientes")
+      }
+    } finally {
+      setSavingTerceros(false)
+    }
+  }
+
+  const handleAddProveedor = async () => {
+    if (!proveedorForm.nombre.trim()) return
+    setSavingTerceros(true)
+    try {
+      const res = await fetch("/api/proveedores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(proveedorForm),
+      })
+      if (res.ok) {
+        setProveedorForm({ nombre: "", correo: "", telefono: "" })
+        mutate("/api/proveedores")
+      }
+    } finally {
+      setSavingTerceros(false)
+    }
+  }
+
+  const clientes = clientesData?.clientes || []
+  const proveedores = proveedoresData?.proveedores || []
 
   if (isLoading) {
     return (
@@ -120,6 +167,10 @@ export default function ConfiguracionPage() {
           <TabsTrigger value="seguridad" className="text-xs gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
             <Shield className="h-3.5 w-3.5" />
             Seguridad
+          </TabsTrigger>
+          <TabsTrigger value="terceros" className="text-xs gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
+            <Users className="h-3.5 w-3.5" />
+            Clientes/Proveedores
           </TabsTrigger>
         </TabsList>
 
@@ -275,6 +326,72 @@ export default function ConfiguracionPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+
+        <TabsContent value="terceros" className="mt-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card className="glass-card border-border/30">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  Clientes
+                </CardTitle>
+                <CardDescription>Agrega clientes para registrar ventas.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Nombre" value={clienteForm.nombre} onChange={(e) => setClienteForm({ ...clienteForm, nombre: e.target.value })} className="bg-secondary/50 border-border/30" />
+                  <Input placeholder="Apellido" value={clienteForm.apellido} onChange={(e) => setClienteForm({ ...clienteForm, apellido: e.target.value })} className="bg-secondary/50 border-border/30" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Correo" value={clienteForm.correo} onChange={(e) => setClienteForm({ ...clienteForm, correo: e.target.value })} className="bg-secondary/50 border-border/30" />
+                  <Input placeholder="Telefono" value={clienteForm.telefono} onChange={(e) => setClienteForm({ ...clienteForm, telefono: e.target.value })} className="bg-secondary/50 border-border/30" />
+                </div>
+                <Button onClick={handleAddCliente} disabled={savingTerceros || !clienteForm.nombre.trim()}>
+                  {savingTerceros && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Agregar Cliente
+                </Button>
+                <Separator className="bg-border/30" />
+                <div className="max-h-44 overflow-y-auto space-y-2">
+                  {clientes.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Aun no hay clientes registrados.</p>
+                  ) : clientes.map((c: { id: string; nombre: string; apellido?: string }) => (
+                    <div key={c.id} className="text-sm text-foreground">{c.nombre} {c.apellido || ""}</div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-border/30">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Truck className="h-4 w-4 text-primary" />
+                  Proveedores
+                </CardTitle>
+                <CardDescription>Agrega proveedores para registrar compras.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Input placeholder="Nombre" value={proveedorForm.nombre} onChange={(e) => setProveedorForm({ ...proveedorForm, nombre: e.target.value })} className="bg-secondary/50 border-border/30" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Correo" value={proveedorForm.correo} onChange={(e) => setProveedorForm({ ...proveedorForm, correo: e.target.value })} className="bg-secondary/50 border-border/30" />
+                  <Input placeholder="Telefono" value={proveedorForm.telefono} onChange={(e) => setProveedorForm({ ...proveedorForm, telefono: e.target.value })} className="bg-secondary/50 border-border/30" />
+                </div>
+                <Button onClick={handleAddProveedor} disabled={savingTerceros || !proveedorForm.nombre.trim()}>
+                  {savingTerceros && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  Agregar Proveedor
+                </Button>
+                <Separator className="bg-border/30" />
+                <div className="max-h-44 overflow-y-auto space-y-2">
+                  {proveedores.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Aun no hay proveedores registrados.</p>
+                  ) : proveedores.map((p: { id: string; nombre: string }) => (
+                    <div key={p.id} className="text-sm text-foreground">{p.nombre}</div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

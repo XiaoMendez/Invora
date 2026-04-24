@@ -54,6 +54,11 @@ interface Categoria {
   nombre: string
 }
 
+interface Proveedor {
+  id: string
+  nombre: string
+}
+
 interface Producto {
   id: string
   nombre: string
@@ -88,14 +93,19 @@ export default function ProductosPage() {
     stock_minimo: "0",
     precio_costo: "0",
     precio_venta: "0",
+    cantidad_inicial: "0",
+    id_proveedor: "",
+    precio_compra: "0",
   })
 
   const apiUrl = `/api/productos?search=${encodeURIComponent(searchQuery)}&categoria=${selectedCategory}`
   const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
   const { data: catData } = useSWR("/api/categorias", fetcher)
+  const { data: provData } = useSWR("/api/proveedores", fetcher)
 
   const productos: Producto[] = data?.productos || []
   const categorias: Categoria[] = catData?.categorias || []
+  const proveedores: Proveedor[] = provData?.proveedores || []
 
   const resetForm = () => {
     setFormData({
@@ -105,6 +115,9 @@ export default function ProductosPage() {
         stock_minimo: "0",
       precio_costo: "0",
       precio_venta: "0",
+      cantidad_inicial: "0",
+      id_proveedor: "",
+      precio_compra: "0",
     })
     setEditingProduct(null)
   }
@@ -118,6 +131,9 @@ export default function ProductosPage() {
       stock_minimo: product.stock_minimo.toString(),
       precio_costo: product.precio_costo.toString(),
       precio_venta: product.precio_venta.toString(),
+      cantidad_inicial: "0",
+      id_proveedor: "",
+      precio_compra: product.precio_costo.toString(),
     })
     setDialogOpen(true)
   }
@@ -258,6 +274,49 @@ export default function ProductosPage() {
                   className="bg-secondary/50 border-border/30"
                 />
               </div>
+
+              {!editingProduct && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="cantidad-inicial" className="text-xs">Cantidad Inicial</Label>
+                    <Input
+                      id="cantidad-inicial"
+                      type="number"
+                      min="0"
+                      value={formData.cantidad_inicial}
+                      onChange={(e) => setFormData({ ...formData, cantidad_inicial: e.target.value })}
+                      className="bg-secondary/50 border-border/30"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label className="text-xs">Proveedor</Label>
+                    <Select
+                      value={formData.id_proveedor}
+                      onValueChange={(val) => setFormData({ ...formData, id_proveedor: val })}
+                    >
+                      <SelectTrigger className="bg-secondary/50 border-border/30">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent className="glass-card border-border/30">
+                        {proveedores.map((prov) => (
+                          <SelectItem key={prov.id} value={prov.id}>{prov.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="precio-compra" className="text-xs">Precio Compra</Label>
+                    <Input
+                      id="precio-compra"
+                      type="number"
+                      min="0"
+                      value={formData.precio_compra}
+                      onChange={(e) => setFormData({ ...formData, precio_compra: e.target.value })}
+                      className="bg-secondary/50 border-border/30"
+                    />
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="costo" className="text-xs">Precio Costo</Label>
@@ -288,7 +347,7 @@ export default function ProductosPage() {
               <Button
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={handleSubmit}
-                disabled={saving || !formData.nombre.trim()}
+                disabled={saving || !formData.nombre.trim() || (!editingProduct && Number(formData.cantidad_inicial) > 0 && !formData.id_proveedor)}
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 {editingProduct ? "Guardar Cambios" : "Guardar Producto"}
