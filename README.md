@@ -13,13 +13,19 @@
   <img src="https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css" alt="Tailwind"/>
 </p>
 
-<p align="center">
-  <a href="#-descripción">Descripción</a> •
-  <a href="#-características">Características</a> •
-  <a href="#-tecnologías">Tecnologías</a> •
-  <a href="#-documentación">Documentación</a> •
-  <a href="#-instalación">Instalación</a>
-</p>
+---
+
+## 📚 Documentación
+
+Toda la documentación técnica del proyecto está organizada en archivos separados para facilitar la navegación:
+
+| Documento | Descripción |
+|-----------|-------------|
+| [**Arquitectura**](docs/ARCHITECTURE.md) | Estructura del sistema, patrones MVC, flujo de datos y componentes |
+| [**Base de Datos**](docs/DATABASE.md) | Esquema ER, tablas, relaciones, RLS y funciones SQL |
+| [**API**](docs/API.md) | Endpoints REST, autenticación, ejemplos de request/response |
+| [**Despliegue**](docs/DEPLOYMENT.md) | Guía de instalación local, Vercel y Docker |
+| [**Roadmap**](docs/ROADMAP.md) | Funcionalidades pendientes, plan de desarrollo y mejoras futuras |
 
 ---
 
@@ -59,9 +65,9 @@ Desarrollar una solución web completa que permita a las PYMEs:
 | **Productos** | Completo | CRUD completo con categorías, SKU, precios y stock |
 | **Dashboard** | Completo | Métricas en tiempo real, gráficos de rendimiento |
 | **Movimientos** | Completo | Entradas, salidas, ajustes con historial completo |
-| **Reportes** | Completo | Análisis por período, exportación CSV |
+| **Reportes** | En Proceso | Análisis por período, exportación CSV |
 | **Alertas** | En Proceso | Notificaciones de stock bajo |
-| **Configuración** | Completo | Perfil de empresa, preferencias |
+| **Configuración** | En Proceso | Perfil de empresa, preferencias |
 | **Landing Page** | Completo | Página de presentación con escena 3D |
 
 ### Características Técnicas
@@ -209,7 +215,7 @@ El proyecto tiene planificadas las siguientes mejoras:
 
 ## Licencia
 
-Este proyecto fue desarrollado como parte del curso de Desarrollo Web.
+Este proyecto fue desarrollado como parte del curso de Desarrollo Web por el estudiante Xiao Méndez en 2026.
 
 ---
 
