@@ -1,32 +1,31 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
+    // Use regular client for authentication check
     const supabase = await createClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-    console.log("[v0] Setup API - User:", user?.id, "Auth Error:", authError?.message)
-
     if (authError || !user) {
-      console.log("[v0] Setup API - Not authenticated")
       return NextResponse.json(
         { error: "No autenticado" },
         { status: 401 }
       )
     }
 
+    // Use admin client for database operations (bypasses RLS)
+    const adminClient = createAdminClient()
+
     // Check if user already has an empresa
-    const { data: existingRelation, error: checkError } = await supabase
+    const { data: existingRelation } = await adminClient
       .from("usuario_empresa")
       .select("id_empresa")
       .eq("id_usuario", user.id)
       .single()
-
-    console.log("[v0] Setup API - Existing relation check:", existingRelation, "Error:", checkError?.message)
 
     if (existingRelation?.id_empresa) {
       return NextResponse.json(
@@ -37,8 +36,6 @@ export async function POST(request: Request) {
 
     const body = await request.json()
     const { nombre, email, telefono, direccion, id_fiscal } = body
-
-    console.log("[v0] Setup API - Creating empresa:", { nombre, email })
 
     if (!nombre?.trim()) {
       return NextResponse.json(
@@ -54,8 +51,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create empresa record (columns: id, nombre, email, telefono, direccion, id_fiscal, logo_url, activo, creado_en, actualizado_en)
-    const { data: empresa, error: empresaError } = await supabase
+    // Create empresa record using admin client (bypasses RLS)
+    const { data: empresa, error: empresaError } = await adminClient
       .from("empresa")
       .insert({
         nombre: nombre.trim(),
@@ -67,8 +64,6 @@ export async function POST(request: Request) {
       .select("id")
       .single()
 
-    console.log("[v0] Setup API - Empresa created:", empresa, "Error:", empresaError?.message, empresaError?.code, empresaError?.details)
-
     if (empresaError) {
       console.error("[v0] Error creating empresa:", empresaError)
       return NextResponse.json(
@@ -78,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     // Create usuario_empresa relationship
-    const { error: relationError } = await supabase
+    const { error: relationError } = await adminClient
       .from("usuario_empresa")
       .insert({
         id_usuario: user.id,
@@ -89,7 +84,7 @@ export async function POST(request: Request) {
     if (relationError) {
       console.error("[v0] Error creating usuario_empresa:", relationError)
       // Rollback empresa creation
-      await supabase.from("empresa").delete().eq("id", empresa.id)
+      await adminClient.from("empresa").delete().eq("id", empresa.id)
       return NextResponse.json(
         { error: "Error al vincular usuario con empresa" },
         { status: 500 }
@@ -105,7 +100,7 @@ export async function POST(request: Request) {
       { nombre: "Electronica", descripcion: "Productos electronicos" },
     ]
 
-    await supabase.from("categoria").insert(
+    await adminClient.from("categoria").insert(
       categorias.map((cat) => ({
         id_empresa: empresa.id,
         ...cat,
