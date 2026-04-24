@@ -29,6 +29,20 @@ Toda la documentación técnica del proyecto está organizada en archivos separa
 
 ---
 
+## 📚 Documentación
+
+Toda la documentación técnica del proyecto está organizada en archivos separados para facilitar la navegación:
+
+| Documento | Descripción |
+|-----------|-------------|
+| [**Arquitectura**](docs/ARCHITECTURE.md) | Estructura del sistema, patrones MVC, flujo de datos y componentes |
+| [**Base de Datos**](docs/DATABASE.md) | Esquema ER, tablas, relaciones, RLS y funciones SQL |
+| [**API**](docs/API.md) | Endpoints REST, autenticación, ejemplos de request/response |
+| [**Despliegue**](docs/DEPLOYMENT.md) | Guía de instalación local, Vercel y Docker |
+| [**Roadmap**](docs/ROADMAP.md) | Funcionalidades pendientes, plan de desarrollo y mejoras futuras |
+
+---
+
 ## 📋 Descripción
 
 **Invora** es un sistema de gestión de inventario moderno y escalable, diseñado específicamente para pequeñas y medianas empresas (PYMEs) en Costa Rica. La plataforma permite gestionar productos, controlar movimientos de inventario, generar reportes detallados y recibir alertas de stock bajo, todo desde una interfaz intuitiva y responsiva.

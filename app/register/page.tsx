@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({
-    nombre: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -51,9 +50,6 @@ export default function RegisterPage() {
         email: form.email.toLowerCase().trim(),
         password: form.password,
         options: {
-          data: {
-            empresa_nombre: form.nombre.trim(),
-          },
           emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
@@ -70,9 +66,9 @@ export default function RegisterPage() {
 
       // Check if email confirmation is required
       if (data.session) {
-        // Auto confirmed - redirect to dashboard
+        // Auto confirmed - redirect to onboarding to set up empresa
         router.refresh()
-        router.push("/dashboard")
+        router.push("/onboarding")
       } else {
         // Email confirmation required - redirect to confirm page
         router.push("/auth/confirm")
@@ -116,7 +112,7 @@ export default function RegisterPage() {
             />
             <h1 className="text-2xl font-bold text-foreground">Crear Cuenta</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Registra tu empresa en INVORA
+              Crea tu cuenta para comenzar
             </p>
           </div>
 
@@ -127,21 +123,6 @@ export default function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="nombre" className="text-sm text-foreground">
-                Nombre de la empresa
-              </Label>
-              <Input
-                id="nombre"
-                type="text"
-                placeholder="Mi Empresa S.A."
-                value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })}
-                required
-                className="bg-secondary/50 border-border/30 h-11"
-              />
-            </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="text-sm text-foreground">
                 Correo electronico

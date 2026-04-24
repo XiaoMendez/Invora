@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getEmpresaId } from "@/lib/supabase/empresa"
+import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
@@ -120,10 +120,13 @@ export async function GET() {
     })
   } catch (error) {
     console.error("[v0] Dashboard API error:", error)
+    if (error instanceof UserNotAuthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof EmpresaNotConfiguredError) {
+      return NextResponse.json({ error: "Empresa no configurada", needsOnboarding: true }, { status: 403 })
+    }
     const message = error instanceof Error ? error.message : "Error al cargar datos del dashboard"
-    return NextResponse.json(
-      { error: message },
-      { status: error instanceof Error && error.message.includes("no autenticado") ? 401 : 500 }
-    )
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
