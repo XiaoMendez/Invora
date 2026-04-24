@@ -8,40 +8,19 @@ import {
   ArrowUpRight,
   Calendar,
   Download,
-  Plus,
+  ShoppingCart,
+  Truck,
   Loader2,
   AlertTriangle,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 
 interface Movimiento {
   id: string
@@ -53,6 +32,8 @@ interface Movimiento {
   stock_antes: number
   stock_despues: number
   motivo: string | null
+  id_venta?: string | null
+  id_compra?: string | null
 }
 
 interface Producto {
@@ -60,6 +41,19 @@ interface Producto {
   nombre: string
   sku: string | null
   stock: number
+  precio_costo: number
+  precio_venta: number
+}
+
+interface Cliente {
+  id: string
+  nombre: string
+  apellido: string | null
+}
+
+interface Proveedor {
+  id: string
+  nombre: string
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -79,313 +73,148 @@ function formatMovementType(tipo: string) {
 export default function MovimientosPage() {
   const [tipo, setTipo] = useState("todos")
   const [periodo, setPeriodo] = useState("30d")
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [formData, setFormData] = useState({
-    id_producto: "",
-    tipo: "entrada",
-    cantidad: "",
-    motivo: "",
-  })
+  const [compraOpen, setCompraOpen] = useState(false)
+  const [ventaOpen, setVentaOpen] = useState(false)
+  const [savingCompra, setSavingCompra] = useState(false)
+  const [savingVenta, setSavingVenta] = useState(false)
+  const [compraForm, setCompraForm] = useState({ id_proveedor: "", id_producto: "", cantidad: "", precio_unitario: "" })
+  const [ventaForm, setVentaForm] = useState({ id_cliente: "", id_producto: "", cantidad: "", precio_unitario: "" })
 
   const apiUrl = `/api/movimientos?tipo=${tipo}&periodo=${periodo}`
   const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 15000 })
   const { data: prodData } = useSWR("/api/productos", fetcher)
+  const { data: clientesData } = useSWR("/api/clientes", fetcher)
+  const { data: proveedoresData } = useSWR("/api/proveedores", fetcher)
 
   const movimientos: Movimiento[] = data?.movimientos || []
   const stats = data?.stats || { entradas: 0, salidas: 0, neto: 0, total: 0 }
   const productos: Producto[] = prodData?.productos || []
+  const clientes: Cliente[] = clientesData?.clientes || []
+  const proveedores: Proveedor[] = proveedoresData?.proveedores || []
 
   const handleExportCSV = () => {
     window.open(`/api/movimientos?tipo=${tipo}&periodo=${periodo}&export=csv`, "_blank")
   }
 
-  const handleSubmit = async () => {
-    if (!formData.id_producto || !formData.cantidad) return
-    setSaving(true)
-
+  const handleCompra = async () => {
+    if (!compraForm.id_proveedor || !compraForm.id_producto || !compraForm.cantidad || !compraForm.precio_unitario) return
+    setSavingCompra(true)
     try {
-      const res = await fetch("/api/movimientos", {
+      const res = await fetch("/api/compras", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          id_proveedor: compraForm.id_proveedor,
+          items: [{ id_producto: compraForm.id_producto, cantidad: Number(compraForm.cantidad), precio_unitario: Number(compraForm.precio_unitario) }],
+        }),
       })
-
       if (res.ok) {
         mutate(apiUrl)
         mutate("/api/productos")
-        setDialogOpen(false)
-        setFormData({ id_producto: "", tipo: "entrada", cantidad: "", motivo: "" })
+        setCompraOpen(false)
+        setCompraForm({ id_proveedor: "", id_producto: "", cantidad: "", precio_unitario: "" })
       }
-    } catch (err) {
-      console.error("Error creating movement:", err)
     } finally {
-      setSaving(false)
+      setSavingCompra(false)
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando movimientos...</p>
-        </div>
-      </div>
-    )
+  const handleVenta = async () => {
+    if (!ventaForm.id_cliente || !ventaForm.id_producto || !ventaForm.cantidad || !ventaForm.precio_unitario) return
+    setSavingVenta(true)
+    try {
+      const res = await fetch("/api/ventas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_cliente: ventaForm.id_cliente,
+          items: [{ id_producto: ventaForm.id_producto, cantidad: Number(ventaForm.cantidad), precio_unitario: Number(ventaForm.precio_unitario) }],
+        }),
+      })
+      if (res.ok) {
+        mutate(apiUrl)
+        mutate("/api/productos")
+        setVentaOpen(false)
+        setVentaForm({ id_cliente: "", id_producto: "", cantidad: "", precio_unitario: "" })
+      }
+    } finally {
+      setSavingVenta(false)
+    }
   }
 
-  if (error || data?.error) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar movimientos</p>
-        </div>
-      </div>
-    )
-  }
+  if (isLoading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+  if (error || data?.error) return <div className="flex items-center justify-center min-h-[60vh]"><AlertTriangle className="h-8 w-8 text-amber-400" /></div>
 
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Movimientos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Historial de entradas y salidas de inventario.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">El inventario solo cambia por compras y ventas (no por ajustes manuales).</p>
         </div>
         <div className="flex items-center gap-2">
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
-                <Plus className="h-4 w-4" />
-                Nuevo Movimiento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="glass-card border-border/30 sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Registrar Movimiento</DialogTitle>
-                <DialogDescription>
-                  Agrega una entrada o salida de inventario.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label className="text-xs">Producto</Label>
-                  <Select
-                    value={formData.id_producto}
-                    onValueChange={(val) => setFormData({ ...formData, id_producto: val })}
-                  >
-                    <SelectTrigger className="bg-secondary/50 border-border/30">
-                      <SelectValue placeholder="Seleccionar producto" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-card border-border/30 max-h-60">
-                      {productos.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nombre} {p.sku ? `(${p.sku})` : ""} - Stock: {p.stock}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label className="text-xs">Tipo</Label>
-                    <Select
-                      value={formData.tipo}
-                      onValueChange={(val) => setFormData({ ...formData, tipo: val })}
-                    >
-                      <SelectTrigger className="bg-secondary/50 border-border/30">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="glass-card border-border/30">
-                        <SelectItem value="entrada">Entrada</SelectItem>
-                        <SelectItem value="salida">Salida</SelectItem>
-                        <SelectItem value="ajuste_positivo">Ajuste +</SelectItem>
-                        <SelectItem value="ajuste_negativo">Ajuste -</SelectItem>
-                        <SelectItem value="devolucion_venta">Dev. Venta</SelectItem>
-                        <SelectItem value="devolucion_compra">Dev. Compra</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label className="text-xs">Cantidad</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={formData.cantidad}
-                      onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-                      className="bg-secondary/50 border-border/30"
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-xs">Motivo (opcional)</Label>
-                  <Textarea
-                    value={formData.motivo}
-                    onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
-                    className="bg-secondary/50 border-border/30 min-h-[80px]"
-                    placeholder="Ej: Reabastecimiento semanal"
-                  />
+          <Dialog open={compraOpen} onOpenChange={setCompraOpen}>
+            <DialogTrigger asChild><Button className="gap-2"><Truck className="h-4 w-4" />Registrar Compra</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Nueva compra</DialogTitle><DialogDescription>Debes seleccionar proveedor y producto.</DialogDescription></DialogHeader>
+              <div className="grid gap-3">
+                <Label>Proveedor</Label>
+                <Select value={compraForm.id_proveedor} onValueChange={(v) => setCompraForm({ ...compraForm, id_proveedor: v })}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{proveedores.map((p) => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent></Select>
+                <Label>Producto</Label>
+                <Select value={compraForm.id_producto} onValueChange={(v) => setCompraForm({ ...compraForm, id_producto: v })}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{productos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)}</SelectContent></Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Cantidad</Label><Input type="number" min="1" value={compraForm.cantidad} onChange={(e) => setCompraForm({ ...compraForm, cantidad: e.target.value })} /></div>
+                  <div><Label>Precio</Label><Input type="number" min="0" value={compraForm.precio_unitario} onChange={(e) => setCompraForm({ ...compraForm, precio_unitario: e.target.value })} /></div>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border/30">
-                  Cancelar
-                </Button>
-                <Button
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  onClick={handleSubmit}
-                  disabled={saving || !formData.id_producto || !formData.cantidad}
-                >
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Registrar
-                </Button>
-              </DialogFooter>
+              <DialogFooter><Button onClick={handleCompra} disabled={savingCompra || !compraForm.id_proveedor || !compraForm.id_producto || !compraForm.cantidad || !compraForm.precio_unitario}>{savingCompra ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Guardar compra</Button></DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="border-border/30 gap-2 text-sm" onClick={handleExportCSV}>
-            <Download className="h-4 w-4" />
-            Exportar CSV
-          </Button>
+
+          <Dialog open={ventaOpen} onOpenChange={setVentaOpen}>
+            <DialogTrigger asChild><Button variant="outline" className="gap-2"><ShoppingCart className="h-4 w-4" />Registrar Venta</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Nueva venta</DialogTitle><DialogDescription>Debes seleccionar cliente y producto.</DialogDescription></DialogHeader>
+              <div className="grid gap-3">
+                <Label>Cliente</Label>
+                <Select value={ventaForm.id_cliente} onValueChange={(v) => setVentaForm({ ...ventaForm, id_cliente: v })}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nombre} {c.apellido || ""}</SelectItem>)}</SelectContent></Select>
+                <Label>Producto</Label>
+                <Select value={ventaForm.id_producto} onValueChange={(v) => setVentaForm({ ...ventaForm, id_producto: v })}><SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger><SelectContent>{productos.map((p) => <SelectItem key={p.id} value={p.id}>{p.nombre} · Stock {p.stock}</SelectItem>)}</SelectContent></Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Cantidad</Label><Input type="number" min="1" value={ventaForm.cantidad} onChange={(e) => setVentaForm({ ...ventaForm, cantidad: e.target.value })} /></div>
+                  <div><Label>Precio</Label><Input type="number" min="0" value={ventaForm.precio_unitario} onChange={(e) => setVentaForm({ ...ventaForm, precio_unitario: e.target.value })} /></div>
+                </div>
+              </div>
+              <DialogFooter><Button onClick={handleVenta} disabled={savingVenta || !ventaForm.id_cliente || !ventaForm.id_producto || !ventaForm.cantidad || !ventaForm.precio_unitario}>{savingVenta ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}Guardar venta</Button></DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Button variant="outline" className="border-border/30 gap-2 text-sm" onClick={handleExportCSV}><Download className="h-4 w-4" />Exportar CSV</Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                <ArrowDownLeft className="h-5 w-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Entradas</p>
-                <p className="text-xl font-bold text-foreground">{stats.entradas.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10">
-                <ArrowUpRight className="h-5 w-5 text-red-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Salidas</p>
-                <p className="text-xl font-bold text-foreground">{stats.salidas.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="glass-card border-border/30">
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <ArrowLeftRight className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Neto</p>
-                <p className="text-xl font-bold text-foreground">
-                  {stats.neto >= 0 ? "+" : ""}{stats.neto.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <Card><CardContent className="pt-0"><div className="flex items-center gap-3"><ArrowDownLeft className="h-5 w-5 text-green-400" /><div><p className="text-xs text-muted-foreground">Entradas</p><p className="text-xl font-bold text-foreground">{stats.entradas.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-0"><div className="flex items-center gap-3"><ArrowUpRight className="h-5 w-5 text-red-400" /><div><p className="text-xs text-muted-foreground">Salidas</p><p className="text-xl font-bold text-foreground">{stats.salidas.toLocaleString()}</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-0"><div className="flex items-center gap-3"><ArrowLeftRight className="h-5 w-5 text-primary" /><div><p className="text-xs text-muted-foreground">Neto</p><p className="text-xl font-bold text-foreground">{stats.neto >= 0 ? "+" : ""}{stats.neto.toLocaleString()}</p></div></div></CardContent></Card>
       </div>
 
-      {/* Filters */}
       <div className="flex items-center gap-3">
-        <Select value={tipo} onValueChange={setTipo}>
-          <SelectTrigger className="w-36 bg-secondary/50 border-border/30 text-sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="glass-card border-border/30">
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="entradas">Entradas</SelectItem>
-            <SelectItem value="salidas">Salidas</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={periodo} onValueChange={setPeriodo}>
-          <SelectTrigger className="w-40 bg-secondary/50 border-border/30 text-sm">
-            <Calendar className="h-3.5 w-3.5 mr-1" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="glass-card border-border/30">
-            <SelectItem value="1d">Hoy</SelectItem>
-            <SelectItem value="7d">Ultimos 7 dias</SelectItem>
-            <SelectItem value="30d">Ultimos 30 dias</SelectItem>
-            <SelectItem value="all">Todos</SelectItem>
-          </SelectContent>
-        </Select>
+        <Select value={tipo} onValueChange={setTipo}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="todos">Todos</SelectItem><SelectItem value="entradas">Entradas</SelectItem><SelectItem value="salidas">Salidas</SelectItem></SelectContent></Select>
+        <Select value={periodo} onValueChange={setPeriodo}><SelectTrigger className="w-40"><Calendar className="h-3.5 w-3.5 mr-1" /><SelectValue /></SelectTrigger><SelectContent><SelectItem value="1d">Hoy</SelectItem><SelectItem value="7d">Últimos 7 días</SelectItem><SelectItem value="30d">Últimos 30 días</SelectItem></SelectContent></Select>
       </div>
 
-      {/* Table */}
-      <Card className="glass-card border-border/30">
-        <CardContent className="pt-6">
-          {movimientos.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/30 hover:bg-transparent">
-                  <TableHead className="text-xs">Producto</TableHead>
-                  <TableHead className="text-xs">Tipo</TableHead>
-                  <TableHead className="text-xs text-right">Cantidad</TableHead>
-                  <TableHead className="text-xs text-right">Stock</TableHead>
-                  <TableHead className="text-xs">Fecha</TableHead>
-                  <TableHead className="text-xs">Motivo</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {movimientos.map((mov) => {
-                  const movType = formatMovementType(mov.tipo)
-                  return (
-                    <TableRow key={mov.id} className="border-border/20">
-                      <TableCell className="text-xs text-foreground font-medium">
-                        {mov.producto}
-                        {mov.sku && <span className="text-muted-foreground ml-1">({mov.sku})</span>}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] ${
-                            movType.variant === "entrada"
-                              ? "bg-green-500/10 text-green-400 border-green-500/20"
-                              : "bg-red-500/10 text-red-400 border-red-500/20"
-                          }`}
-                        >
-                          {movType.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-right text-foreground">{mov.cantidad}</TableCell>
-                      <TableCell className="text-xs text-right text-muted-foreground">
-                        {mov.stock_antes} → {mov.stock_despues}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {new Date(mov.creado_en).toLocaleDateString("es-CR", {
-                          day: "numeric",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate">
-                        {mov.motivo || "—"}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-              No hay movimientos registrados en este periodo.
-            </div>
-          )}
+      <Card>
+        <CardContent className="pt-0">
+          <Table>
+            <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Producto</TableHead><TableHead>Tipo</TableHead><TableHead>Cantidad</TableHead><TableHead>Stock</TableHead><TableHead>Documento</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {movimientos.length === 0 ? <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No hay movimientos para mostrar</TableCell></TableRow> : movimientos.map((m) => {
+                const typeInfo = formatMovementType(m.tipo)
+                return <TableRow key={m.id}><TableCell>{new Date(m.creado_en).toLocaleString("es-CR")}</TableCell><TableCell>{m.producto}</TableCell><TableCell><Badge variant={typeInfo.variant === "entrada" ? "default" : "destructive"}>{typeInfo.label}</Badge></TableCell><TableCell>{m.cantidad}</TableCell><TableCell>{m.stock_antes} → {m.stock_despues}</TableCell><TableCell>{m.id_compra ? `Compra ${m.id_compra.slice(0, 8)}` : m.id_venta ? `Venta ${m.id_venta.slice(0, 8)}` : "-"}</TableCell></TableRow>
+              })}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

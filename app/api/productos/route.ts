@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion } = body
+    const { nombre, sku, id_categoria, stock_minimo, precio_costo, precio_venta, descripcion } = body
 
     if (!nombre?.trim()) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const insertData: Record<string, unknown> = {
       id_empresa: empresaId,
       nombre: nombre.trim(),
-      stock: parseInt(stock) || 0,
+      stock: 0,
       stock_minimo: parseInt(stock_minimo) || 0,
       precio_costo: parseFloat(precio_costo) || 0,
       precio_venta: parseFloat(precio_venta) || 0,
@@ -74,20 +74,6 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Record initial stock movement
-    if (parseInt(stock) > 0) {
-      await supabase
-        .from("movimiento_inventario")
-        .insert({
-          id_empresa: empresaId,
-          id_producto: producto.id,
-          tipo: "entrada",
-          cantidad: parseInt(stock),
-          stock_antes: 0,
-          stock_despues: parseInt(stock),
-          motivo: "Stock inicial al crear producto",
-        })
-    }
 
     return NextResponse.json({ producto, success: true })
   } catch (error) {

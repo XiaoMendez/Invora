@@ -85,7 +85,6 @@ export default function ProductosPage() {
     nombre: "",
     sku: "",
     id_categoria: "",
-    stock: "0",
     stock_minimo: "0",
     precio_costo: "0",
     precio_venta: "0",
@@ -103,8 +102,7 @@ export default function ProductosPage() {
       nombre: "",
       sku: "",
       id_categoria: "",
-      stock: "0",
-      stock_minimo: "0",
+        stock_minimo: "0",
       precio_costo: "0",
       precio_venta: "0",
     })
@@ -117,7 +115,6 @@ export default function ProductosPage() {
       nombre: product.nombre,
       sku: product.sku || "",
       id_categoria: product.id_categoria || "",
-      stock: product.stock.toString(),
       stock_minimo: product.stock_minimo.toString(),
       precio_costo: product.precio_costo.toString(),
       precio_venta: product.precio_venta.toString(),
@@ -251,28 +248,15 @@ export default function ProductosPage() {
                   </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="stock" className="text-xs">Stock Inicial</Label>
-                  <Input
-                    id="stock"
-                    type="number"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    className="bg-secondary/50 border-border/30"
-                    disabled={!!editingProduct}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="min" className="text-xs">Stock Minimo</Label>
-                  <Input
-                    id="min"
-                    type="number"
-                    value={formData.stock_minimo}
-                    onChange={(e) => setFormData({ ...formData, stock_minimo: e.target.value })}
-                    className="bg-secondary/50 border-border/30"
-                  />
-                </div>
+              <div className="grid gap-2">
+                <Label htmlFor="min" className="text-xs">Stock Minimo</Label>
+                <Input
+                  id="min"
+                  type="number"
+                  value={formData.stock_minimo}
+                  onChange={(e) => setFormData({ ...formData, stock_minimo: e.target.value })}
+                  className="bg-secondary/50 border-border/30"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">

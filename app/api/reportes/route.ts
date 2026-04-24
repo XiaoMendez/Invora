@@ -11,14 +11,14 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get("periodo") || "7m"
-
-    // Calculate how many months to look back
     const mesesAtras = periodo === "30d" ? 1 : periodo === "3m" ? 3 : periodo === "7m" ? 7 : 12
 
-    // 1. KPI: total inventory value, active SKUs
+    const fechaDesde = new Date()
+    fechaDesde.setMonth(fechaDesde.getMonth() - mesesAtras)
+
     const { data: productos } = await supabase
       .from("producto")
-      .select("id, stock, precio_costo, precio_venta, activo")
+      .select("id, stock, precio_costo, activo")
       .eq("id_empresa", empresaId)
       .eq("activo", true)
 
@@ -26,37 +26,43 @@ export async function GET(request: Request) {
     const valorInventario = prods.reduce((s, p) => s + p.stock * Number(p.precio_costo), 0)
     const skusActivos = prods.length
 
-    // 2. Monthly trend - movements grouped by month
-    const fechaDesde = new Date()
-    fechaDesde.setMonth(fechaDesde.getMonth() - mesesAtras)
+    const { data: resumenVentas } = await supabase
+      .from("v_resumen_ventas_mensual")
+      .select("mes, total_ventas")
+      .eq("id_empresa", empresaId)
+      .gte("mes", fechaDesde.toISOString())
+      .order("mes", { ascending: true })
 
     const { data: movimientos } = await supabase
-      .from("movimiento_inventario")
+      .from("v_historial_inventario")
       .select("tipo, cantidad, creado_en")
       .eq("id_empresa", empresaId)
       .gte("creado_en", fechaDesde.toISOString())
       .order("creado_en", { ascending: true })
 
-    // Group by month
-    const monthMap = new Map<string, { mes: string; entradas: number; salidas: number; valorMes: number }>()
+    const monthMap = new Map<string, { mes: string; entradas: number; salidas: number; ventas: number }>()
     ;(movimientos || []).forEach((m) => {
       const d = new Date(m.creado_en)
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
       const mesLabel = d.toLocaleDateString("es-CR", { month: "short", year: "2-digit" })
-      if (!monthMap.has(key)) monthMap.set(key, { mes: mesLabel, entradas: 0, salidas: 0, valorMes: 0 })
+      if (!monthMap.has(key)) monthMap.set(key, { mes: mesLabel, entradas: 0, salidas: 0, ventas: 0 })
       const entry = monthMap.get(key)!
-      if (["entrada", "ajuste_positivo", "devolucion_venta"].includes(m.tipo)) {
-        entry.entradas += m.cantidad
-      } else {
-        entry.salidas += m.cantidad
-      }
+      if (["entrada", "ajuste_positivo", "devolucion_venta"].includes(m.tipo)) entry.entradas += m.cantidad
+      else entry.salidas += m.cantidad
+    })
+
+    ;(resumenVentas || []).forEach((rv) => {
+      const d = new Date(rv.mes)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+      const mesLabel = d.toLocaleDateString("es-CR", { month: "short", year: "2-digit" })
+      if (!monthMap.has(key)) monthMap.set(key, { mes: mesLabel, entradas: 0, salidas: 0, ventas: 0 })
+      monthMap.get(key)!.ventas = Number(rv.total_ventas || 0)
     })
 
     const monthlyTrend = Array.from(monthMap.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, v]) => v)
 
-    // 3. Category distribution by product count and value
     const { data: productosCat } = await supabase
       .from("producto")
       .select("stock, precio_costo, id_categoria, categoria(nombre)")
@@ -65,7 +71,8 @@ export async function GET(request: Request) {
 
     const catMap = new Map<string, { name: string; value: number; valorTotal: number }>()
     ;(productosCat || []).forEach((p) => {
-      const catName = (p.categoria as { nombre: string } | null)?.nombre || "Sin categoria"
+      const categoria = p.categoria as { nombre: string }[] | { nombre: string } | null
+      const catName = Array.isArray(categoria) ? categoria[0]?.nombre : categoria?.nombre || "Sin categoria"
       if (!catMap.has(catName)) catMap.set(catName, { name: catName, value: 0, valorTotal: 0 })
       const c = catMap.get(catName)!
       c.value += 1
@@ -77,36 +84,19 @@ export async function GET(request: Request) {
     const categoryDistribution = Array.from(catMap.values())
       .sort((a, b) => b.value - a.value)
       .slice(0, 5)
-      .map((c, i) => ({
-        ...c,
-        percentage: totalProductos > 0 ? Math.round((c.value / totalProductos) * 100) : 0,
-        color: colors[i % colors.length],
-      }))
+      .map((c, i) => ({ ...c, percentage: totalProductos > 0 ? Math.round((c.value / totalProductos) * 100) : 0, color: colors[i % colors.length] }))
 
-    // 4. Top products by movement (salidas)
-    const { data: topMovs } = await supabase
-      .from("movimiento_inventario")
-      .select("id_producto, cantidad, tipo, producto:producto(nombre, sku)")
+    const { data: topVendidos } = await supabase
+      .from("v_productos_mas_vendidos")
+      .select("id_empresa, producto, unidades_vendidas")
       .eq("id_empresa", empresaId)
-      .in("tipo", ["salida", "ajuste_negativo"])
-      .gte("creado_en", fechaDesde.toISOString())
+      .limit(5)
 
-    const prodMovMap = new Map<string, { nombre: string; salidas: number }>()
-    ;(topMovs || []).forEach((m) => {
-      const prodInfo = m.producto as { nombre: string; sku: string } | null
-      const nombre = prodInfo?.nombre || "Desconocido"
-      if (!prodMovMap.has(m.id_producto)) {
-        prodMovMap.set(m.id_producto, { nombre, salidas: 0 })
-      }
-      prodMovMap.get(m.id_producto)!.salidas += m.cantidad
-    })
+    const topProducts = (topVendidos || []).map((p) => ({
+      nombre: p.producto.length > 15 ? `${p.producto.substring(0, 15)}...` : p.producto,
+      salidas: Number(p.unidades_vendidas),
+    }))
 
-    const topProducts = Array.from(prodMovMap.values())
-      .sort((a, b) => b.salidas - a.salidas)
-      .slice(0, 5)
-      .map((p) => ({ nombre: p.nombre.length > 15 ? p.nombre.substring(0, 15) + "..." : p.nombre, salidas: p.salidas }))
-
-    // 5. Rotation rate: total salidas / avg stock
     const totalSalidas = (movimientos || [])
       .filter((m) => ["salida", "ajuste_negativo"].includes(m.tipo))
       .reduce((s, m) => s + m.cantidad, 0)
@@ -114,11 +104,7 @@ export async function GET(request: Request) {
     const rotacion = avgStock > 0 ? (totalSalidas / avgStock).toFixed(1) : "0.0"
 
     return NextResponse.json({
-      kpis: {
-        valorInventario,
-        skusActivos,
-        rotacion: `${rotacion}x / mes`,
-      },
+      kpis: { valorInventario, skusActivos, rotacion: `${rotacion}x / mes` },
       monthlyTrend,
       categoryDistribution,
       topProducts,

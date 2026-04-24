@@ -15,31 +15,27 @@ export async function GET() {
       .eq("id", empresaId)
       .single()
 
-    // Get products with low stock
-    const { data: productos, error } = await supabase
-      .from("producto")
-      .select("id, nombre, sku, stock, stock_minimo, id_categoria, categoria(nombre)")
+    const { data: bajosStock, error } = await supabase
+      .from("v_productos_bajo_stock")
+      .select("id, producto, sku, stock, stock_minimo, categoria, faltante")
       .eq("id_empresa", empresaId)
-      .eq("activo", true)
-      .gt("stock_minimo", 0)
 
     if (error) throw error
 
-    const bajosStock = (productos || []).filter(p => p.stock <= p.stock_minimo)
-
-    const alertas = bajosStock.map((p) => ({
+    const alertas = (bajosStock || []).map((p) => ({
       id: `alert-${p.id}`,
       tipo: p.stock === 0 ? "critical" : "warning",
       titulo: p.stock === 0 ? "Stock agotado" : "Stock bajo",
-      descripcion: p.stock === 0
-        ? "El producto ha llegado a 0. Se requiere reabastecimiento urgente."
-        : `Stock actual ${p.stock} por debajo del minimo (${p.stock_minimo}). Faltan ${p.stock_minimo - p.stock} unidades.`,
-      producto: p.nombre,
+      descripcion:
+        p.stock === 0
+          ? "El producto ha llegado a 0. Se requiere reabastecimiento urgente."
+          : `Stock actual ${p.stock} por debajo del minimo (${p.stock_minimo}). Faltan ${p.faltante} unidades.`,
+      producto: p.producto,
       sku: p.sku,
       stock: p.stock,
       stock_minimo: p.stock_minimo,
-      faltante: p.stock_minimo - p.stock,
-      categoria: (p.categoria as { nombre: string } | null)?.nombre || null,
+      faltante: p.faltante,
+      categoria: p.categoria || null,
       leida: false,
       fecha: new Date().toISOString(),
     }))
@@ -50,7 +46,7 @@ export async function GET() {
       criticas: alertas.filter((a) => a.tipo === "critical").length,
       advertencias: alertas.filter((a) => a.tipo === "warning").length,
       empresa: empresa?.nombre || "",
-      email: empresa?.email || user.email || "",
+      email: empresa?.email || "",
     })
   } catch (error) {
     console.error("[alertas GET]", error)
@@ -66,6 +62,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
+    const empresaId = await getEmpresaId(supabase)
     const body = await request.json()
     if (body.action !== "send_email_alerts") {
       return NextResponse.json({ error: "Accion no reconocida" }, { status: 400 })
@@ -74,7 +71,7 @@ export async function POST(request: Request) {
     const { data: empresa } = await supabase
       .from("empresa")
       .select("nombre, email")
-      .eq("id", user.id)
+      .eq("id", empresaId)
       .single()
 
     const emailDestino = empresa?.email || user.email
@@ -82,21 +79,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No hay email configurado" }, { status: 400 })
     }
 
-    // Get products with low stock
-    const { data: productos } = await supabase
-      .from("producto")
-      .select("nombre, sku, stock, stock_minimo, categoria(nombre)")
-      .eq("id_empresa", user.id)
-      .eq("activo", true)
-      .gt("stock_minimo", 0)
+    const { data: bajosStock } = await supabase
+      .from("v_productos_bajo_stock")
+      .select("producto, sku, stock, stock_minimo, categoria, faltante")
+      .eq("id_empresa", empresaId)
 
-    const bajosStock = (productos || []).filter(p => p.stock <= p.stock_minimo)
-
-    if (bajosStock.length === 0) {
+    if (!bajosStock || bajosStock.length === 0) {
       return NextResponse.json({ success: true, message: "No hay alertas de stock que enviar" })
     }
 
-    // Check if Resend is available
     const resendApiKey = process.env.RESEND_API_KEY
     if (!resendApiKey) {
       return NextResponse.json({
@@ -106,16 +97,18 @@ export async function POST(request: Request) {
       })
     }
 
-    // Send email using Resend
     const empresaNombre = empresa?.nombre || "Tu empresa"
-    const html = buildEmailHTML(empresaNombre, bajosStock.map(p => ({
-      producto: p.nombre,
-      sku: p.sku,
-      stock: p.stock,
-      stock_minimo: p.stock_minimo,
-      faltante: p.stock_minimo - p.stock,
-      categoria: (p.categoria as { nombre: string } | null)?.nombre || null,
-    })))
+    const html = buildEmailHTML(
+      empresaNombre,
+      bajosStock.map((p) => ({
+        producto: p.producto,
+        sku: p.sku,
+        stock: p.stock,
+        stock_minimo: p.stock_minimo,
+        faltante: p.faltante,
+        categoria: p.categoria || null,
+      }))
+    )
 
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -124,7 +117,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
-        from: `Invora <onboarding@resend.dev>`,
+        from: "Invora <onboarding@resend.dev>",
         to: emailDestino,
         subject: `Alerta: ${bajosStock.length} producto${bajosStock.length !== 1 ? "s" : ""} con stock bajo`,
         html,
@@ -152,7 +145,9 @@ function buildEmailHTML(
   empresaNombre: string,
   productos: Array<{ producto: string; sku: string | null; stock: number; stock_minimo: number; faltante: number; categoria: string | null }>
 ) {
-  const rows = productos.map((p) => `
+  const rows = productos
+    .map(
+      (p) => `
     <tr style="border-bottom:1px solid #e5e7eb;">
       <td style="padding:10px 8px;font-weight:500;color:#111827;">${p.producto}</td>
       <td style="padding:10px 8px;color:#6b7280;">${p.sku || "—"}</td>
@@ -160,7 +155,9 @@ function buildEmailHTML(
       <td style="padding:10px 8px;text-align:center;font-weight:700;color:${p.stock === 0 ? "#dc2626" : "#d97706"};">${p.stock}</td>
       <td style="padding:10px 8px;text-align:center;color:#6b7280;">${p.stock_minimo}</td>
       <td style="padding:10px 8px;text-align:center;font-weight:700;color:#dc2626;">-${p.faltante}</td>
-    </tr>`).join("")
+    </tr>`
+    )
+    .join("")
 
   const criticos = productos.filter((p) => p.stock === 0).length
   const bajos = productos.filter((p) => p.stock > 0).length
@@ -192,11 +189,6 @@ function buildEmailHTML(
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>
-    <div style="background:#f9fafb;border-radius:0 0 12px 12px;padding:16px 32px;border-top:1px solid #e5e7eb;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
-        Este correo fue generado automaticamente por <strong>Invora</strong> · Sistema de Gestion de Inventario
-      </p>
     </div>
   </div>
 </body></html>`
