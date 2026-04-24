@@ -6,11 +6,11 @@ export const dynamic = "force-dynamic"
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { nombre, email, password } = body
+    const { email, password } = body
 
-    if (!nombre || !email || !password) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Todos los campos son requeridos" },
+        { error: "Email y contrasenya son requeridos" },
         { status: 400 }
       )
     }
@@ -22,9 +22,6 @@ export async function POST(request: Request) {
       email: email.toLowerCase().trim(),
       password,
       options: {
-        data: {
-          empresa_nombre: nombre.trim(),
-        },
         emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
       },
     })
@@ -43,52 +40,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create empresa record in database (with auto-generated ID)
-    const { data: empresa, error: empresaError } = await supabase
-      .from("empresa")
-      .insert({
-        nombre: nombre.trim(),
-        email: email.toLowerCase().trim(),
-      })
-      .select("id")
-      .single()
-
-    if (empresaError) {
-      console.error("[v0] Error creating empresa:", empresaError)
-      // Continue anyway - empresa will be created on first login
-    }
-
-    if (empresa) {
-      // Create usuario_empresa relationship
-      const { error: userEmpresaError } = await supabase
-        .from("usuario_empresa")
-        .insert({
-          id_usuario: data.user.id,
-          id_empresa: empresa.id,
-          rol: "admin",
-        })
-
-      if (userEmpresaError) {
-        console.error("[v0] Error creating usuario_empresa:", userEmpresaError)
-        // Try to delete empresa if linking fails
-        await supabase.from("empresa").delete().eq("id", empresa.id)
-      } else {
-        // Create default categories only if empresa was linked successfully
-        const categorias = [
-          { nombre: "General", descripcion: "Categoría general" },
-          { nombre: "Alimentos", descripcion: "Productos alimenticios" },
-          { nombre: "Bebidas", descripcion: "Bebidas y líquidos" },
-          { nombre: "Limpieza", descripcion: "Productos de limpieza" },
-        ]
-
-        await supabase.from("categoria").insert(
-          categorias.map((cat) => ({
-            id_empresa: empresa.id,
-            ...cat,
-          }))
-        )
-      }
-    }
+    // Do NOT create empresa here - let the user complete onboarding
+    // The empresa and usuario_empresa records will be created in /api/empresa/setup
 
     return NextResponse.json({
       success: true,
@@ -97,6 +50,7 @@ export async function POST(request: Request) {
         email: data.user.email,
       },
       message: "Cuenta creada exitosamente. Verifica tu correo para confirmar.",
+      needsOnboarding: true,
     })
   } catch (error) {
     console.error("[v0] Register error:", error)

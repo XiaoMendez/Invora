@@ -19,12 +19,16 @@ export async function GET() {
       )
     }
 
-    // Get empresa data from database
-    const { data: empresa } = await supabase
-      .from("empresa")
-      .select("id, nombre, email")
-      .eq("id", user.id)
+    // Get empresa data through usuario_empresa relationship
+    const { data: userEmpresa } = await supabase
+      .from("usuario_empresa")
+      .select("id_empresa, rol, empresa:id_empresa(id, nombre, email)")
+      .eq("id_usuario", user.id)
       .single()
+
+    // Check if user has an empresa configured
+    const hasEmpresa = userEmpresa && userEmpresa.empresa
+    const empresa = hasEmpresa ? (userEmpresa.empresa as { id: string; nombre: string; email: string }) : null
 
     return NextResponse.json({
       authenticated: true,
@@ -32,16 +36,14 @@ export async function GET() {
         id: user.id,
         email: user.email,
       },
-      empresa: empresa || {
-        id: user.id,
-        nombre: user.user_metadata?.empresa_nombre || "Mi Empresa",
-        email: user.email,
-      },
+      empresa: empresa,
+      rol: userEmpresa?.rol || null,
+      needsOnboarding: !hasEmpresa,
     })
   } catch (error) {
     console.error("[v0] Session error:", error)
     return NextResponse.json(
-      { authenticated: false, error: "Error al obtener la sesión" },
+      { authenticated: false, error: "Error al obtener la sesion" },
       { status: 500 }
     )
   }

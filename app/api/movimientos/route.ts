@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getEmpresaId } from "@/lib/supabase/empresa"
+import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
@@ -87,6 +87,12 @@ export async function GET(request: Request) {
     })
   } catch (error) {
     console.error("[movimientos GET]", error)
+    if (error instanceof UserNotAuthenticatedError) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+    if (error instanceof EmpresaNotConfiguredError) {
+      return NextResponse.json({ error: "Empresa no configurada", needsOnboarding: true }, { status: 403 })
+    }
     return NextResponse.json({ error: "Error al cargar movimientos" }, { status: 500 })
   }
 }

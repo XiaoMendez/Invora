@@ -18,8 +18,12 @@ export default function DashboardLayout({
   const { data: session, isLoading } = useSWR("/api/auth/session", fetcher)
 
   useEffect(() => {
-    if (!isLoading && !session?.authenticated) {
-      router.push("/login")
+    if (!isLoading) {
+      if (!session?.authenticated) {
+        router.push("/login")
+      } else if (session?.needsOnboarding) {
+        router.push("/onboarding")
+      }
     }
   }, [session, isLoading, router])
 
@@ -35,7 +39,7 @@ export default function DashboardLayout({
     )
   }
 
-  if (!session?.authenticated) {
+  if (!session?.authenticated || session?.needsOnboarding) {
     return null
   }
 
@@ -44,7 +48,7 @@ export default function DashboardLayout({
       <StarsBackground />
       <DashboardSidebar />
       <div className="pl-64 transition-all duration-300">
-        <DashboardHeader empresa={session?.empresa || { nombre: "Mi Empresa", email: session?.user?.email }} />
+        <DashboardHeader empresa={session.empresa} />
         <main className="p-6 min-h-screen">{children}</main>
       </div>
     </div>
