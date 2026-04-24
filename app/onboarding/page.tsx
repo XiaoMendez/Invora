@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
 import { StarsBackground } from "@/components/space-scene"
 import { Building2, Loader2, Rocket } from "lucide-react"
 import Image from "next/image"
@@ -20,7 +19,7 @@ export default function OnboardingPage() {
     email: "",
     telefono: "",
     direccion: "",
-    descripcion: "",
+    id_fiscal: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,14 +150,13 @@ export default function OnboardingPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="descripcion">Descripcion (opcional)</Label>
-              <Textarea
-                id="descripcion"
-                placeholder="Breve descripcion de tu empresa..."
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              <Label htmlFor="id_fiscal">Identificacion Fiscal (opcional)</Label>
+              <Input
+                id="id_fiscal"
+                placeholder="Cedula juridica o NIT"
+                value={formData.id_fiscal}
+                onChange={(e) => setFormData({ ...formData, id_fiscal: e.target.value })}
                 disabled={isLoading}
-                rows={3}
               />
             </div>
 

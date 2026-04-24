@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { nombre, email, telefono, direccion, descripcion } = body
+    const { nombre, email, telefono, direccion, id_fiscal } = body
 
     if (!nombre?.trim()) {
       return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create empresa record
+    // Create empresa record (columns: id, nombre, email, telefono, direccion, id_fiscal, logo_url, activo, creado_en, actualizado_en)
     const { data: empresa, error: empresaError } = await supabase
       .from("empresa")
       .insert({
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         email: email.toLowerCase().trim(),
         telefono: telefono?.trim() || null,
         direccion: direccion?.trim() || null,
-        descripcion: descripcion?.trim() || null,
+        id_fiscal: id_fiscal?.trim() || null,
       })
       .select("id")
       .single()
