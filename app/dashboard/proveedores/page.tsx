@@ -87,6 +87,11 @@ export default function ProveedoresPage() {
     setEditingProveedor(null)
   }
 
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open)
+    if (!open) resetForm()
+  }
+
   const openEditDialog = (proveedor: Proveedor) => {
     setEditingProveedor(proveedor)
     setFormData({
@@ -172,7 +177,7 @@ export default function ProveedoresPage() {
             Gestiona los proveedores de tu empresa.
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
               <Plus className="h-4 w-4" />
@@ -244,7 +249,7 @@ export default function ProveedoresPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="border-border/30">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border/30">
                 Cancelar
               </Button>
               <Button
