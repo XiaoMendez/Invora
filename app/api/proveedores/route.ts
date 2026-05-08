@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       .order("nombre", { ascending: true })
 
     if (search) {
-      query = query.or(`nombre.ilike.%${search}%,email.ilike.%${search}%,telefono.ilike.%${search}%`)
+      query = query.or(`nombre.ilike.%${search}%,correo.ilike.%${search}%,telefono.ilike.%${search}%`)
     }
 
     const { data: proveedores, error } = await query
@@ -42,24 +42,24 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    const adminClient = createAdminClient()
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { nombre, email, telefono, direccion, notas } = body
+    const { nombre, correo, telefono, direccion } = body
 
     if (!nombre?.trim()) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
     }
 
-    const { data: proveedor, error } = await supabase
+    const { data: proveedor, error } = await adminClient
       .from("proveedor")
       .insert({
         id_empresa: empresaId,
         nombre: nombre.trim(),
-        email: email?.toLowerCase().trim() || null,
+        correo: correo?.toLowerCase().trim() || null,
         telefono: telefono?.trim() || null,
         direccion: direccion?.trim() || null,
-        notas: notas?.trim() || null,
       })
       .select()
       .single()
@@ -82,10 +82,13 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
+    const adminClient = createAdminClient()
     const empresaId = await getEmpresaId(supabase)
 
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
     const body = await request.json()
-    const { id, nombre, email, telefono, direccion, notas, activo } = body
+    const { nombre, correo, telefono, direccion, activo } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID es requerido" }, { status: 400 })
@@ -95,14 +98,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
     }
 
-    const { data: proveedor, error } = await supabase
+    const { data: proveedor, error } = await adminClient
       .from("proveedor")
       .update({
         nombre: nombre.trim(),
-        email: email?.toLowerCase().trim() || null,
+        correo: correo?.toLowerCase().trim() || null,
         telefono: telefono?.trim() || null,
         direccion: direccion?.trim() || null,
-        notas: notas?.trim() || null,
         activo: activo !== undefined ? activo : true,
         actualizado_en: new Date().toISOString(),
       })
@@ -129,6 +131,7 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient()
+    const adminClient = createAdminClient()
     const empresaId = await getEmpresaId(supabase)
 
     const { searchParams } = new URL(request.url)
@@ -138,7 +141,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID es requerido" }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("proveedor")
       .delete()
       .eq("id", id)
