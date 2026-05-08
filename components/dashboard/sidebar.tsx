@@ -15,6 +15,7 @@ import {
   LogOut,
   Search,
   Plus,
+  Truck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -31,6 +32,7 @@ import { createClient } from "@/lib/supabase/client"
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Productos", href: "/dashboard/productos", icon: Package },
+  { label: "Proveedores", href: "/dashboard/proveedores", icon: Truck },
   { label: "Movimientos", href: "/dashboard/movimientos", icon: ArrowLeftRight },
   { label: "Reportes", href: "/dashboard/reportes", icon: BarChart3 },
   { label: "Alertas", href: "/dashboard/alertas", icon: Bell, badge: 3 },
