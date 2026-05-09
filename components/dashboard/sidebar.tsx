@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
+import useSWR from "swr"
 import {
   LayoutDashboard,
   Package,
@@ -16,6 +17,7 @@ import {
   Search,
   Plus,
   Truck,
+  Users,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -29,13 +31,16 @@ import {
 } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/client"
 
+const fetcher = (url: string) => fetch(url).then((r) => r.json())
+
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Productos", href: "/dashboard/productos", icon: Package },
   { label: "Proveedores", href: "/dashboard/proveedores", icon: Truck },
+  { label: "Clientes", href: "/dashboard/clientes", icon: Users },
   { label: "Movimientos", href: "/dashboard/movimientos", icon: ArrowLeftRight },
   { label: "Reportes", href: "/dashboard/reportes", icon: BarChart3 },
-  { label: "Alertas", href: "/dashboard/alertas", icon: Bell, badge: 3 },
+  { label: "Alertas", href: "/dashboard/alertas", icon: Bell, showAlertBadge: true },
   { label: "Configuracion", href: "/dashboard/configuracion", icon: Settings },
 ]
 
@@ -43,6 +48,8 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+  const { data: alertasData } = useSWR("/api/alertas", fetcher, { refreshInterval: 60000 })
+  const alertCount: number = alertasData?.alertas?.length ?? 0
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -117,12 +124,12 @@ export function DashboardSidebar() {
                         {!collapsed && (
                           <>
                             <span className="flex-1">{link.label}</span>
-                            {link.badge && (
+                            {link.showAlertBadge && alertCount > 0 && (
                               <Badge
                                 variant="secondary"
                                 className="bg-primary/20 text-primary text-[10px] h-5 min-w-5 flex items-center justify-center"
                               >
-                                {link.badge}
+                                {alertCount}
                               </Badge>
                             )}
                           </>
@@ -132,7 +139,7 @@ export function DashboardSidebar() {
                     {collapsed && (
                       <TooltipContent side="right" className="bg-popover text-popover-foreground">
                         {link.label}
-                        {link.badge && ` (${link.badge})`}
+                        {link.showAlertBadge && alertCount > 0 && ` (${alertCount})`}
                       </TooltipContent>
                     )}
                   </Tooltip>
