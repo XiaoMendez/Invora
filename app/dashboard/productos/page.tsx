@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import useSWR, { mutate } from "swr"
 import {
   Package,
@@ -12,6 +12,9 @@ import {
   Trash2,
   Loader2,
   AlertTriangle,
+  ChevronDown,
+  Check,
+  PenLine,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,6 +51,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 interface Categoria {
   id: string
@@ -75,12 +79,171 @@ function getStatusInfo(stock: number, stock_minimo: number) {
   return { label: "Disponible", className: "bg-green-500/10 text-green-400 border-green-500/20" }
 }
 
+// Combobox de categoría con opción de escribir una propia
+function CategoriaCombobox({
+  categorias,
+  value,
+  onChange,
+  onCategoriaCreada,
+}: {
+  categorias: Categoria[]
+  value: string
+  onChange: (val: string) => void
+  onCategoriaCreada: (cat: Categoria) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const [creando, setCreando] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  const selected = categorias.find((c) => c.id === value)
+  const filtradas = categorias.filter((c) =>
+    c.nombre.toLowerCase().includes(search.toLowerCase())
+  )
+  const searchTrimmed = search.trim()
+  const existeExacta = categorias.some(
+    (c) => c.nombre.toLowerCase() === searchTrimmed.toLowerCase()
+  )
+  const mostrarCrear = searchTrimmed.length > 0 && !existeExacta
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+        setSearch("")
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const handleCrear = async () => {
+    if (!searchTrimmed) return
+    setCreando(true)
+    try {
+      const res = await fetch("/api/categorias", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: searchTrimmed }),
+      })
+      if (res.ok) {
+        const { categoria } = await res.json()
+        onCategoriaCreada(categoria)
+        onChange(categoria.id)
+        setOpen(false)
+        setSearch("")
+      }
+    } finally {
+      setCreando(false)
+    }
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm transition-colors outline-none",
+          "border-border/30 bg-secondary/50 text-foreground hover:bg-secondary/70",
+          open && "ring-1 ring-ring/50 border-ring/50"
+        )}
+      >
+        <span className={cn(!selected && "text-muted-foreground")}>
+          {selected ? selected.nombre : "Seleccionar o crear..."}
+        </span>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border/30 bg-popover shadow-lg overflow-hidden">
+          {/* Buscador / escritura libre */}
+          <div className="p-2 border-b border-border/20">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                autoFocus
+                className="w-full pl-7 pr-2 py-1.5 text-sm bg-secondary/50 border border-border/20 rounded text-foreground placeholder:text-muted-foreground outline-none focus:border-ring/50"
+                placeholder="Buscar o escribir nueva..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && mostrarCrear) handleCrear()
+                  if (e.key === "Escape") { setOpen(false); setSearch("") }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="max-h-48 overflow-y-auto py-1">
+            {/* Opcion "Sin categoria" */}
+            <button
+              type="button"
+              onClick={() => { onChange(""); setOpen(false); setSearch("") }}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent/20 transition-colors",
+                !value && "bg-primary text-primary-foreground hover:bg-primary/90"
+              )}
+            >
+              {!value && <Check className="h-3.5 w-3.5 shrink-0" />}
+              <span className={!value ? "" : "pl-5"}>Sin categoria</span>
+            </button>
+
+            {filtradas.map((cat) => {
+              const isSelected = cat.id === value
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => { onChange(cat.id); setOpen(false); setSearch("") }}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent/20 transition-colors",
+                    isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {isSelected
+                    ? <Check className="h-3.5 w-3.5 shrink-0" />
+                    : <span className="w-3.5 shrink-0" />
+                  }
+                  {cat.nombre}
+                </button>
+              )
+            })}
+
+            {filtradas.length === 0 && !mostrarCrear && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</p>
+            )}
+
+            {/* Crear nueva categoria */}
+            {mostrarCrear && (
+              <button
+                type="button"
+                onClick={handleCrear}
+                disabled={creando}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left border-t border-border/20 text-primary hover:bg-primary/10 transition-colors"
+              >
+                {creando
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                  : <PenLine className="h-3.5 w-3.5 shrink-0" />
+                }
+                Crear &quot;{searchTrimmed}&quot;
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProductosPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todas")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Producto | null>(null)
   const [saving, setSaving] = useState(false)
+  const [extraCategorias, setExtraCategorias] = useState<Categoria[]>([])
   const [formData, setFormData] = useState({
     nombre: "",
     sku: "",
@@ -93,10 +256,15 @@ export default function ProductosPage() {
 
   const apiUrl = `/api/productos?search=${encodeURIComponent(searchQuery)}&categoria=${selectedCategory}`
   const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
-  const { data: catData } = useSWR("/api/categorias", fetcher)
+  const { data: catData, mutate: mutateCategorias } = useSWR("/api/categorias", fetcher)
 
   const productos: Producto[] = data?.productos || []
-  const categorias: Categoria[] = catData?.categorias || []
+  const categoriasBase: Categoria[] = catData?.categorias || []
+  // Merge con categorias recien creadas (evitar duplicados)
+  const categorias: Categoria[] = [
+    ...categoriasBase,
+    ...extraCategorias.filter((e) => !categoriasBase.find((b) => b.id === e.id)),
+  ]
 
   const resetForm = () => {
     setFormData({
@@ -235,20 +403,16 @@ export default function ProductosPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="category" className="text-xs">Categoria</Label>
-                  <Select
+                  <Label className="text-xs">Categoria</Label>
+                  <CategoriaCombobox
+                    categorias={categorias}
                     value={formData.id_categoria}
-                    onValueChange={(val) => setFormData({ ...formData, id_categoria: val })}
-                  >
-                    <SelectTrigger className="bg-secondary/50 border-border/30">
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent className="glass-card border-border/30">
-                      {categorias.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>{cat.nombre}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={(val) => setFormData({ ...formData, id_categoria: val })}
+                    onCategoriaCreada={(cat) => {
+                      setExtraCategorias((prev) => [...prev, cat])
+                      mutateCategorias()
+                    }}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
