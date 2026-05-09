@@ -157,14 +157,14 @@ function CategoriaCombobox({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-md border border-border/30 bg-popover shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full rounded-md border border-border/40 bg-[oklch(0.13_0.015_280)] shadow-xl overflow-hidden">
           {/* Buscador / escritura libre */}
           <div className="p-2 border-b border-border/20">
             <div className="relative">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <input
                 autoFocus
-                className="w-full pl-7 pr-2 py-1.5 text-sm bg-secondary/50 border border-border/20 rounded text-foreground placeholder:text-muted-foreground outline-none focus:border-ring/50"
+                className="w-full pl-7 pr-2 py-1.5 text-sm bg-[oklch(0.18_0.02_280)] border border-border/30 rounded text-foreground placeholder:text-muted-foreground outline-none focus:border-ring/50"
                 placeholder="Buscar o escribir nueva..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

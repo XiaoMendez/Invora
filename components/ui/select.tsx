@@ -92,7 +92,7 @@ function SelectLabel({
   return (
     <SelectPrimitive.Label
       data-slot="select-label"
-      className={cn('text-[oklch(0.45_0.02_280)] px-2 py-1.5 text-xs font-medium', className)}
+      className={cn('text-muted-foreground px-2 py-1.5 text-xs font-medium', className)}
       {...props}
     />
   )
