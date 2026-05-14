@@ -5,7 +5,7 @@ import {
   Package,
   BarChart3,
   Bell,
-  Scan,
+  MousePointerClick,
   Users,
   Shield,
 } from "lucide-react"
@@ -30,10 +30,10 @@ const features = [
       "Recibe notificaciones cuando el stock baje del minimo o cuando se detecten anomalias en movimientos.",
   },
   {
-    icon: Scan,
-    title: "Escaneo Rapido",
+    icon: MousePointerClick,
+    title: "Facil de Usar",
     description:
-      "Registra entradas y salidas de inventario con escaneo de codigos de barras desde cualquier dispositivo.",
+      "Diseno intuitivo pensado para que cualquier persona pueda usarlo sin capacitacion previa. Solo haz clic y listo.",
   },
   {
     icon: Users,
