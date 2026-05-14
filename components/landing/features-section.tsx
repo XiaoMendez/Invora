@@ -13,31 +13,31 @@ import {
 const features = [
   {
     icon: Package,
-    title: "Gestion de Productos",
+    title: "Gestión de Productos",
     description:
-      "Registra, organiza y categoriza todos tus productos con campos personalizables y busqueda avanzada.",
+      "Registra, organiza y categoriza todos tus productos con campos personalizables y búsqueda avanzada.",
   },
   {
     icon: BarChart3,
     title: "Reportes en Tiempo Real",
     description:
-      "Visualiza el estado de tu inventario con graficos interactivos y reportes detallados al instante.",
+      "Visualiza el estado de tu inventario con gráficos interactivos y reportes detallados al instante.",
   },
   {
     icon: Bell,
     title: "Alertas Inteligentes",
     description:
-      "Recibe notificaciones cuando el stock baje del minimo o cuando se detecten anomalias en movimientos.",
+      "Recibe notificaciones cuando el stock baje del mínimo o cuando se detecten anomalías en movimientos.",
   },
   {
     icon: MousePointerClick,
-    title: "Facil de Usar",
+    title: "Fácil de Usar",
     description:
-      "Diseno intuitivo pensado para que cualquier persona pueda usarlo sin capacitacion previa. Solo haz clic y listo.",
+      "Diseño intuitivo pensado para que cualquier persona pueda usarlo sin capacitación previa. Solo haz clic y listo.",
   },
   {
     icon: Users,
-    title: "Gestion de Proveedores",
+    title: "Gestión de Proveedores",
     description:
       "Administra tus proveedores, compara precios de compra y mantiene un historial completo de cada pedido.",
   },
@@ -45,7 +45,7 @@ const features = [
     icon: Shield,
     title: "Seguridad Avanzada",
     description:
-      "Tus datos estan protegidos con encriptacion de extremo a extremo y respaldos automaticos diarios.",
+      "Tus datos están protegidos con encriptación de extremo a extremo y respaldos automáticos diarios.",
   },
 ]
 
@@ -87,7 +87,7 @@ export function FeaturesSection() {
             <span className="text-primary">gestionar</span> tu inventario
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground text-pretty leading-relaxed">
-            Herramientas disenadas especificamente para las necesidades de PYMEs costarricenses.
+            Herramientas diseñadas específicamente para las necesidades de PYMEs costarricenses.
           </p>
         </motion.div>
 
