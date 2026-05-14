@@ -30,12 +30,12 @@ export default function RegisterPage() {
     setError("")
 
     if (form.password !== form.confirmPassword) {
-      setError("Las contrasenas no coinciden")
+      setError("Las contraseñas no coinciden")
       return
     }
 
     if (!isPasswordValid(form.password)) {
-      setError("La contrasena no cumple con los requisitos minimos")
+      setError("La contraseña no cumple con los requisitos mínimos")
       return
     }
 
@@ -140,13 +140,13 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="password" className="text-sm text-foreground">
-                Contrasena
+                Contraseña
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Minimo 8 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   onFocus={() => setPasswordFocused(true)}
@@ -158,7 +158,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -171,12 +171,12 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword" className="text-sm text-foreground">
-                Confirmar contrasena
+                Confirmar contraseña
               </Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Repite tu contrasena"
+                placeholder="Repite tu contraseña"
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 required

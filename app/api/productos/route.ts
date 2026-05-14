@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
@@ -15,7 +15,11 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("producto")
-      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria, categoria(id, nombre)")
+      .select(`
+        id, nombre, sku, descripcion, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria,
+        categoria(id, nombre),
+        producto_proveedor(id_proveedor, precio_compra, codigo_proveedor, es_principal, proveedor(id, nombre, correo, telefono))
+      `)
       .eq("id_empresa", empresaId)
       .order("nombre", { ascending: true })
 
