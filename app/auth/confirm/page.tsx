@@ -105,9 +105,9 @@ function EmailConfirmContent() {
             <Image
               src="/images/invora-logo.png"
               alt="INVORA"
-              width={300}
-              height={100}
-              className="h-16 w-auto mb-6"
+              width={360}
+              height={120}
+              className="h-20 w-auto mb-6"
             />
           </div>
 

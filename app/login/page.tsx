@@ -78,9 +78,9 @@ export default function LoginPage() {
             <Image
               src="/images/invora-logo.png"
               alt="INVORA"
-              width={400}
-              height={133}
-              className="h-24 w-auto mb-6"
+              width={360}
+              height={120}
+              className="h-20 w-auto mb-6"
             />
             <h1 className="text-2xl font-bold text-foreground">Iniciar Sesion</h1>
             <p className="text-sm text-muted-foreground mt-1">
