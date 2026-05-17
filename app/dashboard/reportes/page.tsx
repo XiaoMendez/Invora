@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import useSWR from "swr"
-import { BarChart3, TrendingUp, Package, DollarSign, Loader2, AlertTriangle } from "lucide-react"
+import { BarChart3, TrendingUp, Package, DollarSign, Loader2, AlertTriangle, Download, FileSpreadsheet } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -11,6 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
 import {
   AreaChart,
   Area,
@@ -71,6 +80,10 @@ export default function ReportesPage() {
   const categoryDistribution = data?.categoryDistribution || []
   const topProducts = data?.topProducts || []
 
+  const handleExport = (tipo: string) => {
+    window.open(`/api/reportes?periodo=${periodo}&export=${tipo}`, "_blank")
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -115,6 +128,35 @@ export default function ReportesPage() {
               <SelectItem value="1y">Último año</SelectItem>
             </SelectContent>
           </Select>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-border/30 gap-2 text-sm">
+                <Download className="h-4 w-4" />
+                Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="glass-card border-border/30">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Exportar a Excel</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border/30" />
+              <DropdownMenuItem onClick={() => handleExport("inventario")} className="text-sm cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Inventario Completo
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("movimientos")} className="text-sm cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Movimientos del Período
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport("categorias")} className="text-sm cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Distribución por Categorías
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border/30" />
+              <DropdownMenuItem onClick={() => handleExport("resumen")} className="text-sm cursor-pointer">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Resumen Ejecutivo
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

@@ -4,6 +4,29 @@ import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } fr
 
 export const dynamic = "force-dynamic"
 
+// Función para escapar valores CSV correctamente
+function escapeCSV(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return ""
+  const str = String(value)
+  // Si contiene comas, comillas, saltos de línea o punto y coma, envolver en comillas
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r") || str.includes(";")) {
+    // Escapar comillas dobles duplicándolas
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+// Función para generar CSV con BOM para Excel
+function generateCSV(headers: string[], rows: (string | number | null | undefined)[][]): string {
+  const BOM = "\uFEFF" // BOM UTF-8 para que Excel detecte correctamente la codificación
+  const separator = ";" // Usar punto y coma como separador (mejor compatibilidad con Excel en español)
+  
+  const headerLine = headers.map(escapeCSV).join(separator)
+  const dataLines = rows.map(row => row.map(escapeCSV).join(separator))
+  
+  return BOM + [headerLine, ...dataLines].join("\r\n")
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
@@ -52,19 +75,19 @@ export async function GET(request: Request) {
     const data = movimientos || []
 
     if (exportCsv) {
-      const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Despues", "Motivo"]
+      const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo"]
       const rows = data.map((m) => [
         m.id,
         new Date(m.creado_en).toLocaleString("es-CR"),
         m.producto,
-        m.sku || "",
+        m.sku,
         m.tipo,
         m.cantidad,
         m.stock_antes,
         m.stock_despues,
-        m.motivo || "",
+        m.motivo,
       ])
-      const csv = [headers, ...rows].map((r) => r.join(",")).join("\n")
+      const csv = generateCSV(headers, rows)
       return new Response(csv, {
         headers: {
           "Content-Type": "text/csv; charset=utf-8",

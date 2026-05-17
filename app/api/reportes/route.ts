@@ -4,6 +4,25 @@ import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
+// Función para escapar valores CSV correctamente
+function escapeCSV(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return ""
+  const str = String(value)
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r") || str.includes(";")) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+// Función para generar CSV con BOM para Excel
+function generateCSV(headers: string[], rows: (string | number | null | undefined)[][]): string {
+  const BOM = "\uFEFF"
+  const separator = ";"
+  const headerLine = headers.map(escapeCSV).join(separator)
+  const dataLines = rows.map(row => row.map(escapeCSV).join(separator))
+  return BOM + [headerLine, ...dataLines].join("\r\n")
+}
+
 export async function GET(request: Request) {
   try {
     const supabase = await createClient()
@@ -11,6 +30,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get("periodo") || "7m"
+    const exportType = searchParams.get("export")
 
     // Calculate how many months to look back
     const mesesAtras = periodo === "30d" ? 1 : periodo === "3m" ? 3 : periodo === "7m" ? 7 : 12
@@ -112,6 +132,105 @@ export async function GET(request: Request) {
       .reduce((s, m) => s + m.cantidad, 0)
     const avgStock = prods.reduce((s, p) => s + p.stock, 0) / Math.max(prods.length, 1)
     const rotacion = avgStock > 0 ? (totalSalidas / avgStock).toFixed(1) : "0.0"
+
+    // Exportación CSV
+    if (exportType === "inventario") {
+      // Exportar inventario completo con valores
+      const { data: inventarioCompleto } = await supabase
+        .from("producto")
+        .select("nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, categoria(nombre)")
+        .eq("id_empresa", empresaId)
+        .order("nombre")
+
+      const headers = ["Producto", "SKU", "Stock Actual", "Stock Mínimo", "Precio Costo", "Precio Venta", "Valor Total", "Categoría", "Estado"]
+      const rows = (inventarioCompleto || []).map((p) => [
+        p.nombre,
+        p.sku,
+        p.stock,
+        p.stock_minimo,
+        Number(p.precio_costo).toFixed(2),
+        Number(p.precio_venta).toFixed(2),
+        (p.stock * Number(p.precio_costo)).toFixed(2),
+        (p.categoria as { nombre: string } | null)?.nombre || "Sin categoría",
+        p.activo ? "Activo" : "Inactivo",
+      ])
+      const csv = generateCSV(headers, rows)
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="inventario-${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+      })
+    }
+
+    if (exportType === "movimientos") {
+      // Exportar movimientos del período
+      const { data: movsExport } = await supabase
+        .from("v_historial_inventario")
+        .select("creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo")
+        .eq("id_empresa", empresaId)
+        .gte("creado_en", fechaDesde.toISOString())
+        .order("creado_en", { ascending: false })
+
+      const headers = ["Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo"]
+      const rows = (movsExport || []).map((m) => [
+        new Date(m.creado_en).toLocaleString("es-CR"),
+        m.producto,
+        m.sku,
+        m.tipo,
+        m.cantidad,
+        m.stock_antes,
+        m.stock_despues,
+        m.motivo,
+      ])
+      const csv = generateCSV(headers, rows)
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="movimientos-reporte-${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+      })
+    }
+
+    if (exportType === "categorias") {
+      // Exportar distribución por categorías
+      const headers = ["Categoría", "Productos", "Porcentaje", "Valor Total"]
+      const rows = categoryDistribution.map((c) => [
+        c.name,
+        c.value,
+        `${c.percentage}%`,
+        c.valorTotal.toFixed(2),
+      ])
+      const csv = generateCSV(headers, rows)
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="categorias-${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+      })
+    }
+
+    if (exportType === "resumen") {
+      // Exportar resumen completo
+      const headers = ["Métrica", "Valor"]
+      const rows = [
+        ["Valor Total Inventario", valorInventario.toFixed(2)],
+        ["SKUs Activos", skusActivos],
+        ["Rotación Promedio", `${rotacion}x / mes`],
+        ["Total Entradas (período)", (movimientos || []).filter((m) => ["entrada", "ajuste_positivo", "devolucion_venta"].includes(m.tipo)).reduce((s, m) => s + m.cantidad, 0)],
+        ["Total Salidas (período)", totalSalidas],
+        ["", ""],
+        ["Top 5 Productos por Rotación", "Salidas"],
+        ...topProducts.map((p) => [p.nombre, p.salidas]),
+      ]
+      const csv = generateCSV(headers, rows)
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="resumen-inventario-${new Date().toISOString().split("T")[0]}.csv"`,
+        },
+      })
+    }
 
     return NextResponse.json({
       kpis: {

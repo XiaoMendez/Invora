@@ -28,7 +28,7 @@ export function StaticPageLayout({
               alt="INVORA Logo"
               width={360}
               height={120}
-              className="h-10 w-auto"
+              className="h-20 w-auto"
               priority
             />
           </Link>
