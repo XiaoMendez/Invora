@@ -36,6 +36,9 @@ export async function GET(request: Request) {
     const tipo = searchParams.get("tipo") || "todos"
     const periodo = searchParams.get("periodo") || "30d"
     const exportCsv = searchParams.get("export") === "csv"
+    const clienteId = searchParams.get("cliente")
+    const proveedorId = searchParams.get("proveedor")
+    const search = searchParams.get("search")
 
     // Calculate date range
     let fechaDesde: Date | null = null
@@ -53,7 +56,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("v_historial_inventario")
-      .select("id, creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo")
+      .select("id, creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo, id_cliente, cliente_nombre, cliente_apellido, id_proveedor, proveedor_nombre, comprobante_url")
       .eq("id_empresa", empresaId)
       .order("creado_en", { ascending: false })
 
@@ -69,13 +72,26 @@ export async function GET(request: Request) {
       query = query.gte("creado_en", fechaDesde.toISOString())
     }
 
+    // Filtrar por cliente o proveedor
+    if (clienteId) {
+      query = query.eq("id_cliente", clienteId)
+    }
+    if (proveedorId) {
+      query = query.eq("id_proveedor", proveedorId)
+    }
+
+    // Búsqueda por producto, cliente o proveedor
+    if (search) {
+      query = query.or(`producto.ilike.%${search}%,cliente_nombre.ilike.%${search}%,proveedor_nombre.ilike.%${search}%`)
+    }
+
     const { data: movimientos, error } = await query.limit(500)
     if (error) throw error
 
     const data = movimientos || []
 
     if (exportCsv) {
-      const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo"]
+      const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo", "Cliente", "Proveedor"]
       const rows = data.map((m) => [
         m.id,
         new Date(m.creado_en).toLocaleString("es-CR"),
@@ -86,6 +102,8 @@ export async function GET(request: Request) {
         m.stock_antes,
         m.stock_despues,
         m.motivo,
+        m.cliente_nombre ? `${m.cliente_nombre} ${m.cliente_apellido || ""}`.trim() : "",
+        m.proveedor_nombre || "",
       ])
       const csv = generateCSV(headers, rows)
       return new Response(csv, {
@@ -126,7 +144,7 @@ export async function POST(request: Request) {
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { id_producto, tipo, cantidad, motivo } = body
+    const { id_producto, tipo, cantidad, motivo, id_cliente, id_proveedor, comprobante_url } = body
 
     if (!id_producto || !tipo || !cantidad) {
       return NextResponse.json({ error: "Producto, tipo y cantidad son requeridos" }, { status: 400 })
@@ -134,7 +152,7 @@ export async function POST(request: Request) {
 
     const cantidadInt = parseInt(cantidad)
     if (isNaN(cantidadInt) || cantidadInt <= 0) {
-      return NextResponse.json({ error: "La cantidad debe ser un numero positivo" }, { status: 400 })
+      return NextResponse.json({ error: "La cantidad debe ser un número positivo" }, { status: 400 })
     }
 
     // Get current stock
@@ -169,7 +187,7 @@ export async function POST(request: Request) {
 
     if (updateError) throw updateError
 
-    // Record movement
+    // Record movement with optional cliente, proveedor and comprobante
     const { data: movimiento, error: movError } = await supabase
       .from("movimiento_inventario")
       .insert({
@@ -180,6 +198,9 @@ export async function POST(request: Request) {
         stock_antes: stockActual,
         stock_despues: nuevoStock,
         motivo: motivo?.trim() || null,
+        id_cliente: id_cliente || null,
+        id_proveedor: id_proveedor || null,
+        comprobante_url: comprobante_url || null,
       })
       .select("id")
       .single()

@@ -15,6 +15,9 @@ import {
   ChevronDown,
   Check,
   PenLine,
+  Truck,
+  Home,
+  X,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -69,6 +72,21 @@ interface Producto {
   activo: boolean
   id_categoria: string | null
   categoria: Categoria | null
+  es_propio: boolean
+}
+
+interface Proveedor {
+  id: string
+  nombre: string
+  correo: string | null
+}
+
+interface ProductoProveedor {
+  id: string
+  id_proveedor: string
+  precio_compra: number | null
+  es_principal: boolean
+  proveedor: Proveedor
 }
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
