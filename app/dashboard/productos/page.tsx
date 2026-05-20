@@ -255,6 +255,147 @@ function CategoriaCombobox({
   )
 }
 
+  )
+}
+
+// Componente para gestionar proveedores del producto
+function ProveedoresSection({
+  proveedoresSeleccionados,
+  setProveedoresSeleccionados,
+  proveedoresData,
+  formData,
+}: {
+  proveedoresSeleccionados: Array<{ id: string; nombre: string; precio_compra: string; es_principal: boolean }>
+  setProveedoresSeleccionados: (val: any) => void
+  proveedoresData: any
+  formData: any
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const proveedoresDisponibles = (proveedoresData?.proveedores || []).filter(
+    (p: any) => !proveedoresSeleccionados.some((ps) => ps.id === p.id)
+  )
+  const filtrados = proveedoresDisponibles.filter((p: any) =>
+    p.nombre.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const handleAgregar = (proveedor: any) => {
+    setProveedoresSeleccionados([
+      ...proveedoresSeleccionados,
+      { id: proveedor.id, nombre: proveedor.nombre, precio_compra: "", es_principal: false },
+    ])
+    setSearch("")
+    setOpen(false)
+  }
+
+  const handleRemover = (id: string) => {
+    setProveedoresSeleccionados(proveedoresSeleccionados.filter((p) => p.id !== id))
+  }
+
+  const handleActualizar = (id: string, campo: string, valor: any) => {
+    setProveedoresSeleccionados(
+      proveedoresSeleccionados.map((p) =>
+        p.id === id ? { ...p, [campo]: valor } : p
+      )
+    )
+  }
+
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label className="text-xs">Proveedores</Label>
+          <p className="text-xs text-muted-foreground">Asocia proveedores a este producto (opcional)</p>
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={formData.es_propio}
+            onChange={(e) => {}}
+            className="w-4 h-4"
+          />
+          <span className="text-xs">Producto propio</span>
+        </label>
+      </div>
+
+      {proveedoresSeleccionados.length > 0 && (
+        <div className="space-y-2 bg-secondary/30 rounded p-2">
+          {proveedoresSeleccionados.map((prov) => (
+            <div key={prov.id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={prov.es_principal}
+                onChange={(e) => handleActualizar(prov.id, "es_principal", e.target.checked)}
+                className="w-4 h-4"
+                title="Proveedor principal"
+              />
+              <span className="text-xs flex-1">{prov.nombre}</span>
+              <input
+                type="number"
+                placeholder="Precio compra"
+                value={prov.precio_compra}
+                onChange={(e) => handleActualizar(prov.id, "precio_compra", e.target.value)}
+                className="w-24 h-8 text-xs bg-secondary/50 border border-border/30 rounded px-2"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemover(prov.id)}
+                className="text-red-500 hover:text-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!formData.es_propio && (
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="w-full text-left px-3 py-2 text-sm bg-secondary/50 border border-border/30 rounded hover:bg-secondary/70 flex items-center justify-between"
+          >
+            <span className="text-muted-foreground">Agregar proveedor...</span>
+            <ChevronDown className="h-4 w-4" />
+          </button>
+
+          {open && proveedoresDisponibles.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg">
+              <input
+                type="text"
+                placeholder="Buscar proveedor..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full px-3 py-2 text-sm bg-secondary/50 border-b border-border/20 rounded-t"
+                autoFocus
+              />
+              <div className="max-h-40 overflow-y-auto">
+                {filtrados.map((prov: any) => (
+                  <button
+                    key={prov.id}
+                    type="button"
+                    onClick={() => handleAgregar(prov)}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors"
+                  >
+                    {prov.nombre}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {open && proveedoresDisponibles.length === 0 && (
+            <div className="absolute z-50 w-full mt-1 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg p-3">
+              <p className="text-xs text-muted-foreground text-center">No hay proveedores disponibles</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ProductosPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todas")
@@ -270,7 +411,15 @@ export default function ProductosPage() {
     stock_minimo: "0",
     precio_costo: "0",
     precio_venta: "0",
+    es_propio: true,
   })
+  const [proveedoresSeleccionados, setProveedoresSeleccionados] = useState<
+    Array<{ id: string; nombre: string; precio_compra: string; es_principal: boolean }>
+  >([])
+  const [proveedorSearch, setProveedorSearch] = useState("")
+  const [proveedoresOpen, setProveedoresOpen] = useState(false)
+
+  const { data: proveedoresData } = useSWR("/api/proveedores", fetcher)
 
   const apiUrl = `/api/productos?search=${encodeURIComponent(searchQuery)}&categoria=${selectedCategory}`
   const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
@@ -293,7 +442,9 @@ export default function ProductosPage() {
       stock_minimo: "0",
       precio_costo: "0",
       precio_venta: "0",
+      es_propio: true,
     })
+    setProveedoresSeleccionados([])
     setEditingProduct(null)
   }
 
@@ -307,7 +458,9 @@ export default function ProductosPage() {
       stock_minimo: product.stock_minimo.toString(),
       precio_costo: product.precio_costo.toString(),
       precio_venta: product.precio_venta.toString(),
+      es_propio: product.es_propio,
     })
+    setProveedoresSeleccionados([])
     setDialogOpen(true)
   }
 
@@ -328,6 +481,26 @@ export default function ProductosPage() {
       })
 
       if (res.ok) {
+        const { producto } = await res.json()
+
+        // Guardar proveedores asociados
+        if (proveedoresSeleccionados.length > 0) {
+          await Promise.all(
+            proveedoresSeleccionados.map((prov) =>
+              fetch("/api/producto-proveedor", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  id_producto: producto.id,
+                  id_proveedor: prov.id,
+                  precio_compra: prov.precio_compra ? parseFloat(prov.precio_compra) : null,
+                  es_principal: prov.es_principal,
+                }),
+              })
+            )
+          )
+        }
+
         mutate(apiUrl)
         setDialogOpen(false)
         resetForm()
@@ -477,6 +650,15 @@ export default function ProductosPage() {
                     className="bg-secondary/50 border-border/30"
                   />
                 </div>
+              </div>
+
+              <div className="border-t border-border/20 pt-4">
+                <ProveedoresSection
+                  proveedoresSeleccionados={proveedoresSeleccionados}
+                  setProveedoresSeleccionados={setProveedoresSeleccionados}
+                  proveedoresData={proveedoresData}
+                  formData={formData}
+                />
               </div>
             </div>
             <DialogFooter>

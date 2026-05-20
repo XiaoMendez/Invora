@@ -31,6 +31,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const periodo = searchParams.get("periodo") || "7m"
     const exportType = searchParams.get("export")
+    const clienteId = searchParams.get("cliente")
+    const proveedorId = searchParams.get("proveedor")
 
     // Calculate how many months to look back
     const mesesAtras = periodo === "30d" ? 1 : periodo === "3m" ? 3 : periodo === "7m" ? 7 : 12
@@ -50,12 +52,17 @@ export async function GET(request: Request) {
     const fechaDesde = new Date()
     fechaDesde.setMonth(fechaDesde.getMonth() - mesesAtras)
 
-    const { data: movimientos } = await supabase
+    let movQuery = supabase
       .from("movimiento_inventario")
       .select("tipo, cantidad, creado_en")
       .eq("id_empresa", empresaId)
       .gte("creado_en", fechaDesde.toISOString())
       .order("creado_en", { ascending: true })
+
+    if (clienteId) movQuery = movQuery.eq("id_cliente", clienteId)
+    if (proveedorId) movQuery = movQuery.eq("id_proveedor", proveedorId)
+
+    const { data: movimientos } = await movQuery
 
     // Group by month
     const monthMap = new Map<string, { mes: string; entradas: number; salidas: number; valorMes: number }>()
