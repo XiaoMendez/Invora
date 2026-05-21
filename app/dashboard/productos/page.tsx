@@ -255,9 +255,6 @@ function CategoriaCombobox({
   )
 }
 
-  )
-}
-
 // Componente para gestionar proveedores del producto
 function ProveedoresSection({
   proveedoresSeleccionados,
