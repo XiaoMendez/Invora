@@ -139,78 +139,16 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  try {
-    const supabase = await createClient()
-    const empresaId = await getEmpresaId(supabase)
+  // Los movimientos NO se crean manualmente desde aquí.
+  // Se crean automáticamente mediante triggers cuando:
+  // 1. Una compra cambia de estado a "recibida"
+  // 2. Una venta cambia de estado a "completada"
+  // 3. Se cancela/anula una venta que estaba completada (devolucion_venta)
 
-    const body = await request.json()
-    const { id_producto, tipo, cantidad, motivo, id_cliente, id_proveedor, comprobante_url } = body
-
-    if (!id_producto || !tipo || !cantidad) {
-      return NextResponse.json({ error: "Producto, tipo y cantidad son requeridos" }, { status: 400 })
-    }
-
-    const cantidadInt = parseInt(cantidad)
-    if (isNaN(cantidadInt) || cantidadInt <= 0) {
-      return NextResponse.json({ error: "La cantidad debe ser un número positivo" }, { status: 400 })
-    }
-
-    // Get current stock
-    const { data: producto, error: prodError } = await supabase
-      .from("producto")
-      .select("id, stock, nombre")
-      .eq("id", id_producto)
-      .eq("id_empresa", empresaId)
-      .single()
-
-    if (prodError || !producto) {
-      return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
-    }
-
-    const esEntrada = ["entrada", "ajuste_positivo", "devolucion_venta"].includes(tipo)
-    const esSalida = ["salida", "ajuste_negativo", "devolucion_compra"].includes(tipo)
-
-    const stockActual = producto.stock
-    const nuevoStock = esEntrada ? stockActual + cantidadInt : stockActual - cantidadInt
-
-    if (esSalida && nuevoStock < 0) {
-      return NextResponse.json({
-        error: `Stock insuficiente. Stock actual: ${stockActual}, cantidad solicitada: ${cantidadInt}`,
-      }, { status: 400 })
-    }
-
-    // Update stock
-    const { error: updateError } = await supabase
-      .from("producto")
-      .update({ stock: nuevoStock })
-      .eq("id", id_producto)
-
-    if (updateError) throw updateError
-
-    // Record movement with optional cliente, proveedor and comprobante
-    const { data: movimiento, error: movError } = await supabase
-      .from("movimiento_inventario")
-      .insert({
-        id_empresa: empresaId,
-        id_producto,
-        tipo,
-        cantidad: cantidadInt,
-        stock_antes: stockActual,
-        stock_despues: nuevoStock,
-        motivo: motivo?.trim() || null,
-        id_cliente: id_cliente || null,
-        id_proveedor: id_proveedor || null,
-        comprobante_url: comprobante_url || null,
-      })
-      .select("id")
-      .single()
-
-    if (movError) throw movError
-
-    return NextResponse.json({ success: true, movimiento, nuevoStock })
-  } catch (error) {
-    console.error("[movimientos POST]", error)
-    const msg = error instanceof Error ? error.message : "Error al registrar movimiento"
-    return NextResponse.json({ error: msg }, { status: 500 })
-  }
+  return NextResponse.json(
+    {
+      error: "Los movimientos se crean automáticamente mediante compras y ventas. Use /api/compras o /api/ventas en su lugar.",
+    },
+    { status: 403 }
+  )
 }
