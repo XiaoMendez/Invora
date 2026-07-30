@@ -58,8 +58,8 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
   const { data: productosData } = useSWR("/api/productos", fetcher)
 
   const [loading, setLoading] = useState(false)
-  const [selectedProveedor, setSelectedProveedor] = useState("")
-  const [selectedProducto, setSelectedProducto] = useState("")
+  const [selectedProveedor, setSelectedProveedor] = useState("__placeholder__")
+  const [selectedProducto, setSelectedProducto] = useState("__placeholder__")
   const [cantidad, setCantidad] = useState("")
   const [precioUnitario, setPrecioUnitario] = useState("")
   const [detalles, setDetalles] = useState<Compra["compra_detalle"]>([])
@@ -169,6 +169,9 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
                 <SelectValue placeholder="Selecciona un proveedor" />
               </SelectTrigger>
               <SelectContent className="glass-card border-border/30">
+                <SelectItem value="__placeholder__" disabled>
+                  Selecciona un proveedor
+                </SelectItem>
                 {proveedores.map((p: any) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.nombre}
@@ -187,6 +190,9 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
                   <SelectValue placeholder="Producto" />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/30">
+                  <SelectItem value="__placeholder__" disabled>
+                    Selecciona un producto
+                  </SelectItem>
                   {productos.map((p: any) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.nombre}
