@@ -37,6 +37,36 @@
   --radius: 0.75rem;
 }
 
+/* Light Mode Variables */
+.light {
+  --background: oklch(0.98 0.001 0);
+  --foreground: oklch(0.15 0.01 280);
+
+  --card: oklch(0.99 0.001 0);
+  --card-foreground: oklch(0.15 0.01 280);
+
+  --popover: oklch(0.98 0.001 0);
+  --popover-foreground: oklch(0.15 0.01 280);
+
+  --primary: oklch(0.55 0.2 310);
+  --primary-foreground: oklch(0.98 0 0);
+
+  --secondary: oklch(0.92 0.01 280);
+  --secondary-foreground: oklch(0.3 0.01 280);
+
+  --muted: oklch(0.88 0.01 280);
+  --muted-foreground: oklch(0.5 0.01 280);
+
+  --accent: oklch(0.55 0.2 310);
+  --accent-foreground: oklch(0.98 0 0);
+
+  --destructive: oklch(0.6 0.2 25);
+
+  --border: oklch(0.85 0.02 280);
+  --input: oklch(0.92 0.01 280);
+  --ring: oklch(0.55 0.2 310);
+}
+
 /* ============================= */
 /* Base Layer                    */
 /* ============================= */
