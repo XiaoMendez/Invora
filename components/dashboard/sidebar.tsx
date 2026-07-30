@@ -18,6 +18,8 @@ import {
   Plus,
   Truck,
   Users,
+  ShoppingCart,
+  TrendingUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -36,6 +38,8 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 const sidebarLinks = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Productos", href: "/dashboard/productos", icon: Package },
+  { label: "Compras", href: "/dashboard/compras", icon: ShoppingCart },
+  { label: "Ventas", href: "/dashboard/ventas", icon: TrendingUp },
   { label: "Proveedores", href: "/dashboard/proveedores", icon: Truck },
   { label: "Clientes", href: "/dashboard/clientes", icon: Users },
   { label: "Movimientos", href: "/dashboard/movimientos", icon: ArrowLeftRight },
