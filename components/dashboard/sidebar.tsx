@@ -32,6 +32,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/client"
+import { LanguageThemeSwitcher } from "@/components/LanguageThemeSwitcher"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -67,6 +68,7 @@ export function DashboardSidebar() {
       <aside
         className={cn(
           "fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300",
+          "hidden md:flex",
           collapsed ? "w-16" : "w-64"
         )}
       >
@@ -154,7 +156,10 @@ export function DashboardSidebar() {
         </nav>
 
         {/* User Section */}
-        <div className="border-t border-sidebar-border p-3">
+        <div className="border-t border-sidebar-border p-3 space-y-2">
+          <div className="flex items-center justify-center">
+            <LanguageThemeSwitcher />
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <button

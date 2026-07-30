@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { notFound } from "next/navigation"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -32,13 +33,27 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+const locales = ["es", "en", "pt"]
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
+
 export default function RootLayout({
   children,
+  params,
 }: {
   children: React.ReactNode
+  params: { locale?: string }
 }) {
+  const locale = params.locale || "es"
+
+  if (!locales.includes(locale as string)) {
+    notFound()
+  }
+
   return (
-    <html lang="es" className="dark">
+    <html lang={locale} className="dark">
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
