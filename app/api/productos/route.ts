@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     let query = supabase
       .from("producto")
       .select(`
-        id, nombre, sku, descripcion, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria,
+        id, nombre, sku, descripcion, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria, es_propio,
         categoria(id, nombre),
         producto_proveedor(id_proveedor, precio_compra, codigo_proveedor, es_principal, proveedor(id, nombre, correo, telefono))
       `)
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion } = body
+    const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion, es_propio } = body
 
     if (!nombre?.trim()) {
       return NextResponse.json({ error: "El nombre es requerido" }, { status: 400 })
@@ -65,6 +65,7 @@ export async function POST(request: Request) {
       stock_minimo: parseInt(stock_minimo) || 0,
       precio_costo: parseFloat(precio_costo) || 0,
       precio_venta: parseFloat(precio_venta) || 0,
+      es_propio: es_propio !== undefined ? es_propio : true,
     }
     if (sku?.trim()) insertData.sku = sku.trim()
     if (id_categoria) insertData.id_categoria = id_categoria
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     const { data: producto, error } = await supabase
       .from("producto")
       .insert(insertData)
-      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
+      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, es_propio, categoria(id, nombre)")
       .single()
 
     if (error) throw error
@@ -107,7 +108,7 @@ export async function PUT(request: Request) {
     const empresaId = await getEmpresaId(supabase)
 
     const body = await request.json()
-    const { id, nombre, sku, id_categoria, stock_minimo, precio_costo, precio_venta, activo } = body
+    const { id, nombre, sku, id_categoria, stock_minimo, precio_costo, precio_venta, activo, es_propio } = body
 
     if (!id) {
       return NextResponse.json({ error: "ID del producto requerido" }, { status: 400 })
@@ -121,13 +122,14 @@ export async function PUT(request: Request) {
     if (precio_costo !== undefined) updateData.precio_costo = parseFloat(precio_costo) || 0
     if (precio_venta !== undefined) updateData.precio_venta = parseFloat(precio_venta) || 0
     if (activo !== undefined) updateData.activo = activo
+    if (es_propio !== undefined) updateData.es_propio = es_propio
 
     const { data: producto, error } = await supabase
       .from("producto")
       .update(updateData)
       .eq("id", id)
       .eq("id_empresa", empresaId)
-      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, categoria(id, nombre)")
+      .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, es_propio, categoria(id, nombre)")
       .single()
 
     if (error) throw error
