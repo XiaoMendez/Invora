@@ -9,18 +9,18 @@ const handleI18nRouting = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
-  // Primero actualizar sesión de Supabase con el request original
+  // Aplicar i18n routing primero
+  let response = handleI18nRouting(request) || NextResponse.next()
+
+  // Luego actualizar sesión de Supabase con el request original
   const supabaseResponse = await updateSession(request)
 
-  // Luego aplicar i18n routing al response de Supabase
-  const i18nResponse = handleI18nRouting(request)
-
-  // Combinar cookies de ambas respuestas
+  // Copiar cookies de Supabase a la respuesta final
   supabaseResponse.headers.getSetCookie().forEach((cookie) => {
-    i18nResponse.headers.append('set-cookie', cookie)
+    response.headers.append('set-cookie', cookie)
   })
 
-  return i18nResponse
+  return response
 }
 
 export const config = {
