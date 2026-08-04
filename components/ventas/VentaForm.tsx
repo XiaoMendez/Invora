@@ -59,8 +59,8 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
   const { data: productosData } = useSWR("/api/productos", fetcher)
 
   const [loading, setLoading] = useState(false)
-  const [selectedCliente, setSelectedCliente] = useState("__none__")
-  const [selectedProducto, setSelectedProducto] = useState("__placeholder__")
+  const [selectedCliente, setSelectedCliente] = useState("")
+  const [selectedProducto, setSelectedProducto] = useState("")
   const [cantidad, setCantidad] = useState("")
   const [precioUnitario, setPrecioUnitario] = useState("")
   const [descuento, setDescuento] = useState("0")
@@ -129,7 +129,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_cliente: selectedCliente === "__none__" ? null : selectedCliente || null,
+          id_cliente: selectedCliente || null,
         }),
       })
 
@@ -153,7 +153,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
       onSuccess?.()
       onOpenChange(false)
       setDetalles([])
-      setSelectedCliente("__none__")
+      setSelectedCliente("")
     } catch (error) {
       console.error("Error:", error)
       alert("Error al guardar la venta")
@@ -179,7 +179,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
                 <SelectValue placeholder="Selecciona un cliente" />
               </SelectTrigger>
               <SelectContent className="glass-card border-border/30">
-                <SelectItem value="__none__">Sin cliente</SelectItem>
+                <SelectItem value="">Sin cliente</SelectItem>
                 {clientes.map((c: any) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.nombre}
@@ -198,9 +198,6 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
                   <SelectValue placeholder="Producto" />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/30">
-                  <SelectItem value="__placeholder__" disabled>
-                    Selecciona un producto
-                  </SelectItem>
                   {productos
                     .filter((p: any) => p.stock > 0)
                     .map((p: any) => (

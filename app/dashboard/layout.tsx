@@ -47,9 +47,9 @@ export default function DashboardLayout({
     <div className="relative min-h-screen bg-background">
       <StarsBackground />
       <DashboardSidebar />
-      <div className="md:pl-64 transition-all duration-300">
+      <div className="pl-64 transition-all duration-300">
         <DashboardHeader empresa={session.empresa} />
-        <main className="p-3 md:p-6 min-h-screen w-full overflow-x-hidden">{children}</main>
+        <main className="p-6 min-h-screen">{children}</main>
       </div>
     </div>
   )

@@ -4,29 +4,6 @@ import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const supabase = await createClient()
-    const empresaId = await getEmpresaId(supabase)
-    const ventaId = params.id
-
-    const { data: detalles, error } = await supabase
-      .from("venta_detalle")
-      .select(
-        "id, id_producto, cantidad, precio_unitario, descuento, subtotal, producto(id, nombre, sku)"
-      )
-      .eq("id_venta", ventaId)
-      .order("creado_en", { ascending: true })
-
-    if (error) throw error
-
-    return NextResponse.json({ detalles: detalles || [] })
-  } catch (error) {
-    console.error("[venta detalle GET]", error)
-    return NextResponse.json({ error: "Error al obtener detalles" }, { status: 500 })
-  }
-}
-
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
     const supabase = await createClient()
