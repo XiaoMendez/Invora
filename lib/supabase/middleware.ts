@@ -34,14 +34,21 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
-  const isAuthPage = pathname === '/login' || pathname === '/register'
-  const isOnboardingPage = pathname === '/onboarding'
-  const isDashboardPage = pathname.startsWith('/dashboard')
+  
+  // Remove locale prefix from pathname for matching
+  // Routes can be /es/dashboard, /en/dashboard, etc.
+  const pathWithoutLocale = pathname.replace(/^\/(es|en|pt)/, '') || '/'
+  
+  const isAuthPage = pathWithoutLocale === '/login' || pathWithoutLocale === '/register'
+  const isOnboardingPage = pathWithoutLocale === '/onboarding'
+  const isDashboardPage = pathWithoutLocale.startsWith('/dashboard')
 
   // If not authenticated and trying to access protected routes
   if (!user && (isDashboardPage || isOnboardingPage)) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    // Extract locale from original pathname
+    const locale = pathname.match(/^\/(es|en|pt)/)?.[1] || 'es'
+    url.pathname = `/${locale}/login`
     return NextResponse.redirect(url)
   }
 
@@ -59,21 +66,24 @@ export async function updateSession(request: NextRequest) {
     // If user needs onboarding (no empresa) and trying to access dashboard
     if (!hasEmpresa && isDashboardPage) {
       const url = request.nextUrl.clone()
-      url.pathname = '/onboarding'
+      const locale = pathname.match(/^\/(es|en|pt)/)?.[1] || 'es'
+      url.pathname = `/${locale}/onboarding`
       return NextResponse.redirect(url)
     }
 
     // If user has empresa and trying to access onboarding, redirect to dashboard
     if (hasEmpresa && isOnboardingPage) {
       const url = request.nextUrl.clone()
-      url.pathname = '/dashboard'
+      const locale = pathname.match(/^\/(es|en|pt)/)?.[1] || 'es'
+      url.pathname = `/${locale}/dashboard`
       return NextResponse.redirect(url)
     }
 
     // If authenticated and on auth pages, redirect appropriately
     if (isAuthPage) {
       const url = request.nextUrl.clone()
-      url.pathname = hasEmpresa ? '/dashboard' : '/onboarding'
+      const locale = pathname.match(/^\/(es|en|pt)/)?.[1] || 'es'
+      url.pathname = hasEmpresa ? `/${locale}/dashboard` : `/${locale}/onboarding`
       return NextResponse.redirect(url)
     }
   }
