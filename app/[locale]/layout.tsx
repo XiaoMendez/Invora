@@ -1,16 +1,17 @@
+'use client'
+
 import { ReactNode } from 'react'
 import { NextIntlClientProvider } from 'next-intl'
 import { ThemeProvider } from '@/components/theme-provider'
 import { OnboardingWrapper } from '@/components/OnboardingWrapper'
-import { getMessages } from 'next-intl/server'
+import { useMessages } from 'next-intl'
 
 interface LocaleLayoutProps {
   children: ReactNode
-  params: { locale: string }
 }
 
-export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
-  const messages = await getMessages()
+export default function LocaleLayout({ children }: LocaleLayoutProps) {
+  const messages = useMessages()
 
   return (
     <NextIntlClientProvider messages={messages}>
