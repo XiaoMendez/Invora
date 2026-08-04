@@ -1,8 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { useTheme } from 'next-themes'
-import { useEffect, useState } from 'react'
 
 interface ThemeLogoProps {
   width?: number
@@ -11,31 +9,40 @@ interface ThemeLogoProps {
   className?: string
 }
 
-export function ThemeLogo({ 
-  width = 800, 
-  height = 200, 
+/**
+ * Renders both logos and toggles them with Tailwind's `dark:` variant,
+ * which is driven by the class "dark" on <html> (added by next-themes with
+ * attribute="class"). No JS state needed — works on first paint with no flash.
+ *
+ * Default (no "dark" class on html) = light mode → show light logo.
+ * "dark" class on html              = dark mode  → show dark logo.
+ */
+export function ThemeLogo({
+  width = 800,
+  height = 200,
   alt = 'INVORA',
-  className = 'h-24 w-auto'
+  className = 'h-14 w-auto',
 }: ThemeLogoProps) {
-  const { theme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Use resolved theme to handle system preference
-  const isDark = mounted && (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark'))
-  const logoSrc = isDark ? '/images/invora-logo.png' : '/images/invora-logo-light.png'
-
   return (
-    <Image
-      src={logoSrc}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      priority
-    />
+    <>
+      {/* Light logo: visible in light mode, hidden in dark mode */}
+      <Image
+        src="/images/invora-logo-light.png"
+        alt={alt}
+        width={width}
+        height={height}
+        className={`${className} object-contain block dark:hidden`}
+        priority
+      />
+      {/* Dark logo: hidden in light mode, visible in dark mode */}
+      <Image
+        src="/images/invora-logo.png"
+        alt={alt}
+        width={width}
+        height={height}
+        className={`${className} object-contain hidden dark:block`}
+        priority
+      />
+    </>
   )
 }
