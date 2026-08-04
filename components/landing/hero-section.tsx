@@ -21,11 +21,26 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Black stars for light mode */}
+      {/* Black stars for light mode using CSS */}
+      <style>{`
+        @media (prefers-color-scheme: light) {
+          .hero-star-1 { display: block; }
+          .hero-star-2 { display: block; }
+          .hero-star-3 { display: block; }
+          .hero-star-4 { display: block; }
+          .hero-star-5 { display: block; }
+          .hero-star-6 { display: block; }
+        }
+        @media (prefers-color-scheme: dark) {
+          .hero-star-1, .hero-star-2, .hero-star-3, 
+          .hero-star-4, .hero-star-5, .hero-star-6 { display: none; }
+        }
+      `}</style>
+      
       <div className="absolute inset-0 pointer-events-none">
         {/* Top left star cluster */}
         <motion.div 
-          className="absolute top-10 left-6 light:block hidden"
+          className="absolute top-10 left-6 hero-star-1 hidden"
           animate={{ y: [0, -20, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
         >
@@ -34,7 +49,7 @@ export function HeroSection() {
         
         {/* Top right stars */}
         <motion.div 
-          className="absolute top-20 right-12 light:block hidden"
+          className="absolute top-20 right-12 hero-star-2 hidden"
           animate={{ y: [0, 15, 0] }}
           transition={{ duration: 5, repeat: Infinity }}
         >
@@ -43,7 +58,7 @@ export function HeroSection() {
         
         {/* Bottom left star */}
         <motion.div 
-          className="absolute bottom-32 left-10 light:block hidden"
+          className="absolute bottom-32 left-10 hero-star-3 hidden"
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 6, repeat: Infinity }}
         >
@@ -52,7 +67,7 @@ export function HeroSection() {
 
         {/* Bottom right stars */}
         <motion.div 
-          className="absolute bottom-24 right-8 light:block hidden"
+          className="absolute bottom-24 right-8 hero-star-4 hidden"
           animate={{ y: [0, 12, 0] }}
           transition={{ duration: 4.5, repeat: Infinity }}
         >
@@ -61,7 +76,7 @@ export function HeroSection() {
 
         {/* Center accent stars */}
         <motion.div 
-          className="absolute top-1/3 right-1/4 light:block hidden"
+          className="absolute top-1/3 right-1/4 hero-star-5 hidden"
           animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.35, 0.2] }}
           transition={{ duration: 3, repeat: Infinity }}
         >
@@ -69,7 +84,7 @@ export function HeroSection() {
         </motion.div>
 
         <motion.div 
-          className="absolute top-2/3 left-1/4 light:block hidden"
+          className="absolute top-2/3 left-1/4 hero-star-6 hidden"
           animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.3, 0.15] }}
           transition={{ duration: 3.5, repeat: Infinity }}
         >
