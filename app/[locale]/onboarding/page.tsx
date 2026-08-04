@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
+import { usePreferences } from "@/contexts/PreferencesContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -27,7 +28,8 @@ const themes = [
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { setTheme } = useTheme()
+  const { setTheme: setNTheme } = useTheme()
+  const { setTheme, setLocale } = usePreferences()
   const [step, setStep] = useState<Step>("language")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -43,14 +45,14 @@ export default function OnboardingPage() {
 
   const handleLanguageSelect = (lang: string) => {
     setSelectedLanguage(lang)
-    localStorage.setItem("NEXT_LOCALE", lang)
+    setLocale(lang as 'es' | 'en' | 'pt')
     setStep("theme")
   }
 
   const handleThemeSelect = (theme: string) => {
     setSelectedTheme(theme)
-    localStorage.setItem("theme", theme)
-    setTheme(theme)
+    setTheme(theme as 'light' | 'dark' | 'system')
+    setNTheme(theme)
     setStep("company")
   }
 
@@ -83,13 +85,8 @@ export default function OnboardingPage() {
         throw new Error(data.error || "Error al configurar la empresa")
       }
 
-      // Guardar que ya completó el onboarding
+      // Marcar onboarding como completado
       localStorage.setItem("onboarding_completed", "true")
-      localStorage.setItem("preferences", JSON.stringify({
-        locale: selectedLanguage,
-        theme: selectedTheme,
-        firstTime: false,
-      }))
 
       setStep("complete")
       setTimeout(() => {

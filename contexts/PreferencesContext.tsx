@@ -63,17 +63,7 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     const updated = { ...preferences, theme }
     setPreferences(updated)
     localStorage.setItem('preferences', JSON.stringify(updated))
-
-    // Aplicar tema en el HTML
-    const html = document.documentElement
-    if (theme === 'system') {
-      html.removeAttribute('data-theme')
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      html.classList.toggle('dark', isDark)
-    } else {
-      html.setAttribute('data-theme', theme)
-      html.classList.toggle('dark', theme === 'dark')
-    }
+    localStorage.setItem('theme', theme)
   }
 
   const completeOnboarding = () => {
