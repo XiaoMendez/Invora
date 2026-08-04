@@ -1,0 +1,41 @@
+{
+  "common": {
+    "welcome": "Bienvenido a Invora",
+    "language": "Idioma",
+    "theme": "Tema",
+    "settings": "Configuración",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "dashboard": "Panel de Control",
+    "logout": "Cerrar sesión",
+    "loading": "Cargando..."
+  },
+  "onboarding": {
+    "title": "Bienvenido a Invora",
+    "description": "Personaliza tu experiencia",
+    "selectLanguage": "Selecciona tu idioma",
+    "selectTheme": "Selecciona tu tema",
+    "companyName": "Nombre de la empresa",
+    "next": "Siguiente",
+    "finish": "Finalizar"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes cuenta?"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido",
+    "companyInfo": "Información de la empresa",
+    "inventory": "Inventario",
+    "sales": "Ventas",
+    "purchases": "Compras",
+    "reports": "Reportes"
+  }
+}
