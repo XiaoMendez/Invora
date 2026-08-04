@@ -1,0 +1,60 @@
+{
+  "common": {
+    "language": "Idioma",
+    "theme": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "logout": "Cerrar sesión",
+    "settings": "Configuración",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "close": "Cerrar"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "products": "Productos",
+    "purchases": "Compras",
+    "sales": "Ventas",
+    "suppliers": "Proveedores",
+    "clients": "Clientes",
+    "movements": "Movimientos",
+    "reports": "Reportes",
+    "alerts": "Alertas",
+    "configuration": "Configuración"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido",
+    "inventory_value": "Valor del Inventario",
+    "active_skus": "SKUs Activos"
+  },
+  "products": {
+    "title": "Productos",
+    "new_product": "Nuevo Producto",
+    "name": "Nombre",
+    "sku": "SKU"
+  },
+  "purchases": {
+    "title": "Compras",
+    "new_purchase": "Nueva Compra",
+    "supplier": "Proveedor"
+  },
+  "sales": {
+    "title": "Ventas",
+    "new_sale": "Nueva Venta",
+    "client": "Cliente"
+  },
+  "onboarding": {
+    "welcome_title": "Bienvenido a Invora",
+    "welcome_description": "Configura tu preferencia de idioma y tema",
+    "select_language": "Selecciona tu idioma",
+    "select_theme": "Selecciona tu tema",
+    "spanish": "Español",
+    "english": "English",
+    "portuguese": "Português",
+    "continue": "Continuar"
+  }
+}
