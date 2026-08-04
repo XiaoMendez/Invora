@@ -5,6 +5,7 @@ import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { motion } from "framer-motion"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export function StaticPageLayout({
   children,
@@ -15,6 +16,8 @@ export function StaticPageLayout({
   title: string
   subtitle?: string
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-screen flex flex-col bg-background">
       <StarsBackgroundCanvas />
@@ -37,7 +40,7 @@ export function StaticPageLayout({
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
+            {t("staticPages.backHome")}
           </Link>
         </div>
       </header>
@@ -73,16 +76,16 @@ export function StaticPageLayout({
       <footer className="relative z-20 border-t border-border/20 backdrop-blur-md bg-background/50">
         <div className="mx-auto max-w-5xl px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>&copy; 2024 INVORA. Todos los derechos reservados.</p>
+            <p>{t("common.copyright")} {t("common.allRightsReserved")}</p>
             <div className="flex gap-6">
               <Link href="/privacidad" className="hover:text-foreground transition-colors">
-                Privacidad
+                {t("common.privacy")}
               </Link>
               <Link href="/terminos" className="hover:text-foreground transition-colors">
-                Terminos
+                {t("common.terms")}
               </Link>
               <Link href="/contacto" className="hover:text-foreground transition-colors">
-                Contacto
+                {t("common.contact")}
               </Link>
             </div>
           </div>

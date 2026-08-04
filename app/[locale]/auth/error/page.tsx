@@ -1,14 +1,14 @@
+"use client"
+
 import Link from "next/link"
 import { AlertTriangle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
-
-export const metadata = {
-  title: "Error de Autenticación - INVORA",
-  description: "Ocurrió un error durante el proceso de autenticación.",
-}
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function AuthErrorPage() {
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-screen flex items-center justify-center">
       <StarsBackgroundCanvas />
@@ -19,7 +19,7 @@ export default function AuthErrorPage() {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver al inicio
+          {t("common.back")}
         </Link>
       </div>
 
@@ -29,22 +29,22 @@ export default function AuthErrorPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 border border-destructive/20">
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Error de Autenticación</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("auth.authErrorTitle")}</h1>
             <p className="text-sm text-muted-foreground max-w-sm">
-              Ocurrió un problema durante el proceso de autenticación. Por favor, intenta de nuevo.
+              {t("auth.authErrorDesc")}
             </p>
           </div>
 
           <div className="space-y-3 mb-6">
             <div className="rounded-lg bg-secondary/50 p-4 text-left">
               <p className="text-xs text-muted-foreground mb-2 font-medium">
-                Posibles causas:
+                {t("auth.authErrorCauses")}
               </p>
               <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc">
-                <li>Enlace de confirmación expirado</li>
-                <li>Sesión expirada</li>
-                <li>Navegador sin cookies habilitadas</li>
-                <li>Error en la conexión</li>
+                <li>{t("auth.authErrorCause1")}</li>
+                <li>{t("auth.authErrorCause2")}</li>
+                <li>{t("auth.authErrorCause3")}</li>
+                <li>{t("auth.authErrorCause4")}</li>
               </ul>
             </div>
           </div>
@@ -52,20 +52,20 @@ export default function AuthErrorPage() {
           <div className="flex flex-col gap-3">
             <Link href="/login" className="w-full">
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Intentar Iniciar Sesión de Nuevo
+                {t("auth.tryAgain")}
               </Button>
             </Link>
             <Link href="/register" className="w-full">
               <Button variant="outline" className="w-full border-border/30">
-                Crear Nueva Cuenta
+                {t("auth.createNewAccount")}
               </Button>
             </Link>
           </div>
 
           <p className="text-xs text-muted-foreground mt-6">
-            ¿Necesitas ayuda?{" "}
+            {t("auth.needHelp")}{" "}
             <Link href="/contacto" className="text-primary hover:text-primary/80 font-medium">
-              Contacta con nosotros
+              {t("auth.contactUs")}
             </Link>
           </p>
         </div>

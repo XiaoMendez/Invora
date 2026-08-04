@@ -1,86 +1,63 @@
-import { StaticPageLayout } from "@/components/static-page-layout"
+"use client"
 
-export const metadata = {
-  title: "Sobre Nosotros - INVORA",
-  description: "Conoce la mision y valores de INVORA, el sistema de inventario para PYMEs.",
-}
+import { StaticPageLayout } from "@/components/static-page-layout"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function SobreNosotrosPage() {
+  const { t } = useTranslation()
+
   return (
-    <StaticPageLayout 
-      title="Sobre Nosotros"
-      subtitle="Conoce la mision y los valores que impulsan a INVORA."
+    <StaticPageLayout
+      title={t("staticPages.about.title")}
+      subtitle={t("staticPages.about.subtitle")}
     >
       <div className="flex flex-col gap-8">
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-4">
-            Nuestra Mision
+            {t("staticPages.about.missionTitle")}
+          </h2>
+          <p>{t("staticPages.about.missionText")}</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            {t("staticPages.about.whatTitle")}
+          </h2>
+          <p>{t("staticPages.about.whatText")}</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-foreground mb-4">
+            {t("staticPages.about.whyTitle")}
           </h2>
           <p>
-            En INVORA, creemos que las PYMEs costarricenses merecen
-            herramientas de gestion de inventario tan potentes como las de las
-            grandes empresas, pero sin la complejidad ni los costos elevados.
+            {t("staticPages.about.whyText1")}{" "}
+            &ldquo;{t("staticPages.about.whyInventario")}&rdquo;{" "}
+            e &ldquo;{t("staticPages.about.whyInnovacion")}&rdquo;.{" "}
+            {t("staticPages.about.whyText2")}
           </p>
         </section>
 
         <section>
           <h2 className="text-xl font-semibold text-foreground mb-4">
-            Que Hacemos
-          </h2>
-          <p>
-            Desarrollamos un sistema de inventario inteligente disenado
-            especificamente para las necesidades de las pequenas y medianas
-            empresas en Costa Rica. Nuestra plataforma permite controlar el
-            stock, registrar movimientos, gestionar proveedores y generar
-            reportes de forma sencilla e intuitiva.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Por Que INVORA
-          </h2>
-          <p>
-            El nombre INVORA combina las palabras &ldquo;Inventario&rdquo; e
-            &ldquo;Innovacion&rdquo;. Nuestra vision es llevar la gestion de
-            inventarios a otra dimension, haciendo que el proceso sea tan
-            natural como mirar las estrellas. Cada detalle de nuestra
-            plataforma esta disenado para simplificar tu dia a dia y darte el
-            control total de tu negocio.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Nuestros Valores
+            {t("staticPages.about.valuesTitle")}
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-foreground font-semibold mb-2">Simplicidad</h3>
-              <p className="text-sm">
-                Tecnologia avanzada con una interfaz sencilla que cualquiera
-                puede usar.
-              </p>
+              <h3 className="text-foreground font-semibold mb-2">{t("staticPages.about.v1title")}</h3>
+              <p className="text-sm">{t("staticPages.about.v1desc")}</p>
             </div>
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-foreground font-semibold mb-2">Confianza</h3>
-              <p className="text-sm">
-                La seguridad de tus datos es nuestra maxima prioridad.
-              </p>
+              <h3 className="text-foreground font-semibold mb-2">{t("staticPages.about.v2title")}</h3>
+              <p className="text-sm">{t("staticPages.about.v2desc")}</p>
             </div>
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-foreground font-semibold mb-2">Innovacion</h3>
-              <p className="text-sm">
-                Mejoramos constantemente para ofrecerte las mejores
-                herramientas.
-              </p>
+              <h3 className="text-foreground font-semibold mb-2">{t("staticPages.about.v3title")}</h3>
+              <p className="text-sm">{t("staticPages.about.v3desc")}</p>
             </div>
             <div className="glass-card rounded-xl p-6">
-              <h3 className="text-foreground font-semibold mb-2">Compromiso Local</h3>
-              <p className="text-sm">
-                Disenado por y para PYMEs costarricenses, entendiendo sus
-                necesidades reales.
-              </p>
+              <h3 className="text-foreground font-semibold mb-2">{t("staticPages.about.v4title")}</h3>
+              <p className="text-sm">{t("staticPages.about.v4desc")}</p>
             </div>
           </div>
         </section>
