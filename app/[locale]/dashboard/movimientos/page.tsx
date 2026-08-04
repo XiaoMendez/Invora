@@ -248,7 +248,7 @@ function SearchableSelect({
 }
 
 export default function MovimientosPage() {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const [tipo, setTipo] = useState("todos")
   const [periodo, setPeriodo] = useState("30d")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -668,10 +668,10 @@ export default function MovimientosPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="glass-card border-border/30">
-            <SelectItem value="1d">{t("movements.last7days").replace("7", "1").replace("días", "día")}</SelectItem>
+            <SelectItem value="1d">{t("movements.today")}</SelectItem>
             <SelectItem value="7d">{t("movements.last7days")}</SelectItem>
             <SelectItem value="30d">{t("movements.last30days")}</SelectItem>
-            <SelectItem value="all">{t("movements.allTypes")}</SelectItem>
+            <SelectItem value="all">{t("movements.allPeriods")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filtroCliente} onValueChange={setFiltroCliente}>
@@ -767,7 +767,7 @@ export default function MovimientosPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {new Date(mov.creado_en).toLocaleDateString("es-CR", {
+                          {new Date(mov.creado_en).toLocaleString(locale, {
                             day: "numeric",
                             month: "short",
                             hour: "2-digit",

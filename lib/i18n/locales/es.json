@@ -276,7 +276,9 @@
     "colDate": "Fecha",
     "noMovements": "No hay movimientos para mostrar",
     "searchPlaceholder": "Buscar producto...",
-    "selectProduct": "Seleccionar producto"
+    "selectProduct": "Seleccionar producto",
+    "today": "Hoy",
+    "allPeriods": "Todos los períodos"
   },
   "configuracion": {
     "title": "Configuración",
