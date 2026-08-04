@@ -55,13 +55,14 @@ export async function updateSession(request: NextRequest) {
   // If authenticated, check empresa assignment
   if (user) {
     // Check if user has an empresa configured
-    const { data: userEmpresa } = await supabase
+    const { data: userEmpresa, error } = await supabase
       .from("usuario_empresa")
       .select("id_empresa")
       .eq("id_usuario", user.id)
       .single()
 
-    const hasEmpresa = !!userEmpresa?.id_empresa
+    // If error is NOT_FOUND, user hasn't been assigned to an empresa yet
+    const hasEmpresa = !error && !!userEmpresa?.id_empresa
 
     // If user needs onboarding (no empresa) and trying to access dashboard
     if (!hasEmpresa && isDashboardPage) {

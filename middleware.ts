@@ -9,7 +9,27 @@ const handleI18nRouting = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
-  // Primero actualizar sesión de Supabase
+  const pathname = request.nextUrl.pathname
+  const locales = ['es', 'en', 'pt']
+  
+  // Check if locale is present in the pathname
+  const hasLocale = locales.some(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`)
+  
+  // If no locale, add default locale 'es'
+  if (!hasLocale && pathname !== '/' && !pathname.startsWith('/_next')) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/es${pathname}`
+    return NextResponse.redirect(url)
+  }
+  
+  // Handle root path without locale
+  if (pathname === '/') {
+    const url = request.nextUrl.clone()
+    url.pathname = '/es'
+    return NextResponse.redirect(url)
+  }
+
+  // Actualizar sesión de Supabase
   const supabaseResponse = await updateSession(request)
 
   // Si Supabase retorna un redirect, usarlo directamente
@@ -17,8 +37,8 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Si no es un redirect, aplicar i18n routing
-  let response = handleI18nRouting(request) || NextResponse.next()
+  // Aplicar i18n routing a la respuesta de Supabase
+  let response = handleI18nRouting(request) || supabaseResponse
 
   // Copiar cookies de Supabase a la respuesta final
   supabaseResponse.headers.getSetCookie().forEach((cookie) => {
