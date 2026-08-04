@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { VentasTable } from "@/components/ventas/VentasTable"
 import { VentaForm } from "@/components/ventas/VentaForm"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
