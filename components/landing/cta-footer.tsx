@@ -2,9 +2,9 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeLogo } from "@/components/theme-logo"
 import { useTranslation } from "@/hooks/useTranslation"
 import { usePreferences } from "@/contexts/PreferencesContext"
 
@@ -77,12 +77,11 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
-            <Image
-              src="/images/invora-logo.png"
+            <ThemeLogo
+              width={640}
+              height={160}
               alt="INVORA Logo"
-              width={320}
-              height={106}
-              className="h-16 w-auto mb-4"
+              className="h-12 w-auto mb-4"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
               {t('footer.tagline')}

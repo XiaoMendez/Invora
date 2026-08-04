@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeLogo } from "@/components/theme-logo"
 import { useTranslation } from "@/hooks/useTranslation"
 import { usePreferences } from "@/contexts/PreferencesContext"
 
@@ -39,13 +39,11 @@ export function Navbar() {
     >
       <nav className="mx-auto max-w-7xl flex items-center justify-between px-6">
         <Link href={`/${locale}`} className="flex items-center gap-2">
-          <Image
-            src="/images/invora-logo.png"
+          <ThemeLogo
+            width={800}
+            height={200}
             alt="INVORA Logo"
-            width={360}
-            height={120}
-            className="h-20 w-auto"
-            priority
+            className="h-14 w-auto"
           />
         </Link>
 

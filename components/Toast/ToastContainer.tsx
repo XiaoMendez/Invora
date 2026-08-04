@@ -1,30 +1,14 @@
 'use client'
 
 import { useToast, ToastType } from '@/contexts/ToastContext'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-const toastStyles: Record<ToastType, { bg: string; border: string; icon: React.ReactNode }> = {
-  success: {
-    bg: 'bg-green-950/80 backdrop-blur',
-    border: 'border-green-700/50',
-    icon: <CheckCircle className="h-5 w-5 text-green-400" />,
-  },
-  error: {
-    bg: 'bg-red-950/80 backdrop-blur',
-    border: 'border-red-700/50',
-    icon: <AlertCircle className="h-5 w-5 text-red-400" />,
-  },
-  warning: {
-    bg: 'bg-amber-950/80 backdrop-blur',
-    border: 'border-amber-700/50',
-    icon: <AlertTriangle className="h-5 w-5 text-amber-400" />,
-  },
-  info: {
-    bg: 'bg-blue-950/80 backdrop-blur',
-    border: 'border-blue-700/50',
-    icon: <Info className="h-5 w-5 text-blue-400" />,
-  },
+const typeStyles: Record<ToastType, { bar: string; text: string }> = {
+  success: { bar: 'bg-emerald-500', text: 'text-emerald-500' },
+  error:   { bar: 'bg-red-500',     text: 'text-red-500' },
+  warning: { bar: 'bg-amber-500',   text: 'text-amber-500' },
+  info:    { bar: 'bg-primary',     text: 'text-primary' },
 }
 
 export function ToastContainer() {
@@ -38,24 +22,29 @@ export function ToastContainer() {
   if (!mounted) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2 max-w-sm">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 w-72">
       {toasts.map((toast) => {
-        const style = toastStyles[toast.type]
+        const style = typeStyles[toast.type]
         return (
           <div
             key={toast.id}
-            className={`${style.bg} ${style.border} border rounded-lg p-4 flex items-start gap-3 animate-in slide-in-from-bottom-5 duration-200`}
+            className="relative overflow-hidden rounded-lg bg-card border border-border/40 shadow-lg animate-in slide-in-from-bottom-4 duration-200"
           >
-            <div className="flex-shrink-0 mt-0.5">{style.icon}</div>
-            <div className="flex-1">
-              <p className="text-sm text-foreground">{toast.message}</p>
+            {/* Accent bar on the left */}
+            <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${style.bar}`} />
+
+            <div className="flex items-center gap-3 px-4 py-3 pl-5">
+              <p className="flex-1 text-sm text-foreground leading-snug">
+                {toast.message}
+              </p>
+              <button
+                onClick={() => removeToast(toast.id)}
+                className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Cerrar"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
-            <button
-              onClick={() => removeToast(toast.id)}
-              className="flex-shrink-0 text-foreground/60 hover:text-foreground transition-colors"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         )
       })}

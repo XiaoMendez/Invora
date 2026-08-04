@@ -2,8 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useSearchParams } from "next/navigation"
+import { ThemeLogo } from "@/components/theme-logo"
 import { motion } from "framer-motion"
 import { CheckCircle2, Mail, ArrowRight, Loader2, XCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -102,12 +102,11 @@ function EmailConfirmContent() {
       >
         <div className="glass-card rounded-2xl p-8">
           <div className="flex flex-col items-center mb-6">
-            <Image
-              src="/images/invora-logo.png"
-              alt="INVORA"
-              width={360}
+            <ThemeLogo
+              width={480}
               height={120}
-              className="h-20 w-auto mb-6"
+              alt="INVORA"
+              className="h-14 w-auto mb-6"
             />
           </div>
 

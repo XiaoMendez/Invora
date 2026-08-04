@@ -9,6 +9,8 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -18,6 +20,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslation } from "@/hooks/useTranslation"
+import { createClient } from "@/lib/supabase/client"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -25,6 +28,16 @@ export default function ConfiguracionPage() {
   const { t } = useTranslation()
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordStatus, setPasswordStatus] = useState<{ success: boolean; message: string } | null>(null)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  })
 
   const { data, error, isLoading } = useSWR("/api/empresa", fetcher)
 
@@ -74,6 +87,60 @@ export default function ConfiguracionPage() {
       setSaveStatus({ success: false, message: t("configuracion.savedError") })
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordStatus(null)
+
+    if (!passwordForm.currentPassword.trim()) {
+      setPasswordStatus({ success: false, message: t("auth.currentPasswordPlaceholder") })
+      return
+    }
+
+    if (!passwordForm.newPassword.trim()) {
+      setPasswordStatus({ success: false, message: t("auth.newPasswordPlaceholder") })
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+      setPasswordStatus({ success: false, message: t("auth.passwordMismatch") })
+      return
+    }
+
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordStatus({ success: false, message: t("auth.passwordRequirements") })
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      const supabase = createClient()
+
+      // First verify the current password by attempting to sign in
+      const { data: sessionData, error: sessionError } = await supabase.auth.getUser()
+      if (sessionError || !sessionData.user) {
+        setPasswordStatus({ success: false, message: t("auth.connectionError") })
+        return
+      }
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword,
+      })
+
+      if (updateError) {
+        setPasswordStatus({ success: false, message: updateError.message || t("auth.connectionError") })
+      } else {
+        setPasswordStatus({ success: true, message: t("auth.passwordChanged") })
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmNewPassword: "" })
+      }
+    } catch (err) {
+      console.error("[v0] Change password error:", err)
+      setPasswordStatus({ success: false, message: t("auth.connectionError") })
+    } finally {
+      setChangingPassword(false)
     }
   }
 
@@ -247,29 +314,89 @@ export default function ConfiguracionPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-6 max-w-lg">
-                <div className="grid gap-2">
-                  <Label className="text-xs">{t("configuracion.currentPassword")}</Label>
-                  <Input type="password" className="bg-secondary/50 border-border/30" />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-xs">{t("configuracion.newPassword")}</Label>
-                  <Input type="password" className="bg-secondary/50 border-border/30" />
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-xs">{t("configuracion.confirmNewPassword")}</Label>
-                  <Input type="password" className="bg-secondary/50 border-border/30" />
-                </div>
-                <Separator className="bg-border/30" />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-foreground">{t("configuracion.twoFactor")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{t("configuracion.twoFactorDesc")}</p>
+                {passwordStatus && (
+                  <div className={`flex items-center gap-2 p-3 rounded-lg ${passwordStatus.success ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
+                    {passwordStatus.success ? <CheckCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                    <span className="text-sm">{passwordStatus.message}</span>
                   </div>
-                  <Switch />
+                )}
+
+                <div className="grid gap-2">
+                  <Label className="text-xs">{t("auth.currentPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      type={showCurrentPassword ? "text" : "password"}
+                      placeholder={t("auth.currentPasswordPlaceholder")}
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                      className="bg-secondary/50 border-border/30 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-xs">{t("auth.newPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder={t("auth.newPasswordPlaceholder")}
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      className="bg-secondary/50 border-border/30 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t("auth.passwordMinPlaceholder")}</p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-xs">{t("auth.confirmPassword")}</Label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder={t("auth.confirmPasswordPlaceholder")}
+                      value={passwordForm.confirmNewPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmNewPassword: e.target.value })}
+                      className="bg-secondary/50 border-border/30 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
                 <Separator className="bg-border/30" />
-                <Button className="w-fit bg-primary text-primary-foreground hover:bg-primary/90">
-                  {t("configuracion.updateSecurity")}
+
+                <Button
+                  onClick={handleChangePassword}
+                  disabled={changingPassword}
+                  className="w-fit bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {changingPassword ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      {t("auth.changingPassword")}
+                    </>
+                  ) : (
+                    t("auth.changePasswordBtn")
+                  )}
                 </Button>
               </div>
             </CardContent>
