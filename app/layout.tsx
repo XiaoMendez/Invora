@@ -3,6 +3,7 @@ import { Space_Grotesk, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { notFound } from "next/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
+import { PreferencesProvider } from "@/contexts/PreferencesContext"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -60,9 +61,11 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
+        <PreferencesProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            {children}
+          </ThemeProvider>
+        </PreferencesProvider>
         <Analytics />
       </body>
     </html>
