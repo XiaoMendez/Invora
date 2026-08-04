@@ -20,6 +20,7 @@ import {
   Users,
   ShoppingCart,
   TrendingUp,
+  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,7 @@ export function DashboardSidebar() {
     { labelKey: "sidebar.dashboard", href: `/${locale}/dashboard`, icon: LayoutDashboard },
     { labelKey: "sidebar.products", href: `/${locale}/dashboard/productos`, icon: Package },
     { labelKey: "sidebar.purchases", href: `/${locale}/dashboard/compras`, icon: ShoppingCart },
+    { labelKey: "sidebar.purchaseOrders", href: `/${locale}/dashboard/ordenes-compra`, icon: FileText },
     { labelKey: "sidebar.sales", href: `/${locale}/dashboard/ventas`, icon: TrendingUp },
     { labelKey: "sidebar.suppliers", href: `/${locale}/dashboard/proveedores`, icon: Truck },
     { labelKey: "sidebar.customers", href: `/${locale}/dashboard/clientes`, icon: Users },

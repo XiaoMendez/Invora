@@ -185,6 +185,7 @@
     "dashboard": "Dashboard",
     "products": "Products",
     "purchases": "Purchases",
+    "purchaseOrders": "Purchase Orders",
     "sales": "Sales",
     "suppliers": "Suppliers",
     "customers": "Customers",
