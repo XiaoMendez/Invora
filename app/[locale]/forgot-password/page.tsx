@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { ArrowLeft, Loader2, CheckCircle, Mail } from "lucide-react"
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
+import { ThemeLogo } from "@/components/theme-logo"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslation } from "@/hooks/useTranslation"
 

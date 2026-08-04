@@ -39,32 +39,32 @@
 
 /* Light Mode Variables */
 .light {
-  --background: oklch(0.98 0.001 0);
-  --foreground: oklch(0.15 0.01 280);
+  --background: oklch(0.97 0.002 280);
+  --foreground: oklch(0.1 0.015 280);
 
   --card: oklch(0.99 0.001 0);
-  --card-foreground: oklch(0.15 0.01 280);
+  --card-foreground: oklch(0.1 0.015 280);
 
-  --popover: oklch(0.98 0.001 0);
-  --popover-foreground: oklch(0.15 0.01 280);
+  --popover: oklch(0.98 0.002 280);
+  --popover-foreground: oklch(0.1 0.015 280);
 
-  --primary: oklch(0.55 0.2 310);
+  --primary: oklch(0.55 0.22 310);
   --primary-foreground: oklch(0.98 0 0);
 
-  --secondary: oklch(0.92 0.01 280);
-  --secondary-foreground: oklch(0.3 0.01 280);
+  --secondary: oklch(0.88 0.015 280);
+  --secondary-foreground: oklch(0.25 0.02 280);
 
-  --muted: oklch(0.88 0.01 280);
-  --muted-foreground: oklch(0.5 0.01 280);
+  --muted: oklch(0.82 0.01 280);
+  --muted-foreground: oklch(0.45 0.01 280);
 
-  --accent: oklch(0.55 0.2 310);
+  --accent: oklch(0.6 0.2 310);
   --accent-foreground: oklch(0.98 0 0);
 
-  --destructive: oklch(0.6 0.2 25);
+  --destructive: oklch(0.65 0.22 25);
 
-  --border: oklch(0.85 0.02 280);
-  --input: oklch(0.92 0.01 280);
-  --ring: oklch(0.55 0.2 310);
+  --border: oklch(0.8 0.025 280);
+  --input: oklch(0.85 0.02 280);
+  --ring: oklch(0.55 0.22 310);
 }
 
 /* ============================= */
@@ -96,6 +96,20 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.72 0.19 310);
+  }
+
+  /* Light mode scrollbar */
+  .light ::-webkit-scrollbar-track {
+    background: oklch(0.92 0.01 280);
+  }
+
+  .light ::-webkit-scrollbar-thumb {
+    background: oklch(0.75 0.05 280);
+    border-radius: 3px;
+  }
+
+  .light ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.55 0.22 310);
   }
 }
 
@@ -166,6 +180,19 @@
   border: 1px solid oklch(0.25 0.03 280 / 0.4);
 }
 
+/* Light mode glass utilities */
+.light .glass {
+  background: oklch(0.95 0.01 280 / 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid oklch(0.8 0.03 280 / 0.4);
+}
+
+.light .glass-card {
+  background: oklch(0.98 0.002 280 / 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.82 0.025 280 / 0.5);
+}
+
 /* ============================= */
 /* Noise Overlay                 */
 /* ============================= */
@@ -177,4 +204,133 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1;
+}
+
+/* ============================= */
+/* Light Mode Enhancements       */
+/* ============================= */
+
+/* Input fields in light mode */
+.light input {
+  background-color: oklch(0.92 0.01 280);
+  color: oklch(0.15 0.02 280);
+  border-color: oklch(0.8 0.025 280);
+}
+
+.light input::placeholder {
+  color: oklch(0.55 0.01 280);
+}
+
+.light input:focus {
+  border-color: oklch(0.55 0.22 310);
+  box-shadow: 0 0 0 3px oklch(0.55 0.22 310 / 0.15);
+}
+
+/* Textarea in light mode */
+.light textarea {
+  background-color: oklch(0.92 0.01 280);
+  color: oklch(0.15 0.02 280);
+  border-color: oklch(0.8 0.025 280);
+}
+
+.light textarea::placeholder {
+  color: oklch(0.55 0.01 280);
+}
+
+.light textarea:focus {
+  border-color: oklch(0.55 0.22 310);
+  box-shadow: 0 0 0 3px oklch(0.55 0.22 310 / 0.15);
+}
+
+/* Cards and containers in light mode */
+.light [role="button"],
+.light button,
+.light .btn {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Icons/Stars - ensure visibility in light mode */
+.light svg {
+  color: inherit;
+  opacity: 1;
+}
+
+.light [data-icon],
+.light .icon {
+  color: oklch(0.55 0.22 310);
+}
+
+/* Badge/Alert styling for light mode */
+.light [role="alert"],
+.light .alert,
+.light [class*="alert"] {
+  background-color: oklch(0.95 0.01 280);
+  color: oklch(0.15 0.02 280);
+  border-color: oklch(0.8 0.025 280);
+}
+
+/* Table styling for light mode */
+.light table,
+.light tbody,
+.light tr {
+  background-color: oklch(0.98 0.001 0);
+  border-color: oklch(0.8 0.025 280);
+  color: oklch(0.15 0.02 280);
+}
+
+.light thead {
+  background-color: oklch(0.92 0.01 280);
+  color: oklch(0.1 0.015 280);
+}
+
+.light td,
+.light th {
+  border-color: oklch(0.85 0.02 280);
+  color: oklch(0.15 0.02 280);
+}
+
+/* Rating stars for light mode */
+.light .star,
+.light [class*="star"],
+.light [aria-label*="star"],
+.light [aria-label*="Star"] {
+  color: oklch(0.75 0.15 55);
+  opacity: 1;
+}
+
+/* Links and text emphasis */
+.light a {
+  color: oklch(0.55 0.22 310);
+}
+
+.light a:hover {
+  color: oklch(0.5 0.2 310);
+  text-decoration: underline;
+}
+
+.light strong,
+.light b {
+  color: oklch(0.1 0.015 280);
+  font-weight: 600;
+}
+
+/* Logo theme switching */
+.logo-default {
+  content-visibility: auto;
+}
+
+.light .logo-dark {
+  display: none;
+}
+
+.light .logo-light {
+  display: inline;
+}
+
+.dark .logo-dark {
+  display: inline;
+}
+
+.dark .logo-light {
+  display: none;
 }

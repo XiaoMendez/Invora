@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, ArrowLeft, Loader2 } from "lucide-react"
@@ -10,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
+import { ThemeLogo } from "@/components/theme-logo"
 import { createClient } from "@/lib/supabase/client"
 import { useTranslation } from "@/hooks/useTranslation"
 
@@ -76,11 +76,10 @@ export default function LoginPage() {
       >
         <div className="glass-card rounded-2xl p-8">
           <div className="flex flex-col items-center mb-8">
-            <Image
-              src="/images/invora-logo.png"
-              alt="INVORA"
+            <ThemeLogo
               width={360}
               height={120}
+              alt="INVORA"
               className="h-20 w-auto mb-6"
             />
             <h1 className="text-2xl font-bold text-foreground">{t("auth.loginTitle")}</h1>
