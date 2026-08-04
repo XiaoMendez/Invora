@@ -77,10 +77,10 @@ export default function LoginPage() {
         <div className="glass-card rounded-2xl p-8">
           <div className="flex flex-col items-center mb-8">
             <ThemeLogo
-              width={360}
+              width={480}
               height={120}
               alt="INVORA"
-              className="h-20 w-auto mb-6"
+              className="h-14 w-auto mb-6"
             />
             <h1 className="text-2xl font-bold text-foreground">{t("auth.loginTitle")}</h1>
             <p className="text-sm text-muted-foreground mt-1">

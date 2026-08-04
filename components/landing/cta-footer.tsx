@@ -81,7 +81,7 @@ export function Footer() {
               width={640}
               height={160}
               alt="INVORA Logo"
-              className="h-20 w-auto mb-4"
+              className="h-12 w-auto mb-4"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
               {t('footer.tagline')}

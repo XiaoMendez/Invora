@@ -26,7 +26,7 @@ export function ThemeLogo({
 
   // Use resolved theme to handle system preference
   const isDark = mounted && (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark'))
-  const logoSrc = isDark ? '/images/invora-logo.png' : '/images/invora-logo-light-optimal.png'
+  const logoSrc = isDark ? '/images/invora-logo.png' : '/images/invora-logo-light.png'
 
   return (
     <Image

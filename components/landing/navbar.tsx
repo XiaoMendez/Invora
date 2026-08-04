@@ -43,7 +43,7 @@ export function Navbar() {
             width={800}
             height={200}
             alt="INVORA Logo"
-            className="h-28 w-auto"
+            className="h-14 w-auto"
           />
         </Link>
 

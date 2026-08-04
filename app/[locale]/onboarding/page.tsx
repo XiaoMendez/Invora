@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StarsBackground } from "@/components/space-scene"
 import { Building2, Loader2, Rocket, Moon, Sun, Monitor, Globe, Check } from "lucide-react"
-import Image from "next/image"
+import { ThemeLogo } from "@/components/theme-logo"
 
 type Step = "language" | "theme" | "company" | "complete"
 
@@ -119,12 +119,11 @@ export default function OnboardingPage() {
           <>
             <CardHeader className="text-center space-y-4 bg-gradient-to-b from-accent/10 to-transparent">
               <div className="flex justify-center">
-                <Image
-                  src="/images/invora-logo.png"
-                  alt="Invora"
-                  width={360}
+                <ThemeLogo
+                  width={480}
                   height={120}
-                  className="h-20 w-auto"
+                  alt="INVORA"
+                  className="h-14 w-auto"
                 />
               </div>
               <div className="space-y-3">
