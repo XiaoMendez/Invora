@@ -6,6 +6,7 @@ import { FeaturesSection } from "@/components/landing/features-section"
 
 import { CTASection, Footer } from "@/components/landing/cta-footer"
 import { SpaceScene } from "@/components/space-scene"
+import { SettingsDialog } from "@/components/SettingsDialog"
 
 export default function HomePage() {
   return (
@@ -16,6 +17,7 @@ export default function HomePage() {
       <FeaturesSection />
       <CTASection />
       <Footer />
+      <SettingsDialog />
     </main>
   )
 }
