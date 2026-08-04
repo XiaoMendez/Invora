@@ -6,16 +6,21 @@ import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-const navLinks = [
-  { label: "Inicio", href: "#hero" },
-  { label: "Funciones", href: "#features" },
-  { label: "Contacto", href: "/contacto" },
-]
+import { useTranslation } from "@/hooks/useTranslation"
+import { usePreferences } from "@/contexts/PreferencesContext"
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { t } = useTranslation()
+  const { preferences } = usePreferences()
+  const locale = preferences.locale
+
+  const navLinks = [
+    { label: t('nav.home'), href: "#hero" },
+    { label: t('nav.features'), href: "#features" },
+    { label: t('nav.contact'), href: `/${locale}/contacto` },
+  ]
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -33,7 +38,7 @@ export function Navbar() {
       }`}
     >
       <nav className="mx-auto max-w-7xl flex items-center justify-between px-6">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href={`/${locale}`} className="flex items-center gap-2">
           <Image
             src="/images/invora-logo.png"
             alt="INVORA Logo"
@@ -58,14 +63,14 @@ export function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/login">
+          <Link href={`/${locale}/login`}>
             <Button variant="ghost" className="text-sm text-muted-foreground hover:text-foreground">
-              Iniciar Sesion
+              {t('nav.login')}
             </Button>
           </Link>
-          <Link href="/register">
+          <Link href={`/${locale}/register`}>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm px-6">
-              Registrarse
+              {t('nav.register')}
             </Button>
           </Link>
         </div>
@@ -100,14 +105,14 @@ export function Navbar() {
                   {link.label}
                 </a>
               ))}
-              <Link href="/login">
+              <Link href={`/${locale}/login`}>
                 <Button variant="ghost" className="w-full text-muted-foreground mt-2">
-                  Iniciar Sesion
+                  {t('nav.login')}
                 </Button>
               </Link>
-              <Link href="/register">
+              <Link href={`/${locale}/register`}>
                 <Button className="w-full bg-primary text-primary-foreground">
-                  Registrarse
+                  {t('nav.register')}
                 </Button>
               </Link>
             </div>

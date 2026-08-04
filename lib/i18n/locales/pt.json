@@ -53,5 +53,79 @@
     "required": "Este campo é obrigatório",
     "invalidEmail": "Email inválido",
     "setupFailed": "Erro ao configurar a empresa"
+  },
+  "nav": {
+    "home": "Início",
+    "features": "Funcionalidades",
+    "contact": "Contato",
+    "login": "Entrar",
+    "register": "Começar"
+  },
+  "hero": {
+    "title1": "Controle total do seu",
+    "title2": "inventário",
+    "title3": "em um só lugar",
+    "subtitle": "INVORA é o sistema de inventário projetado para PMEs. Gerencie produtos, rastreie movimentos e tome decisões com dados em tempo real.",
+    "cta": "Começar Agora",
+    "secondary": "Ver Funcionalidades",
+    "stat1value": "500+",
+    "stat1label": "PMEs Ativas",
+    "stat2value": "99.9%",
+    "stat2label": "Uptime",
+    "stat3value": "50K+",
+    "stat3label": "Produtos Gerenciados",
+    "stat4value": "24/7",
+    "stat4label": "Suporte"
+  },
+  "features": {
+    "badge": "Funcionalidades",
+    "title1": "Tudo o que você precisa para",
+    "title2": "gerenciar",
+    "title3": "seu inventário",
+    "subtitle": "Ferramentas projetadas especificamente para as necessidades das PMEs.",
+    "f1title": "Gestão de Produtos",
+    "f1desc": "Registre, organize e categorize todos os seus produtos com campos personalizáveis e busca avançada.",
+    "f2title": "Relatórios em Tempo Real",
+    "f2desc": "Visualize o status do seu inventário com gráficos interativos e relatórios detalhados ao instante.",
+    "f3title": "Alertas Inteligentes",
+    "f3desc": "Receba notificações quando o estoque ficar abaixo do mínimo ou quando anomalias forem detectadas.",
+    "f4title": "Fácil de Usar",
+    "f4desc": "Design intuitivo para que qualquer pessoa possa usá-lo sem treinamento prévio.",
+    "f5title": "Gestão de Fornecedores",
+    "f5desc": "Gerencie seus fornecedores, compare preços de compra e mantenha um histórico completo de cada pedido.",
+    "f6title": "Segurança Avançada",
+    "f6desc": "Seus dados são protegidos com criptografia de ponta a ponta e backups automáticos diários."
+  },
+  "cta": {
+    "title": "Leve seu inventário a outro nível",
+    "subtitle": "Junte-se a centenas de PMEs que já confiam no INVORA para gerenciar seu inventário de forma inteligente.",
+    "button": "Começar Agora"
+  },
+  "footer": {
+    "product": "Produto",
+    "company": "Empresa",
+    "legal": "Legal",
+    "tagline": "Sistema de inventário inteligente para PMEs.",
+    "rights": "Todos os direitos reservados.",
+    "madeWith": "Feito com amor na Costa Rica",
+    "features": "Funcionalidades",
+    "guide": "Guia",
+    "about": "Sobre Nós",
+    "contact": "Contato",
+    "support": "Suporte",
+    "terms": "Termos de Serviço",
+    "privacy": "Privacidade",
+    "cookies": "Cookies"
+  },
+  "onboardingModal": {
+    "title": "Bem-vindo ao Invora",
+    "subtitle": "Configure sua experiência inicial",
+    "selectLanguage": "Selecione seu idioma",
+    "selectTheme": "Selecione seu tema",
+    "skip": "Pular",
+    "continue": "Continuar",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema"
   }
 }

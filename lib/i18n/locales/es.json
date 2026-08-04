@@ -53,5 +53,79 @@
     "required": "Este campo es requerido",
     "invalidEmail": "Email inválido",
     "setupFailed": "Error al configurar la empresa"
+  },
+  "nav": {
+    "home": "Inicio",
+    "features": "Funciones",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse"
+  },
+  "hero": {
+    "title1": "Control total de tu",
+    "title2": "inventario",
+    "title3": "en un solo lugar",
+    "subtitle": "INVORA es el sistema de inventario diseñado para PYMEs. Gestiona productos, rastrea movimientos y toma decisiones con datos en tiempo real.",
+    "cta": "Comenzar Ahora",
+    "secondary": "Ver Funciones",
+    "stat1value": "500+",
+    "stat1label": "PYMEs Activas",
+    "stat2value": "99.9%",
+    "stat2label": "Uptime",
+    "stat3value": "50K+",
+    "stat3label": "Productos Gestionados",
+    "stat4value": "24/7",
+    "stat4label": "Soporte"
+  },
+  "features": {
+    "badge": "Funcionalidades",
+    "title1": "Todo lo que necesitas para",
+    "title2": "gestionar",
+    "title3": "tu inventario",
+    "subtitle": "Herramientas diseñadas específicamente para las necesidades de las PYMEs.",
+    "f1title": "Gestión de Productos",
+    "f1desc": "Registra, organiza y categoriza todos tus productos con campos personalizables y búsqueda avanzada.",
+    "f2title": "Reportes en Tiempo Real",
+    "f2desc": "Visualiza el estado de tu inventario con gráficos interactivos y reportes detallados al instante.",
+    "f3title": "Alertas Inteligentes",
+    "f3desc": "Recibe notificaciones cuando el stock baje del mínimo o cuando se detecten anomalías en movimientos.",
+    "f4title": "Fácil de Usar",
+    "f4desc": "Diseño intuitivo pensado para que cualquier persona pueda usarlo sin capacitación previa.",
+    "f5title": "Gestión de Proveedores",
+    "f5desc": "Administra tus proveedores, compara precios de compra y mantiene un historial de cada pedido.",
+    "f6title": "Seguridad Avanzada",
+    "f6desc": "Tus datos están protegidos con encriptación de extremo a extremo y respaldos automáticos diarios."
+  },
+  "cta": {
+    "title": "Lleva tu inventario a otra dimensión",
+    "subtitle": "Únete a cientos de PYMEs que ya confían en INVORA para gestionar su inventario de forma inteligente.",
+    "button": "Empezar Ahora"
+  },
+  "footer": {
+    "product": "Producto",
+    "company": "Empresa",
+    "legal": "Legal",
+    "tagline": "Sistema de inventario inteligente para PYMEs.",
+    "rights": "Todos los derechos reservados.",
+    "madeWith": "Hecho con amor en Costa Rica",
+    "features": "Funciones",
+    "guide": "Guía",
+    "about": "Sobre Nosotros",
+    "contact": "Contacto",
+    "support": "Soporte",
+    "terms": "Términos de Servicio",
+    "privacy": "Privacidad",
+    "cookies": "Cookies"
+  },
+  "onboardingModal": {
+    "title": "Bienvenido a Invora",
+    "subtitle": "Configura tu experiencia inicial",
+    "selectLanguage": "Selecciona tu idioma",
+    "selectTheme": "Selecciona tu tema",
+    "skip": "Omitir",
+    "continue": "Continuar",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
   }
 }

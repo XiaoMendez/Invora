@@ -53,5 +53,79 @@
     "required": "This field is required",
     "invalidEmail": "Invalid email",
     "setupFailed": "Error setting up company"
+  },
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "contact": "Contact",
+    "login": "Sign In",
+    "register": "Get Started"
+  },
+  "hero": {
+    "title1": "Total control of your",
+    "title2": "inventory",
+    "title3": "in one place",
+    "subtitle": "INVORA is the inventory system designed for SMEs. Manage products, track movements and make decisions with real-time data.",
+    "cta": "Start Now",
+    "secondary": "See Features",
+    "stat1value": "500+",
+    "stat1label": "Active SMEs",
+    "stat2value": "99.9%",
+    "stat2label": "Uptime",
+    "stat3value": "50K+",
+    "stat3label": "Products Managed",
+    "stat4value": "24/7",
+    "stat4label": "Support"
+  },
+  "features": {
+    "badge": "Features",
+    "title1": "Everything you need to",
+    "title2": "manage",
+    "title3": "your inventory",
+    "subtitle": "Tools designed specifically for the needs of SMEs.",
+    "f1title": "Product Management",
+    "f1desc": "Register, organize and categorize all your products with customizable fields and advanced search.",
+    "f2title": "Real-Time Reports",
+    "f2desc": "Visualize your inventory status with interactive charts and detailed reports instantly.",
+    "f3title": "Smart Alerts",
+    "f3desc": "Receive notifications when stock falls below minimum or when anomalies are detected in movements.",
+    "f4title": "Easy to Use",
+    "f4desc": "Intuitive design so anyone can use it without prior training.",
+    "f5title": "Supplier Management",
+    "f5desc": "Manage your suppliers, compare purchase prices and maintain a complete history of each order.",
+    "f6title": "Advanced Security",
+    "f6desc": "Your data is protected with end-to-end encryption and automatic daily backups."
+  },
+  "cta": {
+    "title": "Take your inventory to another dimension",
+    "subtitle": "Join hundreds of SMEs that already trust INVORA to manage their inventory intelligently.",
+    "button": "Start Now"
+  },
+  "footer": {
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal",
+    "tagline": "Intelligent inventory system for SMEs.",
+    "rights": "All rights reserved.",
+    "madeWith": "Made with love in Costa Rica",
+    "features": "Features",
+    "guide": "Guide",
+    "about": "About Us",
+    "contact": "Contact",
+    "support": "Support",
+    "terms": "Terms of Service",
+    "privacy": "Privacy",
+    "cookies": "Cookies"
+  },
+  "onboardingModal": {
+    "title": "Welcome to Invora",
+    "subtitle": "Set up your initial experience",
+    "selectLanguage": "Select your language",
+    "selectTheme": "Select your theme",
+    "skip": "Skip",
+    "continue": "Continue",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }
