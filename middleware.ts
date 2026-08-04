@@ -9,11 +9,16 @@ const handleI18nRouting = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
-  // Aplicar i18n routing primero
-  let response = handleI18nRouting(request) || NextResponse.next()
-
-  // Luego actualizar sesión de Supabase con el request original
+  // Primero actualizar sesión de Supabase
   const supabaseResponse = await updateSession(request)
+
+  // Si Supabase retorna un redirect, usarlo directamente
+  if (supabaseResponse.status === 307 || supabaseResponse.status === 308) {
+    return supabaseResponse
+  }
+
+  // Si no es un redirect, aplicar i18n routing
+  let response = handleI18nRouting(request) || NextResponse.next()
 
   // Copiar cookies de Supabase a la respuesta final
   supabaseResponse.headers.getSetCookie().forEach((cookie) => {
