@@ -12,9 +12,11 @@ import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
 import { PasswordRequirements, isPasswordValid } from "@/components/password-requirements"
 import { createClient } from "@/lib/supabase/client"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -30,12 +32,12 @@ export default function RegisterPage() {
     setError("")
 
     if (form.password !== form.confirmPassword) {
-      setError("Las contraseñas no coinciden")
+      setError(t("auth.passwordMismatch"))
       return
     }
 
     if (!isPasswordValid(form.password)) {
-      setError("La contraseña no cumple con los requisitos mínimos")
+      setError(t("auth.passwordRequirements"))
       return
     }
 
@@ -44,7 +46,6 @@ export default function RegisterPage() {
     try {
       const supabase = createClient()
 
-      // Sign up with Supabase Auth
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
       const { data, error: authError } = await supabase.auth.signUp({
         email: form.email.toLowerCase().trim(),
@@ -55,27 +56,24 @@ export default function RegisterPage() {
       })
 
       if (authError) {
-        setError(authError.message || "Error al crear la cuenta")
+        setError(authError.message || t("auth.accountError"))
         return
       }
 
       if (!data.user) {
-        setError("Error al crear la cuenta")
+        setError(t("auth.accountError"))
         return
       }
 
-      // Check if email confirmation is required
       if (data.session) {
-        // Auto confirmed - redirect to onboarding to set up empresa
         router.refresh()
         router.push("/onboarding")
       } else {
-        // Email confirmation required - redirect to confirm page
         router.push("/auth/confirm")
       }
     } catch (err) {
       console.error("[v0] Register error:", err)
-      setError("Error de conexion. Intenta de nuevo.")
+      setError(t("auth.connectionError"))
     } finally {
       setLoading(false)
     }
@@ -91,7 +89,7 @@ export default function RegisterPage() {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver al inicio
+          {t("common.back")}
         </Link>
       </div>
 
@@ -110,9 +108,9 @@ export default function RegisterPage() {
               height={120}
               className="h-20 w-auto mb-6"
             />
-            <h1 className="text-2xl font-bold text-foreground">Crear Cuenta</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("auth.registerTitle")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Crea tu cuenta para comenzar
+              {t("auth.registerSubtitle")}
             </p>
           </div>
 
@@ -125,12 +123,12 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="text-sm text-foreground">
-                Correo electronico
+                {t("auth.email")}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="tu@empresa.com"
+                placeholder={t("auth.emailPlaceholder")}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
@@ -140,13 +138,13 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="password" className="text-sm text-foreground">
-                Contraseña
+                {t("auth.password")}
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder={t("auth.passwordMinPlaceholder")}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   onFocus={() => setPasswordFocused(true)}
@@ -158,7 +156,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -171,12 +169,12 @@ export default function RegisterPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword" className="text-sm text-foreground">
-                Confirmar contraseña
+                {t("auth.confirmPassword")}
               </Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="Repite tu contraseña"
+                placeholder={t("auth.confirmPasswordPlaceholder")}
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 required
@@ -192,21 +190,21 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creando cuenta...
+                  {t("auth.creatingAccount")}
                 </>
               ) : (
-                "Crear Cuenta"
+                t("auth.registerTitle")
               )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            {"Ya tienes cuenta? "}
+            {t("auth.haveAccount")}{" "}
             <Link
               href="/login"
               className="text-primary hover:text-primary/80 font-medium transition-colors"
             >
-              Inicia sesion
+              {t("auth.signIn")}
             </Link>
           </p>
         </div>

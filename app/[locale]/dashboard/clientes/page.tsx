@@ -45,6 +45,7 @@ import {
   X,
   User,
 } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Cliente {
   id: string
@@ -70,6 +71,7 @@ interface FormData {
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function ClientesPage() {
+  const { t } = useTranslation()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -188,33 +190,23 @@ export default function ClientesPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Clientes</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gestiona los clientes de tu empresa.
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("customers.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("customers.subtitle")}</p>
         </div>
-        <Button
-          onClick={() => {
-            resetForm()
-            setDialogOpen(true)
-          }}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
-        >
+        <Button onClick={() => { resetForm(); setDialogOpen(true) }}
+          className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
           <Plus className="h-4 w-4" />
-          Nuevo Cliente
+          {t("customers.new")}
         </Button>
       </div>
 
       {/* Search Bar */}
       <Card className="glass-card border-border/30">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">Buscar Clientes</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre, apellido, email o telefono..."
+              placeholder={t("customers.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-secondary/50 border-border/30"
@@ -225,27 +217,22 @@ export default function ClientesPage() {
 
       {/* Clientes Table */}
       <Card className="glass-card border-border/30">
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">
-            Lista de Clientes ({filteredClientes.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           {filteredClientes.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No hay clientes registrados</p>
+              <p className="text-muted-foreground">{t("customers.noCustomers")}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/30">
-                    <TableHead className="text-xs font-semibold">Nombre</TableHead>
-                    <TableHead className="text-xs font-semibold">Email</TableHead>
-                    <TableHead className="text-xs font-semibold">Telefono</TableHead>
-                    <TableHead className="text-xs font-semibold">Ubicacion</TableHead>
-                    <TableHead className="text-xs font-semibold">Estado</TableHead>
-                    <TableHead className="text-xs font-semibold text-right">Acciones</TableHead>
+                    <TableHead className="text-xs font-semibold">{t("customers.colName")}</TableHead>
+                    <TableHead className="text-xs font-semibold">{t("customers.colEmail")}</TableHead>
+                    <TableHead className="text-xs font-semibold">{t("customers.colPhone")}</TableHead>
+                    <TableHead className="text-xs font-semibold">{t("common.address")}</TableHead>
+                    <TableHead className="text-xs font-semibold">{t("common.status")}</TableHead>
+                    <TableHead className="text-xs font-semibold text-right">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -299,15 +286,9 @@ export default function ClientesPage() {
                       <TableCell className="text-sm">
                         <Badge variant={cliente.activo ? "default" : "secondary"}>
                           {cliente.activo ? (
-                            <span className="flex items-center gap-1">
-                              <Check className="h-3 w-3" />
-                              Activo
-                            </span>
+                            <span className="flex items-center gap-1"><Check className="h-3 w-3" />{t("common.active")}</span>
                           ) : (
-                            <span className="flex items-center gap-1">
-                              <X className="h-3 w-3" />
-                              Inactivo
-                            </span>
+                            <span className="flex items-center gap-1"><X className="h-3 w-3" />{t("common.inactive")}</span>
                           )}
                         </Badge>
                       </TableCell>
@@ -344,117 +325,70 @@ export default function ClientesPage() {
       <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="glass-card border-border/30 sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingCliente ? "Editar Cliente" : "Agregar Cliente"}</DialogTitle>
-            <DialogDescription>
-              {editingCliente ? "Modifica los datos del cliente." : "Agrega un nuevo cliente a tu lista."}
-            </DialogDescription>
+            <DialogTitle>{editingCliente ? t("customers.edit") : t("customers.add")}</DialogTitle>
+            <DialogDescription>{editingCliente ? t("customers.editDesc") : t("customers.addDesc")}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="nombre" className="text-xs">
-                  Nombre *
-                </Label>
-                <Input
-                  id="nombre"
-                  placeholder="Juan"
-                  value={formData.nombre}
+                <Label htmlFor="nombre" className="text-xs">{t("customers.name")} *</Label>
+                <Input id="nombre" placeholder="Juan" value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="bg-secondary/50 border-border/30"
-                />
+                  className="bg-secondary/50 border-border/30" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="apellido" className="text-xs">
-                  Apellido
-                </Label>
-                <Input
-                  id="apellido"
-                  placeholder="Perez"
-                  value={formData.apellido}
+                <Label htmlFor="apellido" className="text-xs">{t("customers.lastName")}</Label>
+                <Input id="apellido" placeholder="Perez" value={formData.apellido}
                   onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                  className="bg-secondary/50 border-border/30"
-                />
+                  className="bg-secondary/50 border-border/30" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="correo" className="text-xs">
-                  Email
-                </Label>
-                <Input
-                  id="correo"
-                  type="email"
-                  placeholder="juan@example.com"
-                  value={formData.correo}
+                <Label htmlFor="correo" className="text-xs">{t("customers.email")}</Label>
+                <Input id="correo" type="email" placeholder="juan@example.com" value={formData.correo}
                   onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                  className="bg-secondary/50 border-border/30"
-                />
+                  className="bg-secondary/50 border-border/30" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="telefono" className="text-xs">
-                  Telefono
-                </Label>
-                <Input
-                  id="telefono"
-                  type="tel"
-                  placeholder="+506 8888-8888"
-                  value={formData.telefono}
+                <Label htmlFor="telefono" className="text-xs">{t("customers.phone")}</Label>
+                <Input id="telefono" type="tel" placeholder="+506 8888-8888" value={formData.telefono}
                   onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  className="bg-secondary/50 border-border/30"
-                />
+                  className="bg-secondary/50 border-border/30" />
               </div>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="direccion" className="text-xs">
-                Direccion
-              </Label>
-              <Input
-                id="direccion"
-                placeholder="San Jose, Costa Rica"
-                value={formData.direccion}
+              <Label htmlFor="direccion" className="text-xs">{t("common.address")}</Label>
+              <Input id="direccion" placeholder="San Jose, Costa Rica" value={formData.direccion}
                 onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                className="bg-secondary/50 border-border/30"
-              />
+                className="bg-secondary/50 border-border/30" />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => handleDialogOpenChange(false)}
-              className="border-border/30"
-            >
-              Cancelar
+            <Button variant="outline" onClick={() => handleDialogOpenChange(false)} className="border-border/30">
+              {t("common.cancel")}
             </Button>
-            <Button
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleSubmit}
-              disabled={saving || !formData.nombre.trim()}
-            >
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSubmit}
+              disabled={saving || !formData.nombre.trim()}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {editingCliente ? "Guardar Cambios" : "Guardar Cliente"}
+              {editingCliente ? t("common.save") : t("customers.add")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Alert Dialog para confirmar eliminacion */}
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent className="glass-card border-border/30">
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar Cliente</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar a <strong>{editingCliente?.nombre} {editingCliente?.apellido}</strong>? Esta acción no se puede deshacer.
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("customers.deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("customers.deleteConfirm")}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialog>
-            <AlertDialogCancel className="border-border/30">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-white hover:bg-destructive/90"
-            >
-              Eliminar
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel className="border-border/30">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              {t("common.delete")}
             </AlertDialogAction>
-          </AlertDialog>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>

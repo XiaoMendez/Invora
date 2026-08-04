@@ -51,6 +51,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Movimiento {
   id: string
@@ -92,14 +93,14 @@ interface Proveedor {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-function formatMovementType(tipo: string) {
+function formatMovementType(tipo: string, t: (key: string) => string) {
   const map: Record<string, { label: string; variant: "entrada" | "salida" }> = {
-    entrada: { label: "Entrada", variant: "entrada" },
-    salida: { label: "Salida", variant: "salida" },
-    ajuste_positivo: { label: "Ajuste +", variant: "entrada" },
-    ajuste_negativo: { label: "Ajuste -", variant: "salida" },
-    devolucion_venta: { label: "Dev. Venta", variant: "entrada" },
-    devolucion_compra: { label: "Dev. Compra", variant: "salida" },
+    entrada: { label: t("movements.typeEntry"), variant: "entrada" },
+    salida: { label: t("movements.typeSale"), variant: "salida" },
+    ajuste_positivo: { label: t("movements.typeAdjustPos"), variant: "entrada" },
+    ajuste_negativo: { label: t("movements.typeAdjustNeg"), variant: "salida" },
+    devolucion_venta: { label: t("movements.typeReturnSale"), variant: "entrada" },
+    devolucion_compra: { label: t("movements.typeReturnPurchase"), variant: "salida" },
   }
   return map[tipo] || { label: tipo, variant: "entrada" }
 }
@@ -114,6 +115,8 @@ function SearchableSelect({
   renderItem,
   renderSelected,
   icon: Icon,
+  noAssignedLabel,
+  noResultsLabel,
 }: {
   items: { id: string; label: string; sublabel?: string }[]
   value: string
@@ -123,6 +126,8 @@ function SearchableSelect({
   renderItem: (item: { id: string; label: string; sublabel?: string }) => React.ReactNode
   renderSelected: (item: { id: string; label: string; sublabel?: string }) => React.ReactNode
   icon: React.ElementType
+  noAssignedLabel: string
+  noResultsLabel: string
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -211,7 +216,7 @@ function SearchableSelect({
                 !value && "bg-primary text-primary-foreground hover:bg-primary/90"
               )}
             >
-              Sin asignar
+              {noAssignedLabel}
             </button>
 
             {filtered.map((item) => (
@@ -233,7 +238,7 @@ function SearchableSelect({
             ))}
 
             {filtered.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{noResultsLabel}</p>
             )}
           </div>
         </div>
@@ -243,6 +248,7 @@ function SearchableSelect({
 }
 
 export default function MovimientosPage() {
+  const { t, locale } = useTranslation()
   const [tipo, setTipo] = useState("todos")
   const [periodo, setPeriodo] = useState("30d")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -362,12 +368,15 @@ export default function MovimientosPage() {
     }
   }
 
+  // Use t() after hook is defined inside the component
+  const movType_fn = (tipo: string) => formatMovementType(tipo, t)
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando movimientos...</p>
+          <p className="text-sm text-muted-foreground">{t("movements.loading")}</p>
         </div>
       </div>
     )
@@ -378,7 +387,7 @@ export default function MovimientosPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3 text-center">
           <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar movimientos</p>
+          <p className="text-sm text-muted-foreground">{t("movements.error")}</p>
         </div>
       </div>
     )
@@ -389,40 +398,36 @@ export default function MovimientosPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Movimientos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Historial de entradas y salidas de inventario.
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("movements.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("movements.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
                 <Plus className="h-4 w-4" />
-                Nuevo Movimiento
+                {t("movements.new")}
               </Button>
             </DialogTrigger>
             <DialogContent className="glass-card border-border/30 sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Registrar Movimiento</DialogTitle>
-                <DialogDescription>
-                  Agrega una entrada o salida de inventario con cliente, proveedor o comprobante opcional.
-                </DialogDescription>
+                <DialogTitle>{t("movements.register")}</DialogTitle>
+                <DialogDescription>{t("movements.registerDesc")}</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
                 <div className="grid gap-2">
-                  <Label className="text-xs">Producto *</Label>
+                  <Label className="text-xs">{t("movements.product")} *</Label>
                   <Select
                     value={formData.id_producto}
                     onValueChange={(val) => setFormData({ ...formData, id_producto: val })}
                   >
                     <SelectTrigger className="bg-secondary/50 border-border/30">
-                      <SelectValue placeholder="Seleccionar producto" />
+                      <SelectValue placeholder={t("movements.selectProduct")} />
                     </SelectTrigger>
                     <SelectContent className="glass-card border-border/30 max-h-60">
                       {productos.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
-                          {p.nombre} {p.sku ? `(${p.sku})` : ""} - Stock: {p.stock}
+                          {p.nombre} {p.sku ? `(${p.sku})` : ""} - {t("products.stock")}: {p.stock}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -431,7 +436,7 @@ export default function MovimientosPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label className="text-xs">Tipo *</Label>
+                    <Label className="text-xs">{t("movements.type")} *</Label>
                     <Select
                       value={formData.tipo}
                       onValueChange={(val) => setFormData({ ...formData, tipo: val })}
@@ -440,17 +445,17 @@ export default function MovimientosPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="glass-card border-border/30">
-                        <SelectItem value="entrada">Entrada</SelectItem>
-                        <SelectItem value="salida">Salida (Venta)</SelectItem>
-                        <SelectItem value="ajuste_positivo">Ajuste +</SelectItem>
-                        <SelectItem value="ajuste_negativo">Ajuste -</SelectItem>
-                        <SelectItem value="devolucion_venta">Dev. Venta</SelectItem>
-                        <SelectItem value="devolucion_compra">Dev. Compra</SelectItem>
+                        <SelectItem value="entrada">{t("movements.typeEntry")}</SelectItem>
+                        <SelectItem value="salida">{t("movements.typeSale")}</SelectItem>
+                        <SelectItem value="ajuste_positivo">{t("movements.typeAdjustPos")}</SelectItem>
+                        <SelectItem value="ajuste_negativo">{t("movements.typeAdjustNeg")}</SelectItem>
+                        <SelectItem value="devolucion_venta">{t("movements.typeReturnSale")}</SelectItem>
+                        <SelectItem value="devolucion_compra">{t("movements.typeReturnPurchase")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs">Cantidad *</Label>
+                    <Label className="text-xs">{t("movements.quantity")} *</Label>
                     <Input
                       type="number"
                       min="1"
@@ -464,14 +469,16 @@ export default function MovimientosPage() {
 
                 {/* Cliente (opcional) */}
                 <div className="grid gap-2">
-                  <Label className="text-xs">Cliente (opcional)</Label>
+                  <Label className="text-xs">{t("movements.customer")}</Label>
                   <SearchableSelect
                     items={clienteItems}
                     value={formData.id_cliente}
                     onChange={(val) => setFormData({ ...formData, id_cliente: val })}
-                    placeholder="Buscar cliente..."
-                    searchPlaceholder="Buscar por nombre o correo..."
+                    placeholder={t("movements.searchCustomer")}
+                    searchPlaceholder={t("movements.searchByName")}
                     icon={User}
+                    noAssignedLabel={t("movements.noAssigned")}
+                    noResultsLabel={t("common.noResults")}
                     renderItem={(item) => (
                       <div>
                         <div className="font-medium">{item.label}</div>
@@ -484,14 +491,16 @@ export default function MovimientosPage() {
 
                 {/* Proveedor (opcional) */}
                 <div className="grid gap-2">
-                  <Label className="text-xs">Proveedor (opcional)</Label>
+                  <Label className="text-xs">{t("movements.supplier")}</Label>
                   <SearchableSelect
                     items={proveedorItems}
                     value={formData.id_proveedor}
                     onChange={(val) => setFormData({ ...formData, id_proveedor: val })}
-                    placeholder="Buscar proveedor..."
-                    searchPlaceholder="Buscar por nombre o correo..."
+                    placeholder={t("movements.searchSupplier")}
+                    searchPlaceholder={t("movements.searchByName")}
                     icon={Truck}
+                    noAssignedLabel={t("movements.noAssigned")}
+                    noResultsLabel={t("common.noResults")}
                     renderItem={(item) => (
                       <div>
                         <div className="font-medium">{item.label}</div>
@@ -504,7 +513,7 @@ export default function MovimientosPage() {
 
                 {/* Comprobante */}
                 <div className="grid gap-2">
-                  <Label className="text-xs">Comprobante (opcional)</Label>
+                  <Label className="text-xs">{t("movements.receipt")}</Label>
                   <div className="flex items-center gap-2">
                     <input
                       ref={fileInputRef}
@@ -525,7 +534,7 @@ export default function MovimientosPage() {
                       ) : (
                         <Upload className="h-4 w-4" />
                       )}
-                      {formData.comprobante_url ? "Cambiar archivo" : "Subir foto o PDF"}
+                      {formData.comprobante_url ? t("movements.changeFile") : t("movements.uploadFile")}
                     </Button>
                     {formData.comprobante_url && (
                       <Button
@@ -542,32 +551,32 @@ export default function MovimientosPage() {
                   {formData.comprobante_url && (
                     <div className="flex items-center gap-2 text-xs text-green-400">
                       <FileText className="h-3.5 w-3.5" />
-                      Archivo cargado
+                      {t("movements.fileUploaded")}
                       <a
                         href={formData.comprobante_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:text-green-300"
                       >
-                        Ver
+                        {t("movements.view")}
                       </a>
                     </div>
                   )}
                 </div>
 
                 <div className="grid gap-2">
-                  <Label className="text-xs">Motivo (opcional)</Label>
+                  <Label className="text-xs">{t("movements.reason")}</Label>
                   <Textarea
                     value={formData.motivo}
                     onChange={(e) => setFormData({ ...formData, motivo: e.target.value })}
                     className="bg-secondary/50 border-border/30 min-h-[80px]"
-                    placeholder="Ej: Reabastecimiento semanal, Venta a cliente..."
+                    placeholder={t("movements.reasonPlaceholder")}
                   />
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-border/30">
-                  Cancelar
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -575,14 +584,14 @@ export default function MovimientosPage() {
                   disabled={saving || !formData.id_producto || !formData.cantidad}
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Registrar
+                  {t("movements.register")}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
           <Button variant="outline" className="border-border/30 gap-2 text-sm" onClick={handleExportCSV}>
             <Download className="h-4 w-4" />
-            Exportar
+            {t("movements.exportCSV")}
           </Button>
         </div>
       </div>
@@ -596,7 +605,7 @@ export default function MovimientosPage() {
                 <ArrowDownLeft className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Entradas</p>
+                <p className="text-xs text-muted-foreground">{t("movements.entries")}</p>
                 <p className="text-xl font-bold text-foreground">{stats.entradas.toLocaleString()}</p>
               </div>
             </div>
@@ -609,7 +618,7 @@ export default function MovimientosPage() {
                 <ArrowUpRight className="h-5 w-5 text-red-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Salidas</p>
+                <p className="text-xs text-muted-foreground">{t("movements.exits")}</p>
                 <p className="text-xl font-bold text-foreground">{stats.salidas.toLocaleString()}</p>
               </div>
             </div>
@@ -622,7 +631,7 @@ export default function MovimientosPage() {
                 <ArrowLeftRight className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Neto</p>
+                <p className="text-xs text-muted-foreground">{t("movements.net")}</p>
                 <p className="text-xl font-bold text-foreground">
                   {stats.neto >= 0 ? "+" : ""}{stats.neto.toLocaleString()}
                 </p>
@@ -637,7 +646,7 @@ export default function MovimientosPage() {
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar producto, cliente, proveedor..."
+            placeholder={t("movements.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 bg-secondary/50 border-border/30"
@@ -648,9 +657,9 @@ export default function MovimientosPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="glass-card border-border/30">
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="entradas">Entradas</SelectItem>
-            <SelectItem value="salidas">Salidas</SelectItem>
+            <SelectItem value="todos">{t("movements.allTypes")}</SelectItem>
+            <SelectItem value="entradas">{t("movements.entries")}</SelectItem>
+            <SelectItem value="salidas">{t("movements.exits")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={periodo} onValueChange={setPeriodo}>
@@ -659,19 +668,19 @@ export default function MovimientosPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="glass-card border-border/30">
-            <SelectItem value="1d">Hoy</SelectItem>
-            <SelectItem value="7d">Últimos 7 días</SelectItem>
-            <SelectItem value="30d">Últimos 30 días</SelectItem>
-            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="1d">{t("movements.today")}</SelectItem>
+            <SelectItem value="7d">{t("movements.last7days")}</SelectItem>
+            <SelectItem value="30d">{t("movements.last30days")}</SelectItem>
+            <SelectItem value="all">{t("movements.allPeriods")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={filtroCliente} onValueChange={setFiltroCliente}>
           <SelectTrigger className="w-40 bg-secondary/50 border-border/30 text-sm">
             <User className="h-3.5 w-3.5 mr-1" />
-            <SelectValue placeholder="Cliente" />
+            <SelectValue placeholder={t("customers.title")} />
           </SelectTrigger>
           <SelectContent className="glass-card border-border/30 max-h-60">
-            <SelectItem value="todos">Todos los clientes</SelectItem>
+            <SelectItem value="todos">{t("reports.allCustomers")}</SelectItem>
             {clientes.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.nombre} {c.apellido || ""}
@@ -682,10 +691,10 @@ export default function MovimientosPage() {
         <Select value={filtroProveedor} onValueChange={setFiltroProveedor}>
           <SelectTrigger className="w-40 bg-secondary/50 border-border/30 text-sm">
             <Truck className="h-3.5 w-3.5 mr-1" />
-            <SelectValue placeholder="Proveedor" />
+            <SelectValue placeholder={t("suppliers.title")} />
           </SelectTrigger>
           <SelectContent className="glass-card border-border/30 max-h-60">
-            <SelectItem value="todos">Todos los proveedores</SelectItem>
+            <SelectItem value="todos">{t("reports.allSuppliers")}</SelectItem>
             {proveedores.map((p) => (
               <SelectItem key={p.id} value={p.id}>
                 {p.nombre}
@@ -703,18 +712,18 @@ export default function MovimientosPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-border/30 hover:bg-transparent">
-                    <TableHead className="text-xs">Producto</TableHead>
-                    <TableHead className="text-xs">Tipo</TableHead>
-                    <TableHead className="text-xs text-right">Cantidad</TableHead>
-                    <TableHead className="text-xs text-right">Stock</TableHead>
-                    <TableHead className="text-xs">Cliente/Proveedor</TableHead>
-                    <TableHead className="text-xs">Fecha</TableHead>
-                    <TableHead className="text-xs">Comprobante</TableHead>
+                    <TableHead className="text-xs">{t("movements.colProduct")}</TableHead>
+                    <TableHead className="text-xs">{t("movements.colType")}</TableHead>
+                    <TableHead className="text-xs text-right">{t("movements.colQuantity")}</TableHead>
+                    <TableHead className="text-xs text-right">{t("movements.colBefore")}/{t("movements.colAfter")}</TableHead>
+                    <TableHead className="text-xs">{t("movements.colCustomer")}/{t("movements.colSupplier")}</TableHead>
+                    <TableHead className="text-xs">{t("movements.colDate")}</TableHead>
+                    <TableHead className="text-xs">{t("movements.colReceipt")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {movimientos.map((mov) => {
-                    const movType = formatMovementType(mov.tipo)
+                    const movType = movType_fn(mov.tipo)
                     const clienteNombre = mov.cliente_nombre
                       ? `${mov.cliente_nombre} ${mov.cliente_apellido || ""}`.trim()
                       : null
@@ -758,7 +767,7 @@ export default function MovimientosPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {new Date(mov.creado_en).toLocaleDateString("es-CR", {
+                          {new Date(mov.creado_en).toLocaleString(locale, {
                             day: "numeric",
                             month: "short",
                             hour: "2-digit",
@@ -774,7 +783,7 @@ export default function MovimientosPage() {
                               className="flex items-center gap-1 text-primary hover:underline"
                             >
                               <FileText className="h-3 w-3" />
-                              Ver
+                              {t("movements.view")}
                               <ExternalLink className="h-2.5 w-2.5" />
                             </a>
                           ) : (
@@ -789,7 +798,7 @@ export default function MovimientosPage() {
             </div>
           ) : (
             <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-              No hay movimientos registrados en este período.
+              {t("movements.noMovements")}
             </div>
           )}
         </CardContent>

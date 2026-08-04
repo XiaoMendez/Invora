@@ -17,10 +17,12 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function ConfiguracionPage() {
+  const { t } = useTranslation()
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null)
 
@@ -46,7 +48,7 @@ export default function ConfiguracionPage() {
 
   const handleSave = async () => {
     if (!formData.nombre.trim()) {
-      setSaveStatus({ success: false, message: "El nombre de la empresa es requerido" })
+      setSaveStatus({ success: false, message: t("configuracion.nameRequired") })
       return
     }
 
@@ -63,13 +65,13 @@ export default function ConfiguracionPage() {
       const result = await res.json()
 
       if (result.success) {
-        setSaveStatus({ success: true, message: "Datos guardados correctamente" })
+        setSaveStatus({ success: true, message: t("configuracion.savedOk") })
         mutate("/api/empresa")
       } else {
-        setSaveStatus({ success: false, message: result.error || "Error al guardar" })
+        setSaveStatus({ success: false, message: result.error || t("configuracion.savedError") })
       }
     } catch (err) {
-      setSaveStatus({ success: false, message: "Error al guardar los datos" })
+      setSaveStatus({ success: false, message: t("configuracion.savedError") })
     } finally {
       setSaving(false)
     }
@@ -80,7 +82,7 @@ export default function ConfiguracionPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando configuracion...</p>
+          <p className="text-sm text-muted-foreground">{t("configuracion.loading")}</p>
         </div>
       </div>
     )
@@ -91,35 +93,39 @@ export default function ConfiguracionPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3 text-center">
           <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar configuracion</p>
+          <p className="text-sm text-muted-foreground">{t("configuracion.error")}</p>
         </div>
       </div>
     )
   }
 
+  const notifications = [
+    { key: "notif1", descKey: "notif1desc", defaultChecked: true },
+    { key: "notif2", descKey: "notif2desc", defaultChecked: true },
+    { key: "notif3", descKey: "notif3desc", defaultChecked: false },
+    { key: "notif4", descKey: "notif4desc", defaultChecked: true },
+  ] as const
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Configuracion</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Administra las preferencias de tu cuenta y empresa.
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t("configuracion.title")}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t("configuracion.subtitle")}</p>
       </div>
 
       <Tabs defaultValue="empresa" className="w-full">
         <TabsList className="bg-secondary/30 border border-border/30">
           <TabsTrigger value="empresa" className="text-xs gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
             <Building className="h-3.5 w-3.5" />
-            Empresa
+            {t("configuracion.tabCompany")}
           </TabsTrigger>
           <TabsTrigger value="notificaciones" className="text-xs gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
             <Bell className="h-3.5 w-3.5" />
-            Notificaciones
+            {t("configuracion.tabNotifications")}
           </TabsTrigger>
           <TabsTrigger value="seguridad" className="text-xs gap-1.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
             <Shield className="h-3.5 w-3.5" />
-            Seguridad
+            {t("configuracion.tabSecurity")}
           </TabsTrigger>
         </TabsList>
 
@@ -128,9 +134,9 @@ export default function ConfiguracionPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Building className="h-4 w-4 text-primary" />
-                Datos de la Empresa
+                {t("configuracion.companyData")}
               </CardTitle>
-              <CardDescription>Informacion general de tu negocio.</CardDescription>
+              <CardDescription>{t("configuracion.companyDataDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               {saveStatus && (
@@ -142,7 +148,7 @@ export default function ConfiguracionPage() {
 
               <div className="grid gap-6 max-w-lg">
                 <div className="grid gap-2">
-                  <Label className="text-xs">Nombre de la Empresa</Label>
+                  <Label className="text-xs">{t("configuracion.companyName")}</Label>
                   <Input
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
@@ -151,7 +157,7 @@ export default function ConfiguracionPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Cedula Juridica / ID Fiscal</Label>
+                  <Label className="text-xs">{t("configuracion.taxId")}</Label>
                   <Input
                     value={formData.id_fiscal}
                     onChange={(e) => setFormData({ ...formData, id_fiscal: e.target.value })}
@@ -161,7 +167,7 @@ export default function ConfiguracionPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label className="text-xs">Telefono</Label>
+                    <Label className="text-xs">{t("configuracion.phone")}</Label>
                     <Input
                       value={formData.telefono}
                       onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
@@ -170,7 +176,7 @@ export default function ConfiguracionPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs">Email</Label>
+                    <Label className="text-xs">{t("configuracion.email")}</Label>
                     <Input
                       value={data?.userEmail || ""}
                       disabled
@@ -179,7 +185,7 @@ export default function ConfiguracionPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Direccion</Label>
+                  <Label className="text-xs">{t("configuracion.address")}</Label>
                   <Input
                     value={formData.direccion}
                     onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
@@ -194,7 +200,7 @@ export default function ConfiguracionPage() {
                   disabled={saving}
                 >
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Guardar Cambios
+                  {t("configuracion.saveChanges")}
                 </Button>
               </div>
             </CardContent>
@@ -206,29 +212,24 @@ export default function ConfiguracionPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Bell className="h-4 w-4 text-primary" />
-                Preferencias de Notificaciones
+                {t("configuracion.notifTitle")}
               </CardTitle>
-              <CardDescription>Configura como y cuando recibir alertas.</CardDescription>
+              <CardDescription>{t("configuracion.notifDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-6 max-w-lg">
-                {[
-                  { label: "Alertas de stock bajo", description: "Notificar cuando un producto baje del minimo.", default: true },
-                  { label: "Stock agotado", description: "Alerta inmediata cuando un producto llega a 0.", default: true },
-                  { label: "Movimientos grandes", description: "Notificar movimientos que superen cierta cantidad.", default: false },
-                  { label: "Reportes semanales", description: "Recibir resumen semanal por email.", default: true },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between">
+                {notifications.map((item) => (
+                  <div key={item.key} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-foreground">{item.label}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                      <p className="text-sm text-foreground">{t(`configuracion.${item.key}`)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t(`configuracion.${item.descKey}`)}</p>
                     </div>
-                    <Switch defaultChecked={item.default} />
+                    <Switch defaultChecked={item.defaultChecked} />
                   </div>
                 ))}
                 <Separator className="bg-border/30" />
                 <p className="text-xs text-muted-foreground">
-                  Las alertas se enviaran al email: <strong>{data?.userEmail || "No configurado"}</strong>
+                  {t("configuracion.alertsEmail")} <strong>{data?.userEmail || t("configuracion.notConfigured")}</strong>
                 </p>
               </div>
             </CardContent>
@@ -240,37 +241,35 @@ export default function ConfiguracionPage() {
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Shield className="h-4 w-4 text-primary" />
-                Seguridad de la Cuenta
+                {t("configuracion.secTitle")}
               </CardTitle>
-              <CardDescription>Gestiona la seguridad de tu cuenta.</CardDescription>
+              <CardDescription>{t("configuracion.secDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-6 max-w-lg">
                 <div className="grid gap-2">
-                  <Label className="text-xs">Contrasena Actual</Label>
+                  <Label className="text-xs">{t("configuracion.currentPassword")}</Label>
                   <Input type="password" className="bg-secondary/50 border-border/30" />
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Nueva Contrasena</Label>
+                  <Label className="text-xs">{t("configuracion.newPassword")}</Label>
                   <Input type="password" className="bg-secondary/50 border-border/30" />
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Confirmar Nueva Contrasena</Label>
+                  <Label className="text-xs">{t("configuracion.confirmNewPassword")}</Label>
                   <Input type="password" className="bg-secondary/50 border-border/30" />
                 </div>
                 <Separator className="bg-border/30" />
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-foreground">Autenticacion de dos factores</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Agrega una capa extra de seguridad a tu cuenta.
-                    </p>
+                    <p className="text-sm text-foreground">{t("configuracion.twoFactor")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t("configuracion.twoFactorDesc")}</p>
                   </div>
                   <Switch />
                 </div>
                 <Separator className="bg-border/30" />
                 <Button className="w-fit bg-primary text-primary-foreground hover:bg-primary/90">
-                  Actualizar Seguridad
+                  {t("configuracion.updateSecurity")}
                 </Button>
               </div>
             </CardContent>

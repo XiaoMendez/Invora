@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { notFound } from "next/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
 import { PreferencesProvider } from "@/contexts/PreferencesContext"
+import { ToastProvider } from "@/contexts/ToastContext"
+import { ToastContainer } from "@/components/Toast/ToastContainer"
 import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
@@ -61,11 +63,14 @@ export default function RootLayout({
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}
       >
-        <PreferencesProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {children}
-          </ThemeProvider>
-        </PreferencesProvider>
+        <ToastProvider>
+          <PreferencesProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              {children}
+            </ThemeProvider>
+          </PreferencesProvider>
+          <ToastContainer />
+        </ToastProvider>
         <Analytics />
       </body>
     </html>

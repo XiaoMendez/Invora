@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Auth3DScene } from "@/components/auth-3d-scene"
 import { createClient } from "@/lib/supabase/client"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export default function LoginPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -33,21 +35,20 @@ export default function LoginPage() {
       })
 
       if (authError) {
-        setError(authError.message || "Credenciales invalidas")
+        setError(authError.message || t("auth.invalidCredentials"))
         return
       }
 
       if (!data.user || !data.session) {
-        setError("Error al iniciar sesion")
+        setError(t("auth.loginError"))
         return
       }
 
-      // Refresh to let middleware pick up the session
       router.refresh()
       router.push("/dashboard")
     } catch (err) {
       console.error("[v0] Login error:", err)
-      setError("Error de conexion. Intenta de nuevo.")
+      setError(t("auth.connectionError"))
     } finally {
       setLoading(false)
     }
@@ -63,7 +64,7 @@ export default function LoginPage() {
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver al inicio
+          {t("common.back")}
         </Link>
       </div>
 
@@ -82,9 +83,9 @@ export default function LoginPage() {
               height={120}
               className="h-20 w-auto mb-6"
             />
-            <h1 className="text-2xl font-bold text-foreground">Iniciar Sesion</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("auth.loginTitle")}</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Ingresa a tu cuenta de INVORA
+              {t("auth.loginSubtitle")}
             </p>
           </div>
 
@@ -97,12 +98,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="email" className="text-sm text-foreground">
-                Correo electronico
+                {t("auth.email")}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="tu@empresa.com"
+                placeholder={t("auth.emailPlaceholder")}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
@@ -112,13 +113,13 @@ export default function LoginPage() {
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="password" className="text-sm text-foreground">
-                Contraseña
+                {t("auth.password")}
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Tu contraseña"
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required
@@ -128,7 +129,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -143,21 +144,21 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Ingresando...
+                  {t("auth.signingIn")}
                 </>
               ) : (
-                "Iniciar Sesion"
+                t("auth.loginTitle")
               )}
             </Button>
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-6">
-            {"No tienes cuenta? "}
+            {t("auth.noAccount")}{" "}
             <Link
               href="/register"
               className="text-primary hover:text-primary/80 font-medium transition-colors"
             >
-              Registrate aqui
+              {t("auth.registerHere")}
             </Link>
           </p>
         </div>

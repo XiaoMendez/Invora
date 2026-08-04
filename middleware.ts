@@ -1,12 +1,5 @@
-import createMiddleware from 'next-intl/middleware'
 import { updateSession } from '@/lib/supabase/middleware'
 import { type NextRequest, NextResponse } from 'next/server'
-
-const handleI18nRouting = createMiddleware({
-  locales: ['es', 'en', 'pt'],
-  defaultLocale: 'es',
-  localeCookie: 'NEXT_LOCALE',
-})
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -29,23 +22,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Actualizar sesión de Supabase
+  // Update Supabase session
   const supabaseResponse = await updateSession(request)
 
-  // Si Supabase retorna un redirect, usarlo directamente
+  // If Supabase returns a redirect, use it
   if (supabaseResponse.status === 307 || supabaseResponse.status === 308) {
     return supabaseResponse
   }
 
-  // Aplicar i18n routing a la respuesta de Supabase
-  let response = handleI18nRouting(request) || supabaseResponse
-
-  // Copiar cookies de Supabase a la respuesta final
-  supabaseResponse.headers.getSetCookie().forEach((cookie) => {
-    response.headers.append('set-cookie', cookie)
-  })
-
-  return response
+  return supabaseResponse
 }
 
 export const config = {

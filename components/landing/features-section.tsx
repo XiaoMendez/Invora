@@ -9,45 +9,9 @@ import {
   Users,
   Shield,
 } from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
 
-const features = [
-  {
-    icon: Package,
-    title: "Gestión de Productos",
-    description:
-      "Registra, organiza y categoriza todos tus productos con campos personalizables y búsqueda avanzada.",
-  },
-  {
-    icon: BarChart3,
-    title: "Reportes en Tiempo Real",
-    description:
-      "Visualiza el estado de tu inventario con gráficos interactivos y reportes detallados al instante.",
-  },
-  {
-    icon: Bell,
-    title: "Alertas Inteligentes",
-    description:
-      "Recibe notificaciones cuando el stock baje del mínimo o cuando se detecten anomalías en movimientos.",
-  },
-  {
-    icon: MousePointerClick,
-    title: "Fácil de Usar",
-    description:
-      "Diseño intuitivo pensado para que cualquier persona pueda usarlo sin capacitación previa. Solo haz clic y listo.",
-  },
-  {
-    icon: Users,
-    title: "Gestión de Proveedores",
-    description:
-      "Administra tus proveedores, compara precios de compra y mantiene un historial completo de cada pedido.",
-  },
-  {
-    icon: Shield,
-    title: "Seguridad Avanzada",
-    description:
-      "Tus datos están protegidos con encriptación de extremo a extremo y respaldos automáticos diarios.",
-  },
-]
+const featureIcons = [Package, BarChart3, Bell, MousePointerClick, Users, Shield]
 
 const containerVariants = {
   hidden: {},
@@ -68,6 +32,14 @@ const itemVariants = {
 }
 
 export function FeaturesSection() {
+  const { t } = useTranslation()
+
+  const features = featureIcons.map((icon, i) => ({
+    icon,
+    title: t(`features.f${i + 1}title`),
+    description: t(`features.f${i + 1}desc`),
+  }))
+
   return (
     <section id="features" className="relative py-32">
       <div className="mx-auto max-w-7xl px-6">
@@ -80,14 +52,15 @@ export function FeaturesSection() {
           className="text-center mb-16"
         >
           <p className="text-xs uppercase tracking-widest text-primary mb-3">
-            Funcionalidades
+            {t('features.badge')}
           </p>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground text-balance">
-            Todo lo que necesitas para{" "}
-            <span className="text-primary">gestionar</span> tu inventario
+            {t('features.title1')}{" "}
+            <span className="text-primary">{t('features.title2')}</span>{" "}
+            {t('features.title3')}
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground text-pretty leading-relaxed">
-            Herramientas diseñadas específicamente para las necesidades de PYMEs costarricenses.
+            {t('features.subtitle')}
           </p>
         </motion.div>
 

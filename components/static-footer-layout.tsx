@@ -4,8 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
+import { useTranslation } from "@/hooks/useTranslation"
 
 export function StaticFooterLayout({
   title,
@@ -18,6 +18,8 @@ export function StaticFooterLayout({
   children: React.ReactNode
   showContact?: boolean
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="relative min-h-screen flex flex-col bg-background">
       <StarsBackgroundCanvas />
@@ -39,7 +41,7 @@ export function StaticFooterLayout({
             className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver
+            {t("staticPages.back")}
           </Link>
         </div>
       </nav>
@@ -82,36 +84,36 @@ export function StaticFooterLayout({
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <Mail className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-semibold">Email</span>
+                    <span className="text-sm font-semibold">{t("staticPages.contact.emailContactTitle")}</span>
                   </div>
                   <a
                     href="mailto:hola@invora.io"
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    hola@invora.io
+                    {t("staticPages.contact.emailContactValue")}
                   </a>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <Phone className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-semibold">Teléfono</span>
+                    <span className="text-sm font-semibold">{t("staticPages.contact.phoneTitle")}</span>
                   </div>
                   <a
                     href="tel:+50625671234"
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    +506 2567 1234
+                    {t("staticPages.contact.phoneValue")}
                   </a>
                 </div>
 
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3">
                     <MapPin className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-semibold">Ubicación</span>
+                    <span className="text-sm font-semibold">{t("staticPages.contact.locationTitle")}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    San José, Costa Rica
+                    {t("staticPages.contact.locationValue")}
                   </p>
                 </div>
               </div>
@@ -124,16 +126,16 @@ export function StaticFooterLayout({
       <footer className="relative z-20 border-t border-border/20 backdrop-blur-md bg-background/50">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© 2024 INVORA. Todos los derechos reservados.</p>
+            <p>{t("common.copyright")} {t("common.allRightsReserved")}</p>
             <div className="flex gap-6">
               <Link href="/privacidad" className="hover:text-foreground transition-colors">
-                Privacidad
+                {t("common.privacy")}
               </Link>
               <Link href="/terminos" className="hover:text-foreground transition-colors">
-                Términos
+                {t("common.terms")}
               </Link>
               <Link href="/contacto" className="hover:text-foreground transition-colors">
-                Contacto
+                {t("common.contact")}
               </Link>
             </div>
           </div>

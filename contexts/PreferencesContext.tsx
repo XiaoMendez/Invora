@@ -1,6 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 
 export type Locale = 'es' | 'en' | 'pt'
 export type Theme = 'light' | 'dark' | 'system'
@@ -22,6 +23,9 @@ interface PreferencesContextType {
 const PreferencesContext = createContext<PreferencesContextType | undefined>(undefined)
 
 export function PreferencesProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  
   const [preferences, setPreferences] = useState<Preferences>({
     locale: 'es',
     theme: 'system',
@@ -48,15 +52,20 @@ export function PreferencesProvider({ children }: { children: React.ReactNode })
     const updated = { ...preferences, locale }
     setPreferences(updated)
     localStorage.setItem('preferences', JSON.stringify(updated))
-    // Cambiar el idioma en la URL si es necesario
-    const currentPath = window.location.pathname
-    const pathSegments = currentPath.split('/')
-    if (['es', 'en', 'pt'].includes(pathSegments[1])) {
+    localStorage.setItem('NEXT_LOCALE', locale)
+    
+    // Cambiar el idioma en la URL
+    const pathSegments = pathname.split('/')
+    const currentLocale = pathSegments[1]
+    
+    if (['es', 'en', 'pt'].includes(currentLocale)) {
       pathSegments[1] = locale
     } else {
       pathSegments.splice(1, 0, locale)
     }
-    window.location.pathname = pathSegments.join('/')
+    
+    const newPath = pathSegments.join('/')
+    router.push(newPath)
   }
 
   const setTheme = (theme: Theme) => {

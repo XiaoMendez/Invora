@@ -5,8 +5,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/hooks/useTranslation"
+import { usePreferences } from "@/contexts/PreferencesContext"
 
 export function CTASection() {
+  const { t } = useTranslation()
+  const { preferences } = usePreferences()
+  const locale = preferences.locale
+
   return (
     <section id="contact" className="relative py-32">
       <div className="mx-auto max-w-4xl px-6">
@@ -21,19 +27,18 @@ export function CTASection() {
 
           <div className="relative z-10">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground text-balance">
-              Lleva tu inventario a otra dimension
+              {t('cta.title')}
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto leading-relaxed text-pretty">
-              Unete a cientos de PYMEs costarricenses que ya confian en INVORA
-              para gestionar su inventario de forma inteligente.
+              {t('cta.subtitle')}
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register">
+              <Link href={`/${locale}/register`}>
                 <Button
                   size="lg"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base group"
                 >
-                  Empezar Ahora
+                  {t('cta.button')}
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
@@ -45,24 +50,28 @@ export function CTASection() {
   )
 }
 
-const footerProducto = [
-  { label: "Funciones", href: "/funciones" },
-  { label: "Guia", href: "/guia" },
-]
-
-const footerEmpresa = [
-  { label: "Sobre Nosotros", href: "/sobre-nosotros" },
-  { label: "Contacto", href: "/contacto" },
-  { label: "Soporte", href: "/soporte" },
-]
-
-const footerLegal = [
-  { label: "Terminos de Servicio", href: "/terminos" },
-  { label: "Privacidad", href: "/privacidad" },
-  { label: "Cookies", href: "/cookies" },
-]
-
 export function Footer() {
+  const { t } = useTranslation()
+  const { preferences } = usePreferences()
+  const locale = preferences.locale
+
+  const footerProducto = [
+    { label: t('footer.features'), href: `/${locale}/funciones` },
+    { label: t('footer.guide'), href: `/${locale}/guia` },
+  ]
+
+  const footerEmpresa = [
+    { label: t('footer.about'), href: `/${locale}/sobre-nosotros` },
+    { label: t('footer.contact'), href: `/${locale}/contacto` },
+    { label: t('footer.support'), href: `/${locale}/soporte` },
+  ]
+
+  const footerLegal = [
+    { label: t('footer.terms'), href: `/${locale}/terminos` },
+    { label: t('footer.privacy'), href: `/${locale}/privacidad` },
+    { label: t('footer.cookies'), href: `/${locale}/cookies` },
+  ]
+
   return (
     <footer className="border-t border-border/30 py-12">
       <div className="mx-auto max-w-7xl px-6">
@@ -76,18 +85,15 @@ export function Footer() {
               className="h-16 w-auto mb-4"
             />
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Sistema de inventario inteligente para PYMEs en Costa Rica.
+              {t('footer.tagline')}
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Producto</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.product')}</h4>
             <ul className="flex flex-col gap-2">
               {footerProducto.map((item) => (
                 <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Link href={item.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {item.label}
                   </Link>
                 </li>
@@ -95,14 +101,11 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Empresa</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.company')}</h4>
             <ul className="flex flex-col gap-2">
               {footerEmpresa.map((item) => (
                 <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Link href={item.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {item.label}
                   </Link>
                 </li>
@@ -110,14 +113,11 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold text-foreground mb-4">Legal</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-4">{t('footer.legal')}</h4>
             <ul className="flex flex-col gap-2">
               {footerLegal.map((item) => (
                 <li key={item.label}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
+                  <Link href={item.href} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                     {item.label}
                   </Link>
                 </li>
@@ -127,10 +127,10 @@ export function Footer() {
         </div>
         <div className="mt-12 pt-6 border-t border-border/30 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            &copy; 2026 INVORA. Todos los derechos reservados.
+            &copy; 2026 INVORA. {t('footer.rights')}
           </p>
           <p className="text-xs text-muted-foreground">
-            Hecho con amor en Costa Rica
+            {t('footer.madeWith')}
           </p>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Alerta {
   id: string
@@ -42,16 +43,8 @@ function getAlertIcon(tipo: Alerta["tipo"]) {
   }
 }
 
-function getAlertBadge(tipo: Alerta["tipo"]) {
-  switch (tipo) {
-    case "critical":
-      return { label: "Critica", className: "bg-red-500/10 text-red-400 border-red-500/20" }
-    case "warning":
-      return { label: "Advertencia", className: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
-  }
-}
-
 export default function AlertasPage() {
+  const { t } = useTranslation()
   const [sending, setSending] = useState(false)
   const [emailStatus, setEmailStatus] = useState<{ success: boolean; message: string } | null>(null)
 
@@ -92,7 +85,7 @@ export default function AlertasPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando alertas...</p>
+          <p className="text-sm text-muted-foreground">{t("alerts.loading")}</p>
         </div>
       </div>
     )
@@ -103,10 +96,17 @@ export default function AlertasPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3 text-center">
           <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar alertas</p>
+          <p className="text-sm text-muted-foreground">{t("alerts.error")}</p>
         </div>
       </div>
     )
+  }
+
+  const getAlertBadge = (tipo: Alerta["tipo"]) => {
+    switch (tipo) {
+      case "critical": return { label: t("alerts.outOfStock"), className: "bg-red-500/10 text-red-400 border-red-500/20" }
+      case "warning": return { label: t("alerts.lowStock"), className: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
+    }
   }
 
   return (
@@ -115,16 +115,14 @@ export default function AlertasPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            Alertas
+            {t("alerts.title")}
             {alertas.length > 0 && (
               <Badge variant="secondary" className="bg-primary/20 text-primary text-xs">
-                {alertas.length} activas
+                {alertas.length} {t("alerts.activeAlerts")}
               </Badge>
             )}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Notificaciones de stock bajo en tiempo real.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("alerts.subtitle")}</p>
         </div>
         <Button
           variant="outline"
@@ -133,7 +131,7 @@ export default function AlertasPage() {
           disabled={sending || alertas.length === 0}
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Enviar Alertas por Email
+          {t("alerts.restock")}
         </Button>
       </div>
 
@@ -159,10 +157,10 @@ export default function AlertasPage() {
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Criticas", count: criticas, color: "text-red-400", bg: "bg-red-500/10" },
-          { label: "Advertencias", count: advertencias, color: "text-amber-400", bg: "bg-amber-500/10" },
-          { label: "Total Alertas", count: alertas.length, color: "text-primary", bg: "bg-primary/10" },
-          { label: "Email Destino", count: email || "No configurado", color: "text-muted-foreground", bg: "bg-secondary/50", isText: true },
+          { label: t("alerts.outOfStock"), count: criticas, color: "text-red-400", bg: "bg-red-500/10" },
+          { label: t("alerts.lowStock"), count: advertencias, color: "text-amber-400", bg: "bg-amber-500/10" },
+          { label: t("alerts.title"), count: alertas.length, color: "text-primary", bg: "bg-primary/10" },
+          { label: t("configuracion.alertsEmail").replace(":", ""), count: email || t("configuracion.notConfigured"), color: "text-muted-foreground", bg: "bg-secondary/50", isText: true },
         ].map((item) => (
           <Card key={item.label} className="glass-card border-border/30">
             <CardContent className="pt-0 flex items-center gap-3">
@@ -244,10 +242,7 @@ export default function AlertasPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 mb-3">
                 <CheckCircle className="h-6 w-6 text-green-400" />
               </div>
-              <h3 className="text-sm font-medium text-foreground mb-1">Sin alertas activas</h3>
-              <p className="text-xs text-muted-foreground">
-                Todos tus productos tienen stock suficiente. ¡Excelente!
-              </p>
+              <p className="text-sm text-muted-foreground">{t("alerts.noAlerts")}</p>
             </div>
           </CardContent>
         </Card>

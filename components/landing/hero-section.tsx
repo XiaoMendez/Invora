@@ -4,8 +4,21 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/hooks/useTranslation"
+import { usePreferences } from "@/contexts/PreferencesContext"
 
 export function HeroSection() {
+  const { t } = useTranslation()
+  const { preferences } = usePreferences()
+  const locale = preferences.locale
+
+  const stats = [
+    { value: t('hero.stat1value'), label: t('hero.stat1label') },
+    { value: t('hero.stat2value'), label: t('hero.stat2label') },
+    { value: t('hero.stat3value'), label: t('hero.stat3label') },
+    { value: t('hero.stat4value'), label: t('hero.stat4label') },
+  ]
+
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
@@ -16,12 +29,12 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-foreground text-balance leading-[1.1]"
         >
-          Control total de tu
+          {t('hero.title1')}
           <br />
           <span className="bg-gradient-to-r from-primary via-[oklch(0.75_0.15_340)] to-primary bg-clip-text text-transparent">
-            inventario
+            {t('hero.title2')}
           </span>{" "}
-          en un solo lugar
+          {t('hero.title3')}
         </motion.h1>
 
         {/* Subtitle */}
@@ -31,8 +44,7 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="mx-auto mt-6 max-w-2xl text-base md:text-lg text-muted-foreground leading-relaxed text-pretty"
         >
-          INVORA es el sistema de inventario disenado para PYMEs en Costa Rica.
-          Gestiona productos, rastrea movimientos y toma decisiones con datos en tiempo real.
+          {t('hero.subtitle')}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -42,12 +54,12 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link href="/register">
+          <Link href={`/${locale}/register`}>
             <Button
               size="lg"
               className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-base group animate-pulse-glow"
             >
-              Comenzar Ahora
+              {t('hero.cta')}
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </Link>
@@ -57,7 +69,7 @@ export function HeroSection() {
               variant="outline"
               className="border-border/50 text-foreground hover:bg-secondary px-8 py-6 text-base"
             >
-              Ver Funciones
+              {t('hero.secondary')}
             </Button>
           </a>
         </motion.div>
@@ -69,12 +81,7 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 1 }}
           className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 md:divide-x divide-border/30"
         >
-          {[
-            { value: "500+", label: "PYMEs Activas" },
-            { value: "99.9%", label: "Uptime" },
-            { value: "50K+", label: "Productos Gestionados" },
-            { value: "24/7", label: "Soporte" },
-          ].map((stat) => (
+          {stats.map((stat) => (
             <div key={stat.label} className="text-center px-4">
               <div className="text-2xl md:text-3xl font-bold text-foreground">
                 {stat.value}

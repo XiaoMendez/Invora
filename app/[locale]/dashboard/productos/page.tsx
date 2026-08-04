@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Categoria {
   id: string
@@ -91,10 +92,10 @@ interface ProductoProveedor {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-function getStatusInfo(stock: number, stock_minimo: number) {
-  if (stock === 0) return { label: "Agotado", className: "bg-red-500/10 text-red-400 border-red-500/20" }
-  if (stock <= stock_minimo) return { label: "Stock Bajo", className: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
-  return { label: "Disponible", className: "bg-green-500/10 text-green-400 border-green-500/20" }
+function getStatusInfo(stock: number, stock_minimo: number, t: (k: string) => string) {
+  if (stock === 0) return { label: t("common.outOfStock"), className: "bg-red-500/10 text-red-400 border-red-500/20" }
+  if (stock <= stock_minimo) return { label: t("common.lowStock"), className: "bg-amber-500/10 text-amber-400 border-amber-500/20" }
+  return { label: t("common.available"), className: "bg-green-500/10 text-green-400 border-green-500/20" }
 }
 
 // Combobox de categoría con opción de escribir una propia
@@ -103,11 +104,13 @@ function CategoriaCombobox({
   value,
   onChange,
   onCategoriaCreada,
+  t,
 }: {
   categorias: Categoria[]
   value: string
   onChange: (val: string) => void
   onCategoriaCreada: (cat: Categoria) => void
+  t: (key: string) => string
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -169,7 +172,7 @@ function CategoriaCombobox({
         )}
       >
         <span className={cn(!selected && "text-muted-foreground")}>
-          {selected ? selected.nombre : "Seleccionar o crear..."}
+          {selected ? selected.nombre : t("products.categoryPlaceholder")}
         </span>
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
@@ -183,7 +186,7 @@ function CategoriaCombobox({
               <input
                 autoFocus
                 className="w-full pl-7 pr-2 py-1.5 text-sm bg-[oklch(0.18_0.02_280)] border border-border/30 rounded text-foreground placeholder:text-muted-foreground outline-none focus:border-ring/50"
-                placeholder="Buscar o escribir nueva..."
+                placeholder={t("products.searchOrCreate")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
@@ -205,7 +208,7 @@ function CategoriaCombobox({
               )}
             >
               {!value && <Check className="h-3.5 w-3.5 shrink-0" />}
-              <span className={!value ? "" : "pl-5"}>Sin categoria</span>
+              <span className={!value ? "" : "pl-5"}>{t("products.noCategory")}</span>
             </button>
 
             {filtradas.map((cat) => {
@@ -230,7 +233,7 @@ function CategoriaCombobox({
             })}
 
             {filtradas.length === 0 && !mostrarCrear && (
-              <p className="px-3 py-2 text-xs text-muted-foreground">Sin resultados</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">{t("common.noResults")}</p>
             )}
 
             {/* Crear nueva categoria */}
@@ -245,7 +248,7 @@ function CategoriaCombobox({
                   ? <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
                   : <PenLine className="h-3.5 w-3.5 shrink-0" />
                 }
-                Crear &quot;{searchTrimmed}&quot;
+                {t("products.create")} &quot;{searchTrimmed}&quot;
               </button>
             )}
           </div>
@@ -261,11 +264,13 @@ function ProveedoresSection({
   setProveedoresSeleccionados,
   proveedoresData,
   formData,
+  t,
 }: {
   proveedoresSeleccionados: Array<{ id: string; nombre: string; precio_compra: string; es_principal: boolean }>
   setProveedoresSeleccionados: (val: any) => void
   proveedoresData: any
   formData: any
+  t: (key: string) => string
 }) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -301,8 +306,8 @@ function ProveedoresSection({
     <div className="grid gap-3">
       <div className="flex items-center justify-between">
         <div>
-          <Label className="text-xs">Proveedores</Label>
-          <p className="text-xs text-muted-foreground">Asocia proveedores a este producto (opcional)</p>
+          <Label className="text-xs">{t("products.suppliers")}</Label>
+          <p className="text-xs text-muted-foreground">{t("products.suppliersDesc")}</p>
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -311,7 +316,7 @@ function ProveedoresSection({
             onChange={(e) => {}}
             className="w-4 h-4"
           />
-          <span className="text-xs">Producto propio</span>
+          <span className="text-xs">{t("products.ownProduct")}</span>
         </label>
       </div>
 
@@ -324,12 +329,12 @@ function ProveedoresSection({
                 checked={prov.es_principal}
                 onChange={(e) => handleActualizar(prov.id, "es_principal", e.target.checked)}
                 className="w-4 h-4"
-                title="Proveedor principal"
+                title={t("products.mainSupplier")}
               />
               <span className="text-xs flex-1">{prov.nombre}</span>
               <input
                 type="number"
-                placeholder="Precio compra"
+                placeholder={t("products.purchasePrice")}
                 value={prov.precio_compra}
                 onChange={(e) => handleActualizar(prov.id, "precio_compra", e.target.value)}
                 className="w-24 h-8 text-xs bg-secondary/50 border border-border/30 rounded px-2"
@@ -353,7 +358,7 @@ function ProveedoresSection({
             onClick={() => setOpen(!open)}
             className="w-full text-left px-3 py-2 text-sm bg-secondary/50 border border-border/30 rounded hover:bg-secondary/70 flex items-center justify-between"
           >
-            <span className="text-muted-foreground">Agregar proveedor...</span>
+            <span className="text-muted-foreground">{t("products.addSupplier")}</span>
             <ChevronDown className="h-4 w-4" />
           </button>
 
@@ -361,7 +366,7 @@ function ProveedoresSection({
             <div className="absolute z-50 w-full mt-1 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg">
               <input
                 type="text"
-                placeholder="Buscar proveedor..."
+                placeholder={t("movements.searchSupplier")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-secondary/50 border-b border-border/20 rounded-t"
@@ -384,7 +389,7 @@ function ProveedoresSection({
 
           {open && proveedoresDisponibles.length === 0 && (
             <div className="absolute z-50 w-full mt-1 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg p-3">
-              <p className="text-xs text-muted-foreground text-center">No hay proveedores disponibles</p>
+              <p className="text-xs text-muted-foreground text-center">{t("products.noSuppliersAvailable")}</p>
             </div>
           )}
         </div>
@@ -394,6 +399,7 @@ function ProveedoresSection({
 }
 
 export default function ProductosPage() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todas")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -510,7 +516,7 @@ export default function ProductosPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estas seguro de eliminar este producto?")) return
+    if (!confirm(t("products.deleteConfirm"))) return
 
     try {
       const res = await fetch(`/api/productos?id=${id}`, { method: "DELETE" })
@@ -527,7 +533,7 @@ export default function ProductosPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando productos...</p>
+          <p className="text-sm text-muted-foreground">{t("products.loading")}</p>
         </div>
       </div>
     )
@@ -538,7 +544,7 @@ export default function ProductosPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3 text-center">
           <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar productos</p>
+          <p className="text-sm text-muted-foreground">{t("products.error")}</p>
         </div>
       </div>
     )
@@ -549,31 +555,29 @@ export default function ProductosPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Productos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gestiona todos los productos de tu inventario.
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("products.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("products.subtitle")}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
               <Plus className="h-4 w-4" />
-              Nuevo Producto
+              {t("products.new")}
             </Button>
           </DialogTrigger>
           <DialogContent className="glass-card border-border/30 sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingProduct ? "Editar Producto" : "Agregar Producto"}</DialogTitle>
+              <DialogTitle>{editingProduct ? t("products.edit") : t("products.add")}</DialogTitle>
               <DialogDescription>
-                {editingProduct ? "Modifica los datos del producto." : "Agrega un nuevo producto a tu inventario."}
+                {editingProduct ? t("products.editDesc") : t("products.addDesc")}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="name" className="text-xs">Nombre del Producto</Label>
+                <Label htmlFor="name" className="text-xs">{t("products.name")}</Label>
                 <Input
                   id="name"
-                  placeholder="Ej: Cafe Britt 500g"
+                  placeholder={t("products.namePlaceholder")}
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                   className="bg-secondary/50 border-border/30"
@@ -581,7 +585,7 @@ export default function ProductosPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="sku" className="text-xs">SKU</Label>
+                  <Label htmlFor="sku" className="text-xs">{t("products.sku")}</Label>
                   <Input
                     id="sku"
                     placeholder="CB-500"
@@ -591,7 +595,7 @@ export default function ProductosPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs">Categoria</Label>
+                  <Label className="text-xs">{t("products.category")}</Label>
                   <CategoriaCombobox
                     categorias={categorias}
                     value={formData.id_categoria}
@@ -600,12 +604,13 @@ export default function ProductosPage() {
                       setExtraCategorias((prev) => [...prev, cat])
                       mutateCategorias()
                     }}
+                    t={t}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="stock" className="text-xs">Stock Inicial</Label>
+                  <Label htmlFor="stock" className="text-xs">{t("products.stock")}</Label>
                   <Input
                     id="stock"
                     type="number"
@@ -616,7 +621,7 @@ export default function ProductosPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="min" className="text-xs">Stock Minimo</Label>
+                  <Label htmlFor="min" className="text-xs">{t("products.minStock")}</Label>
                   <Input
                     id="min"
                     type="number"
@@ -628,7 +633,7 @@ export default function ProductosPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="costo" className="text-xs">Precio Costo</Label>
+                  <Label htmlFor="costo" className="text-xs">{t("products.costPrice")}</Label>
                   <Input
                     id="costo"
                     type="number"
@@ -638,7 +643,7 @@ export default function ProductosPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="venta" className="text-xs">Precio Venta</Label>
+                  <Label htmlFor="venta" className="text-xs">{t("products.salePrice")}</Label>
                   <Input
                     id="venta"
                     type="number"
@@ -655,12 +660,13 @@ export default function ProductosPage() {
                   setProveedoresSeleccionados={setProveedoresSeleccionados}
                   proveedoresData={proveedoresData}
                   formData={formData}
+                  t={t}
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="border-border/30">
-                Cancelar
+                {t("common.cancel")}
               </Button>
               <Button
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -668,7 +674,7 @@ export default function ProductosPage() {
                 disabled={saving || !formData.nombre.trim()}
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {editingProduct ? "Guardar Cambios" : "Guardar Producto"}
+                {editingProduct ? t("configuracion.saveChanges") : t("products.add")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -682,7 +688,7 @@ export default function ProductosPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre o SKU..."
+                placeholder={t("products.searchPlaceholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 bg-secondary/50 border-border/30 text-sm"
@@ -695,7 +701,7 @@ export default function ProductosPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/30">
-                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="todas">{t("products.allCategories")}</SelectItem>
                   {categorias.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>{cat.nombre}</SelectItem>
                   ))}
@@ -711,7 +717,7 @@ export default function ProductosPage() {
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />
-            Inventario ({productos.length} productos)
+            {t("products.title")} ({productos.length} {t("products.totalProducts")})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -719,18 +725,18 @@ export default function ProductosPage() {
             <Table>
               <TableHeader>
                 <TableRow className="border-border/30 hover:bg-transparent">
-                  <TableHead className="text-xs">SKU</TableHead>
-                  <TableHead className="text-xs">Producto</TableHead>
-                  <TableHead className="text-xs">Categoria</TableHead>
-                  <TableHead className="text-xs text-right">Stock</TableHead>
-                  <TableHead className="text-xs text-right">Precio Venta</TableHead>
-                  <TableHead className="text-xs">Estado</TableHead>
+                  <TableHead className="text-xs">{t("products.colSKU")}</TableHead>
+                  <TableHead className="text-xs">{t("products.colProduct")}</TableHead>
+                  <TableHead className="text-xs">{t("products.colCategory")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("products.colStock")}</TableHead>
+                  <TableHead className="text-xs text-right">{t("products.colSalePrice")}</TableHead>
+                  <TableHead className="text-xs">{t("products.colStatus")}</TableHead>
                   <TableHead className="text-xs w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {productos.map((product) => {
-                  const status = getStatusInfo(product.stock, product.stock_minimo)
+                  const status = getStatusInfo(product.stock, product.stock_minimo, t)
                   return (
                     <TableRow key={product.id} className="border-border/20">
                       <TableCell className="text-xs font-mono text-muted-foreground">
@@ -741,7 +747,7 @@ export default function ProductosPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary" className="text-[10px] bg-secondary/50">
-                          {product.categoria?.nombre || "Sin categoria"}
+                          {product.categoria?.nombre || t("products.noCategory")}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-right text-foreground">
@@ -760,15 +766,15 @@ export default function ProductosPage() {
                           <DropdownMenuTrigger asChild>
                             <button className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-secondary/50 transition-colors">
                               <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                              <span className="sr-only">Acciones</span>
+                              <span className="sr-only">{t("common.actions")}</span>
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="glass-card border-border/30" align="end">
                             <DropdownMenuItem className="text-xs gap-2" onClick={() => openEditDialog(product)}>
-                              <Edit className="h-3.5 w-3.5" /> Editar
+                              <Edit className="h-3.5 w-3.5" /> {t("common.edit")}
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-xs gap-2 text-red-400" onClick={() => handleDelete(product.id)}>
-                              <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                              <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -780,7 +786,7 @@ export default function ProductosPage() {
             </Table>
           ) : (
             <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-              No hay productos registrados. Crea el primero haciendo clic en &quot;Nuevo Producto&quot;.
+              {t("products.noProductsYet")}
             </div>
           )}
         </CardContent>

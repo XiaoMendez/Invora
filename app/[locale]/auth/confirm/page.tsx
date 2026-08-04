@@ -9,6 +9,7 @@ import { CheckCircle2, Mail, ArrowRight, Loader2, XCircle, RefreshCw } from "luc
 import { Button } from "@/components/ui/button"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
 import { createClient } from "@/lib/supabase/client"
+import { useTranslation } from "@/hooks/useTranslation"
 
 type ConfirmationStatus = "loading" | "success" | "error" | "already_confirmed"
 
@@ -30,7 +31,7 @@ function ConfirmPageFallback() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
-            <p className="text-sm text-muted-foreground">Cargando...</p>
+            <p className="text-sm text-muted-foreground">...</p>
           </div>
         </div>
       </div>
@@ -40,6 +41,7 @@ function ConfirmPageFallback() {
 
 function EmailConfirmContent() {
   const searchParams = useSearchParams()
+  const { t } = useTranslation()
   const [status, setStatus] = useState<ConfirmationStatus>("loading")
   const [errorMessage, setErrorMessage] = useState("")
 
@@ -50,14 +52,12 @@ function EmailConfirmContent() {
 
   useEffect(() => {
     async function confirmEmail() {
-      // If coming from callback with verified=true, show success
       if (verified === "true") {
         setStatus("success")
         return
       }
 
       if (!tokenHash || type !== "email") {
-        // No token - show the "check your email" state
         setStatus("success")
         return
       }
@@ -82,13 +82,13 @@ function EmailConfirmContent() {
         }
       } catch (err) {
         console.error("Email confirmation error:", err)
-        setErrorMessage("Error al verificar el correo")
+        setErrorMessage(t("auth.errorTitle"))
         setStatus("error")
       }
     }
 
     confirmEmail()
-  }, [tokenHash, type])
+  }, [tokenHash, type, t])
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
@@ -111,19 +111,19 @@ function EmailConfirmContent() {
             />
           </div>
 
-          {status === "loading" && <LoadingState />}
-          {status === "success" && <SuccessState hasToken={!!tokenHash || verified === "true"} nextUrl={nextUrl} />}
-          {status === "already_confirmed" && <AlreadyConfirmedState />}
-          {status === "error" && <ErrorState message={errorMessage} />}
+          {status === "loading" && <LoadingState t={t} />}
+          {status === "success" && <SuccessState hasToken={!!tokenHash || verified === "true"} nextUrl={nextUrl} t={t} />}
+          {status === "already_confirmed" && <AlreadyConfirmedState t={t} />}
+          {status === "error" && <ErrorState message={errorMessage} t={t} />}
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
-          {"Necesitas ayuda? "}
+          {t("auth.needHelp")}{" "}
           <Link
             href="/soporte"
             className="text-primary hover:text-primary/80 font-medium transition-colors"
           >
-            Contacta con soporte
+            {t("auth.contactSupport")}
           </Link>
         </p>
       </motion.div>
@@ -131,7 +131,7 @@ function EmailConfirmContent() {
   )
 }
 
-function LoadingState() {
+function LoadingState({ t }: { t: (key: string) => string }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -142,16 +142,16 @@ function LoadingState() {
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
       <h1 className="text-xl font-bold text-foreground mb-2">
-        Verificando tu correo
+        {t("auth.confirmVerifying")}
       </h1>
       <p className="text-sm text-muted-foreground">
-        Por favor espera mientras confirmamos tu direccion de correo electronico...
+        {t("auth.confirmVerifyingDesc")}
       </p>
     </motion.div>
   )
 }
 
-function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean; nextUrl?: string }) {
+function SuccessState({ hasToken, nextUrl = "/dashboard", t }: { hasToken: boolean; nextUrl?: string; t: (key: string) => string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -173,20 +173,21 @@ function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean;
       </motion.div>
 
       <h1 className="text-xl font-bold text-foreground mb-2">
-        {hasToken ? "Correo verificado" : "Revisa tu correo"}
+        {hasToken ? t("auth.confirmVerified") : t("auth.confirmEmailSent")}
       </h1>
 
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
         {hasToken
-          ? "Tu direccion de correo ha sido confirmada exitosamente. Ya puedes acceder a todas las funciones de INVORA."
-          : "Te hemos enviado un enlace de confirmacion. Por favor revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta."
+          ? t("auth.confirmSuccess")
+          : t("auth.confirmEmailSentDesc")
         }
       </p>
 
       {!hasToken && (
         <div className="w-full rounded-lg bg-secondary/50 p-4 mb-6">
           <p className="text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Consejo:</span> Si no encuentras el correo, revisa tu carpeta de spam o correo no deseado.
+            <span className="font-medium text-foreground">{t("auth.confirmTip")}:</span>{" "}
+            {t("auth.confirmTipText")}
           </p>
         </div>
       )}
@@ -194,7 +195,7 @@ function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean;
       <div className="flex flex-col gap-3 w-full">
         <Link href={hasToken ? nextUrl : "/login"} className="w-full">
           <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 gap-2">
-            {hasToken ? "Ir al Dashboard" : "Ir a Iniciar Sesion"}
+            {hasToken ? t("auth.confirmGoToDashboard") : t("auth.confirmGoToLogin")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
@@ -202,7 +203,7 @@ function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean;
         {!hasToken && (
           <Link href="/" className="w-full">
             <Button variant="outline" className="w-full border-border/30 h-11">
-              Volver al Inicio
+              {t("auth.confirmBackHome")}
             </Button>
           </Link>
         )}
@@ -211,7 +212,7 @@ function SuccessState({ hasToken, nextUrl = "/dashboard" }: { hasToken: boolean;
   )
 }
 
-function AlreadyConfirmedState() {
+function AlreadyConfirmedState({ t }: { t: (key: string) => string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -224,23 +225,23 @@ function AlreadyConfirmedState() {
       </div>
 
       <h1 className="text-xl font-bold text-foreground mb-2">
-        Correo ya verificado
+        {t("auth.alreadyVerifiedTitle")}
       </h1>
 
       <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-        Tu direccion de correo ya fue verificada anteriormente. Puedes iniciar sesion para acceder a tu cuenta.
+        {t("auth.alreadyVerifiedDesc")}
       </p>
 
       <div className="flex flex-col gap-3 w-full">
         <Link href="/login" className="w-full">
           <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 gap-2">
-            Iniciar Sesion
+            {t("auth.loginTitle")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
         <Link href="/" className="w-full">
           <Button variant="outline" className="w-full border-border/30 h-11">
-            Volver al Inicio
+            {t("auth.confirmBackHome")}
           </Button>
         </Link>
       </div>
@@ -248,7 +249,7 @@ function AlreadyConfirmedState() {
   )
 }
 
-function ErrorState({ message }: { message: string }) {
+function ErrorState({ message, t }: { message: string; t: (key: string) => string }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -261,11 +262,11 @@ function ErrorState({ message }: { message: string }) {
       </div>
 
       <h1 className="text-xl font-bold text-foreground mb-2">
-        Error de verificacion
+        {t("auth.errorTitle")}
       </h1>
 
       <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-        No pudimos verificar tu correo electronico. El enlace puede haber expirado o ser invalido.
+        {t("auth.errorDesc")}
       </p>
 
       {message && (
@@ -275,11 +276,11 @@ function ErrorState({ message }: { message: string }) {
       )}
 
       <div className="w-full rounded-lg bg-secondary/50 p-4 mb-6">
-        <p className="text-xs text-muted-foreground mb-2 font-medium">Posibles soluciones:</p>
+        <p className="text-xs text-muted-foreground mb-2 font-medium">{t("auth.errorSolutions")}</p>
         <ul className="text-xs text-muted-foreground space-y-1 ml-4 list-disc text-left">
-          <li>Solicita un nuevo enlace de verificacion</li>
-          <li>Asegurate de usar el enlace mas reciente</li>
-          <li>Intenta registrarte de nuevo</li>
+          <li>{t("auth.errorSol1")}</li>
+          <li>{t("auth.errorSol2")}</li>
+          <li>{t("auth.errorSol3")}</li>
         </ul>
       </div>
 
@@ -287,12 +288,12 @@ function ErrorState({ message }: { message: string }) {
         <Link href="/register" className="w-full">
           <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-11 gap-2">
             <RefreshCw className="h-4 w-4" />
-            Registrarse de Nuevo
+            {t("auth.registerAgain")}
           </Button>
         </Link>
         <Link href="/login" className="w-full">
           <Button variant="outline" className="w-full border-border/30 h-11">
-            Ir a Iniciar Sesion
+            {t("auth.loginTitle")}
           </Button>
         </Link>
       </div>
