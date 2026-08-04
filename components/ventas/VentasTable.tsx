@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -35,6 +36,7 @@ interface VentasTableProps {
 }
 
 export function VentasTable({ onEdit, onComplete }: VentasTableProps) {
+  const { t } = useTranslation()
   const { data, isLoading, error } = useSWR("/api/ventas", fetcher, { refreshInterval: 5000 })
   const ventas: Venta[] = data?.ventas || []
 
@@ -51,29 +53,29 @@ export function VentasTable({ onEdit, onComplete }: VentasTableProps) {
   return (
     <div className="rounded-lg border border-border/30 overflow-hidden">
       {isLoading ? (
-        <div className="p-4 text-sm text-muted-foreground">Cargando ventas...</div>
+        <div className="p-4 text-sm text-muted-foreground">{t("sales.loading")}</div>
       ) : error ? (
-        <div className="p-4 text-sm text-red-500">Error al cargar ventas</div>
+        <div className="p-4 text-sm text-red-500">{t("sales.error")}</div>
       ) : ventas.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground">
-          <p>No hay ventas registradas</p>
+          <p>{t("sales.noSales")}</p>
         </div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border/30">
-              <TableHead className="w-20">Número</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead className="w-24">Estado</TableHead>
-              <TableHead className="text-right w-32">Acciones</TableHead>
+              <TableHead className="w-20">{t("sales.colNumber")}</TableHead>
+              <TableHead>{t("sales.colCustomer")}</TableHead>
+              <TableHead className="text-right">{t("sales.colTotal")}</TableHead>
+              <TableHead className="w-24">{t("sales.colStatus")}</TableHead>
+              <TableHead className="text-right w-32">{t("sales.colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ventas.map((venta) => (
               <TableRow key={venta.id} className="border-b border-border/20 hover:bg-secondary/30">
                 <TableCell className="font-medium">#{venta.numero}</TableCell>
-                <TableCell>{venta.cliente?.nombre || "Cliente sin asignar"}</TableCell>
+                <TableCell>{venta.cliente?.nombre || t("sales.noCustomer")}</TableCell>
                 <TableCell className="text-right">
                   ${venta.monto_total.toLocaleString("es-CR", { minimumFractionDigits: 2 })}
                 </TableCell>

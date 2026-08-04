@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import useSWR, { mutate } from "swr"
-import { Loader2, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { VentasTable } from "@/components/ventas/VentasTable"
@@ -12,13 +12,12 @@ import { useTranslation } from "@/hooks/useTranslation"
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function VentasPage() {
+  const { t } = useTranslation()
   const [formOpen, setFormOpen] = useState(false)
   const { data: ventasData } = useSWR("/api/ventas", fetcher, { refreshInterval: 5000 })
 
   const handleComplete = async (ventaId: string) => {
-    if (!confirm("¿Completar esta venta? Esto actualizará automáticamente el inventario.")) {
-      return
-    }
+    if (!confirm(t("sales.confirmComplete"))) return
 
     try {
       const res = await fetch(`/api/ventas/${ventaId}/estado`, {
@@ -29,11 +28,11 @@ export default function VentasPage() {
 
       if (res.ok) {
         mutate("/api/ventas")
-        alert("Venta completada correctamente")
+        alert(t("sales.confirmCompleted"))
       }
     } catch (error) {
       console.error("Error:", error)
-      alert("Error al completar la venta")
+      alert(t("sales.confirmError"))
     }
   }
 
@@ -48,72 +47,69 @@ export default function VentasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Ventas</h1>
-          <p className="text-muted-foreground">Gestiona todas tus órdenes de venta</p>
+          <h1 className="text-3xl font-bold text-foreground">{t("sales.title")}</h1>
+          <p className="text-muted-foreground">{t("sales.subtitle")}</p>
         </div>
         <Button onClick={() => setFormOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
-          Nueva Venta
+          {t("sales.new")}
         </Button>
       </div>
 
-      {/* Estadísticas rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-secondary/50 border-border/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Total Ventas</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sales.statTotal")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{ventas.length}</div>
-            <p className="text-xs text-muted-foreground">Todas las ventas registradas</p>
+            <p className="text-xs text-muted-foreground">{t("sales.statTotalDesc")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-secondary/50 border-border/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sales.statPending")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">{pendientes}</div>
-            <p className="text-xs text-muted-foreground">Aguardando completar</p>
+            <p className="text-xs text-muted-foreground">{t("sales.statPendingDesc")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-secondary/50 border-border/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Completadas</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sales.statCompleted")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{completadas}</div>
-            <p className="text-xs text-muted-foreground">Procesadas al inventario</p>
+            <p className="text-xs text-muted-foreground">{t("sales.statCompletedDesc")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-secondary/50 border-border/30">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Monto Total</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("sales.statAmount")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               ${totalVentas.toLocaleString("es-CR", { minimumFractionDigits: 2 })}
             </div>
-            <p className="text-xs text-muted-foreground">Ventas completadas</p>
+            <p className="text-xs text-muted-foreground">{t("sales.statAmountDesc")}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabla de Ventas */}
       <Card className="border-border/30">
         <CardHeader>
-          <CardTitle>Órdenes de Venta</CardTitle>
-          <CardDescription>Lista de todas tus ventas, filtra por estado o cliente</CardDescription>
+          <CardTitle>{t("sales.tableTitle")}</CardTitle>
+          <CardDescription>{t("sales.tableDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <VentasTable onComplete={handleComplete} />
         </CardContent>
       </Card>
 
-      {/* Form Modal */}
       <VentaForm open={formOpen} onOpenChange={setFormOpen} onSuccess={() => mutate("/api/ventas")} />
     </div>
   )

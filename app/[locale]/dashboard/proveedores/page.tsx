@@ -43,8 +43,8 @@ import {
   MapPin,
   Check,
   X,
-}
-import { useTranslation } from "@/hooks/useTranslation" from "lucide-react"
+} from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Proveedor {
   id: string

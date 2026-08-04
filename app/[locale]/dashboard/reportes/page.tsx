@@ -5,8 +5,6 @@ import useSWR from "swr"
 import { BarChart3, TrendingUp, Package, DollarSign, Loader2, AlertTriangle, Download, FileSpreadsheet, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -36,30 +34,9 @@ import {
   BarChart,
   Bar,
 } from "recharts"
+import { useTranslation } from "@/hooks/useTranslation"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
-
-function CustomTooltipContent({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean
-  payload?: Array<{ value: number; dataKey: string; color: string }>
-  label?: string
-}) {
-  if (!active || !payload) return null
-  return (
-    <div className="glass-card rounded-lg p-3 text-xs">
-      <p className="text-foreground font-medium mb-1">{label}</p>
-      {payload.map((item, i) => (
-        <p key={i} className="text-muted-foreground">
-          {item.dataKey === "entradas" ? "Entradas" : item.dataKey === "salidas" ? "Salidas" : item.dataKey}: {item.value.toLocaleString()}
-        </p>
-      ))}
-    </div>
-  )
-}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("es-CR", {
@@ -71,6 +48,7 @@ function formatCurrency(value: number) {
 }
 
 export default function ReportesPage() {
+  const { t } = useTranslation()
   const [periodo, setPeriodo] = useState("7m")
   const [clienteId, setClienteId] = useState<string | null>(null)
   const [proveedorId, setProveedorId] = useState<string | null>(null)
@@ -116,12 +94,34 @@ export default function ReportesPage() {
     window.open(`/api/reportes?${params.toString()}`, "_blank")
   }
 
+  const CustomTooltipContent = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean
+    payload?: Array<{ value: number; dataKey: string; color: string }>
+    label?: string
+  }) => {
+    if (!active || !payload) return null
+    return (
+      <div className="glass-card rounded-lg p-3 text-xs">
+        <p className="text-foreground font-medium mb-1">{label}</p>
+        {payload.map((item, i) => (
+          <p key={i} className="text-muted-foreground">
+            {item.dataKey === "entradas" ? t("reports.entries") : item.dataKey === "salidas" ? t("reports.exits") : item.dataKey}: {item.value.toLocaleString()}
+          </p>
+        ))}
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando reportes...</p>
+          <p className="text-sm text-muted-foreground">{t("reports.loading")}</p>
         </div>
       </div>
     )
@@ -132,7 +132,7 @@ export default function ReportesPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3 text-center">
           <AlertTriangle className="h-8 w-8 text-amber-400" />
-          <p className="text-sm text-muted-foreground">Error al cargar reportes</p>
+          <p className="text-sm text-muted-foreground">{t("reports.error")}</p>
         </div>
       </div>
     )
@@ -143,10 +143,8 @@ export default function ReportesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reportes</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Analiza el rendimiento de tu inventario con datos detallados.
-          </p>
+          <h1 className="text-2xl font-bold text-foreground">{t("reports.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("reports.subtitle")}</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <Select value={periodo} onValueChange={setPeriodo}>
@@ -154,10 +152,10 @@ export default function ReportesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="glass-card border-border/30">
-              <SelectItem value="30d">Últimos 30 días</SelectItem>
-              <SelectItem value="3m">Últimos 3 meses</SelectItem>
-              <SelectItem value="7m">Últimos 7 meses</SelectItem>
-              <SelectItem value="1y">Último año</SelectItem>
+              <SelectItem value="30d">{t("reports.last30days")}</SelectItem>
+              <SelectItem value="3m">{t("reports.last3months")}</SelectItem>
+              <SelectItem value="7m">{t("reports.last7months")}</SelectItem>
+              <SelectItem value="1y">{t("reports.lastYear")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -171,22 +169,16 @@ export default function ReportesPage() {
               {clienteFiltrado ? (
                 <>
                   <span>{clienteFiltrado.nombre}</span>
-                  <X
-                    className="h-3.5 w-3.5 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setClienteId(null)
-                    }}
-                  />
+                  <X className="h-3.5 w-3.5 cursor-pointer" onClick={(e) => { e.stopPropagation(); setClienteId(null) }} />
                 </>
               ) : (
-                "Todos los clientes"
+                t("reports.allCustomers")
               )}
             </button>
             {clienteFiltrado ? null : (
               <input
                 type="text"
-                placeholder="Buscar cliente..."
+                placeholder={t("reports.searchCustomer")}
                 value={clienteSearch}
                 onChange={(e) => setClienteSearch(e.target.value)}
                 className="absolute z-50 top-10 left-0 w-48 px-3 py-2 text-sm bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg"
@@ -195,15 +187,8 @@ export default function ReportesPage() {
             {!clienteFiltrado && clienteSearch && clientesFiltrados.length > 0 && (
               <div className="absolute z-50 top-20 left-0 w-48 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg max-h-40 overflow-y-auto">
                 {clientesFiltrados.map((c: any) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      setClienteId(c.id)
-                      setClienteSearch("")
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors"
-                  >
+                  <button key={c.id} type="button" onClick={() => { setClienteId(c.id); setClienteSearch("") }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors">
                     {c.nombre}
                   </button>
                 ))}
@@ -221,22 +206,16 @@ export default function ReportesPage() {
               {proveedorFiltrado ? (
                 <>
                   <span>{proveedorFiltrado.nombre}</span>
-                  <X
-                    className="h-3.5 w-3.5 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setProveedorId(null)
-                    }}
-                  />
+                  <X className="h-3.5 w-3.5 cursor-pointer" onClick={(e) => { e.stopPropagation(); setProveedorId(null) }} />
                 </>
               ) : (
-                "Todos los proveedores"
+                t("reports.allSuppliers")
               )}
             </button>
             {proveedorFiltrado ? null : (
               <input
                 type="text"
-                placeholder="Buscar proveedor..."
+                placeholder={t("reports.searchSupplier")}
                 value={proveedorSearch}
                 onChange={(e) => setProveedorSearch(e.target.value)}
                 className="absolute z-50 top-10 left-0 w-48 px-3 py-2 text-sm bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg"
@@ -245,15 +224,8 @@ export default function ReportesPage() {
             {!proveedorFiltrado && proveedorSearch && proveedoresFiltrados.length > 0 && (
               <div className="absolute z-50 top-20 left-0 w-48 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg max-h-40 overflow-y-auto">
                 {proveedoresFiltrados.map((p: any) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => {
-                      setProveedorId(p.id)
-                      setProveedorSearch("")
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors"
-                  >
+                  <button key={p.id} type="button" onClick={() => { setProveedorId(p.id); setProveedorSearch("") }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors">
                     {p.nombre}
                   </button>
                 ))}
@@ -265,28 +237,24 @@ export default function ReportesPage() {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="border-border/30 gap-2 text-sm">
                 <Download className="h-4 w-4" />
-                Exportar
+                {t("reports.export")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="glass-card border-border/30">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">Exportar a Excel</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs text-muted-foreground">{t("reports.exportToExcel")}</DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-border/30" />
               <DropdownMenuItem onClick={() => handleExport("inventario")} className="text-sm cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Inventario Completo
+                <FileSpreadsheet className="h-4 w-4 mr-2" />{t("reports.exportInventory")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport("movimientos")} className="text-sm cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Movimientos del Período
+                <FileSpreadsheet className="h-4 w-4 mr-2" />{t("reports.exportMovements")}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExport("categorias")} className="text-sm cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Distribución por Categorías
+                <FileSpreadsheet className="h-4 w-4 mr-2" />{t("reports.exportCategories")}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border/30" />
               <DropdownMenuItem onClick={() => handleExport("resumen")} className="text-sm cursor-pointer">
-                <FileSpreadsheet className="h-4 w-4 mr-2" />
-                Resumen Ejecutivo
+                <FileSpreadsheet className="h-4 w-4 mr-2" />{t("reports.exportSummary")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -302,7 +270,7 @@ export default function ReportesPage() {
                 <DollarSign className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Valor Total Inventario</p>
+                <p className="text-xs text-muted-foreground">{t("reports.kpiInventoryValue")}</p>
                 <p className="text-xl font-bold text-foreground">{formatCurrency(kpis.valorInventario)}</p>
               </div>
             </div>
@@ -315,7 +283,7 @@ export default function ReportesPage() {
                 <TrendingUp className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Rotacion Promedio</p>
+                <p className="text-xs text-muted-foreground">{t("reports.kpiRotation")}</p>
                 <p className="text-xl font-bold text-foreground">{kpis.rotacion}</p>
               </div>
             </div>
@@ -328,7 +296,7 @@ export default function ReportesPage() {
                 <Package className="h-5 w-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">SKUs Activos</p>
+                <p className="text-xs text-muted-foreground">{t("reports.kpiActiveSKUs")}</p>
                 <p className="text-xl font-bold text-foreground">{kpis.skusActivos.toLocaleString()}</p>
               </div>
             </div>
@@ -338,11 +306,10 @@ export default function ReportesPage() {
 
       {/* Charts */}
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Monthly Trend */}
         <Card className="lg:col-span-2 glass-card border-border/30">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Movimientos Mensuales</CardTitle>
-            <CardDescription>Entradas vs salidas por mes</CardDescription>
+            <CardTitle className="text-sm font-medium">{t("reports.chartMonthly")}</CardTitle>
+            <CardDescription>{t("reports.chartMonthlyDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-72">
@@ -369,33 +336,24 @@ export default function ReportesPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                  No hay datos de movimientos en este periodo
+                  {t("reports.noMovementsData")}
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Category Pie */}
         <Card className="glass-card border-border/30">
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Distribucion por Categoria</CardTitle>
-            <CardDescription>Porcentaje del inventario</CardDescription>
+            <CardTitle className="text-sm font-medium">{t("reports.chartByCategory")}</CardTitle>
+            <CardDescription>{t("reports.chartByCategoryDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-48">
               {categoryDistribution.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={categoryDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
+                    <Pie data={categoryDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value">
                       {categoryDistribution.map((entry: { color: string }, index: number) => (
                         <Cell key={index} fill={entry.color} />
                       ))}
@@ -405,7 +363,7 @@ export default function ReportesPage() {
                         if (!active || !payload?.[0]) return null
                         return (
                           <div className="glass-card rounded-lg p-2 text-xs">
-                            <p className="text-foreground">{payload[0].name}: {payload[0].value} productos</p>
+                            <p className="text-foreground">{payload[0].name}: {payload[0].value} {t("reports.products")}</p>
                           </div>
                         )
                       }}
@@ -414,7 +372,7 @@ export default function ReportesPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                  No hay productos registrados
+                  {t("reports.noProductsData")}
                 </div>
               )}
             </div>
@@ -437,9 +395,9 @@ export default function ReportesPage() {
         <CardHeader>
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-primary" />
-            Productos con Mayor Rotacion
+            {t("reports.chartTopProducts")}
           </CardTitle>
-          <CardDescription>Top 5 por cantidad de salidas en el periodo</CardDescription>
+          <CardDescription>{t("reports.chartTopProductsDesc")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -455,7 +413,7 @@ export default function ReportesPage() {
               </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                No hay datos de rotacion en este periodo
+                {t("reports.noRotationData")}
               </div>
             )}
           </div>

@@ -44,8 +44,8 @@ import {
   Check,
   X,
   User,
-}
-import { useTranslation } from "@/hooks/useTranslation" from "lucide-react"
+} from "lucide-react"
+import { useTranslation } from "@/hooks/useTranslation"
 
 interface Cliente {
   id: string
@@ -380,15 +380,15 @@ export default function ClientesPage() {
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialogContent className="glass-card border-border/30">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("customers.edit")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("customers.deleteConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>{t("customers.deleteConfirm")}</AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialog>
+          <div className="flex gap-3 justify-end">
             <AlertDialogCancel className="border-border/30">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
               {t("common.delete")}
             </AlertDialogAction>
-          </AlertDialog>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
     </div>
