@@ -4,32 +4,36 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { usePreferences } from "@/contexts/PreferencesContext"
+import { useTranslation } from "@/hooks/useTranslation"
+import { useToast } from "@/contexts/ToastContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { StarsBackground } from "@/components/space-scene"
-import { Building2, Loader2, Rocket, Moon, Sun, Monitor, Globe } from "lucide-react"
+import { Building2, Loader2, Rocket, Moon, Sun, Monitor, Globe, Check } from "lucide-react"
 import Image from "next/image"
 
 type Step = "language" | "theme" | "company" | "complete"
 
 const languages = [
-  { code: "es", name: "Español", flag: "🇪🇸" },
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "pt", name: "Português", flag: "🇧🇷" },
+  { code: "es", name: "Español", flag: "ES" },
+  { code: "en", name: "English", flag: "US" },
+  { code: "pt", name: "Português", flag: "BR" },
 ]
 
-const themes = [
-  { value: "light", label: "Claro", icon: Sun },
-  { value: "dark", label: "Oscuro", icon: Moon },
-  { value: "system", label: "Sistema", icon: Monitor },
+const themeConfig = [
+  { value: "light", icon: Sun },
+  { value: "dark", icon: Moon },
+  { value: "system", icon: Monitor },
 ]
 
 export default function OnboardingPage() {
   const router = useRouter()
   const { setTheme: setNTheme } = useTheme()
   const { setTheme, setLocale } = usePreferences()
+  const { t } = useTranslation()
+  const { addToast } = useToast()
   const [step, setStep] = useState<Step>("language")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -46,6 +50,7 @@ export default function OnboardingPage() {
   const handleLanguageSelect = (lang: string) => {
     setSelectedLanguage(lang)
     setLocale(lang as 'es' | 'en' | 'pt')
+    addToast("Language selected successfully", "success")
     setStep("theme")
   }
 
@@ -53,6 +58,7 @@ export default function OnboardingPage() {
     setSelectedTheme(theme)
     setTheme(theme as 'light' | 'dark' | 'system')
     setNTheme(theme)
+    addToast("Theme applied", "success")
     setStep("company")
   }
 
@@ -61,12 +67,14 @@ export default function OnboardingPage() {
     setError("")
 
     if (!formData.nombre.trim()) {
-      setError("El nombre de la empresa es requerido")
+      setError(t('errors.required'))
+      addToast(t('errors.required'), 'error')
       return
     }
 
     if (!formData.email.trim()) {
-      setError("El email de la empresa es requerido")
+      setError(t('errors.required'))
+      addToast(t('errors.required'), 'error')
       return
     }
 
@@ -82,18 +90,20 @@ export default function OnboardingPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Error al configurar la empresa")
+        throw new Error(data.error || t('errors.setupFailed'))
       }
 
-      // Marcar onboarding como completado
       localStorage.setItem("onboarding_completed", "true")
+      addToast(t('onboarding.complete'), 'success')
 
       setStep("complete")
       setTimeout(() => {
         router.push(`/${selectedLanguage}/dashboard`)
-      }, 1500)
+      }, 2000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al configurar la empresa")
+      const message = err instanceof Error ? err.message : t('errors.setupFailed')
+      setError(message)
+      addToast(message, 'error')
     } finally {
       setIsLoading(false)
     }
@@ -107,7 +117,7 @@ export default function OnboardingPage() {
         {/* Language Step */}
         {step === "language" && (
           <>
-            <CardHeader className="text-center space-y-4">
+            <CardHeader className="text-center space-y-4 bg-gradient-to-b from-accent/10 to-transparent">
               <div className="flex justify-center">
                 <Image
                   src="/images/invora-logo.png"
@@ -117,30 +127,30 @@ export default function OnboardingPage() {
                   className="h-20 w-auto"
                 />
               </div>
-              <div className="space-y-2">
-                <CardTitle className="text-2xl flex items-center justify-center gap-2">
-                  <Globe className="h-6 w-6 text-primary" />
-                  Bienvenido a Invora
-                </CardTitle>
-                <CardDescription>
-                  Selecciona tu idioma preferido
+              <div className="space-y-3">
+                <CardTitle className="text-3xl font-bold">{t('onboarding.title')}</CardTitle>
+                <CardDescription className="text-base">
+                  {t('onboarding.step1')}
                 </CardDescription>
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="grid gap-3">
+            <CardContent className="space-y-4">
+              <div className="grid gap-2">
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageSelect(lang.code)}
-                    className="flex items-center gap-4 p-4 rounded-lg border border-border/30 hover:border-primary/50 hover:bg-secondary/50 transition-all duration-200"
+                    className="flex items-center gap-4 p-4 rounded-lg border-2 border-border/30 hover:border-accent hover:bg-accent/10 transition-all duration-200 group"
                   >
-                    <span className="text-3xl">{lang.flag}</span>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-foreground">{lang.name}</p>
-                      <p className="text-sm text-muted-foreground">{lang.code.toUpperCase()}</p>
+                    <div className="w-12 h-12 rounded-lg bg-secondary group-hover:bg-accent/20 flex items-center justify-center font-bold text-sm">
+                      {lang.flag}
                     </div>
+                    <div className="flex-1 text-left">
+                      <p className="font-semibold text-foreground">{lang.name}</p>
+                      <p className="text-xs text-muted-foreground">{lang.code.toUpperCase()}</p>
+                    </div>
+                    <Check className="h-5 w-5 text-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
               </div>
@@ -151,51 +161,59 @@ export default function OnboardingPage() {
         {/* Theme Step */}
         {step === "theme" && (
           <>
-            <CardHeader className="text-center space-y-4">
+            <CardHeader className="text-center space-y-3 bg-gradient-to-b from-accent/10 to-transparent">
               <div className="space-y-2">
-                <CardTitle className="text-2xl">Elige tu Tema</CardTitle>
-                <CardDescription>
-                  Personaliza la apariencia de Invora
+                <CardTitle className="text-3xl font-bold">{t('onboarding.step2')}</CardTitle>
+                <CardDescription className="text-base">
+                  {t('onboarding.description')}
                 </CardDescription>
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="grid gap-3">
-                {themes.map((theme) => {
+            <CardContent className="space-y-4">
+              <div className="grid gap-2">
+                {themeConfig.map((theme) => {
                   const ThemeIcon = theme.icon
+                  const themeLabel = theme.value === 'light' ? t('common.lightTheme') : theme.value === 'dark' ? t('common.darkTheme') : t('common.systemTheme')
                   return (
                     <button
                       key={theme.value}
                       onClick={() => handleThemeSelect(theme.value)}
-                      className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 ${
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all duration-200 group ${
                         selectedTheme === theme.value
-                          ? "border-primary bg-primary/10"
-                          : "border-border/30 hover:border-primary/50 hover:bg-secondary/50"
+                          ? "border-accent bg-accent/10"
+                          : "border-border/30 hover:border-accent hover:bg-accent/5"
                       }`}
                     >
-                      <ThemeIcon className="h-6 w-6 text-primary" />
-                      <div className="flex-1 text-left">
-                        <p className="font-medium text-foreground">{theme.label}</p>
+                      <div className={`p-3 rounded-lg ${selectedTheme === theme.value ? 'bg-accent/20' : 'bg-secondary group-hover:bg-accent/10'}`}>
+                        <ThemeIcon className={`h-6 w-6 ${selectedTheme === theme.value ? 'text-accent' : 'text-muted-foreground'}`} />
                       </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-semibold text-foreground">{themeLabel}</p>
+                      </div>
+                      {selectedTheme === theme.value && (
+                        <Check className="h-5 w-5 text-accent" />
+                      )}
                     </button>
                   )
                 })}
               </div>
 
-              <div className="mt-6 flex gap-3">
+              <div className="mt-6 flex gap-2 pt-4">
                 <Button
                   variant="outline"
                   onClick={() => setStep("language")}
+                  disabled={isLoading}
                   className="flex-1"
                 >
-                  Atrás
+                  {t('onboarding.next')}
                 </Button>
                 <Button
                   onClick={() => setStep("company")}
+                  disabled={isLoading}
                   className="flex-1"
                 >
-                  Siguiente
+                  {t('onboarding.next')}
                 </Button>
               </div>
             </CardContent>
@@ -205,14 +223,16 @@ export default function OnboardingPage() {
         {/* Company Setup Step */}
         {step === "company" && (
           <>
-            <CardHeader className="text-center space-y-4">
+            <CardHeader className="text-center space-y-3 bg-gradient-to-b from-accent/10 to-transparent">
               <div className="space-y-2">
-                <CardTitle className="text-2xl flex items-center justify-center gap-2">
-                  <Building2 className="h-6 w-6 text-primary" />
-                  Configura tu Empresa
+                <CardTitle className="text-3xl font-bold flex items-center justify-center gap-2">
+                  <div className="p-2 rounded-lg bg-accent/20">
+                    <Building2 className="h-6 w-6 text-accent" />
+                  </div>
+                  {t('onboarding.step3')}
                 </CardTitle>
-                <CardDescription>
-                  Necesitamos algunos datos para personalizar tu experiencia
+                <CardDescription className="text-base">
+                  {t('onboarding.description')}
                 </CardDescription>
               </div>
             </CardHeader>
@@ -220,14 +240,14 @@ export default function OnboardingPage() {
             <CardContent>
               <form onSubmit={handleCompanySubmit} className="space-y-4">
                 {error && (
-                  <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                  <div className="p-3 rounded-lg bg-red-950/20 border border-red-700/30 text-red-400 text-sm">
                     {error}
                   </div>
                 )}
 
                 <div className="space-y-2">
                   <Label htmlFor="nombre">
-                    Nombre de la Empresa <span className="text-destructive">*</span>
+                    {t('onboarding.companyName')} <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     id="nombre"
@@ -241,7 +261,7 @@ export default function OnboardingPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email">
-                    Email <span className="text-destructive">*</span>
+                    {t('onboarding.companyEmail')} <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     id="email"
@@ -255,7 +275,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="telefono">Teléfono</Label>
+                  <Label htmlFor="telefono">{t('onboarding.phone')}</Label>
                   <Input
                     id="telefono"
                     placeholder="+1 (555) 000-0000"
@@ -267,7 +287,7 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="direccion">Dirección</Label>
+                  <Label htmlFor="direccion">{t('onboarding.address')}</Label>
                   <Input
                     id="direccion"
                     placeholder="Calle Principal 123"
@@ -278,7 +298,7 @@ export default function OnboardingPage() {
                   />
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-2 pt-4">
                   <Button
                     type="button"
                     variant="outline"
@@ -286,7 +306,7 @@ export default function OnboardingPage() {
                     disabled={isLoading}
                     className="flex-1"
                   >
-                    Atrás
+                    {t('onboarding.next')}
                   </Button>
                   <Button
                     type="submit"
@@ -296,12 +316,12 @@ export default function OnboardingPage() {
                     {isLoading ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Configurando...
+                        {t('common.loading')}
                       </>
                     ) : (
                       <>
                         <Rocket className="h-4 w-4 mr-2" />
-                        Comenzar
+                        {t('onboarding.finish')}
                       </>
                     )}
                   </Button>
@@ -314,17 +334,19 @@ export default function OnboardingPage() {
         {/* Complete Step */}
         {step === "complete" && (
           <>
-            <CardHeader className="text-center space-y-4">
+            <CardHeader className="text-center space-y-4 bg-gradient-to-b from-accent/10 to-transparent">
               <div className="space-y-4">
                 <div className="flex justify-center">
-                  <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Rocket className="h-8 w-8 text-primary animate-bounce" />
+                  <div className="h-20 w-20 rounded-full bg-accent/20 flex items-center justify-center animate-pulse">
+                    <Check className="h-10 w-10 text-accent" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl">¡Configuración Completada!</CardTitle>
-                <CardDescription>
-                  Redirigiendo al panel de control...
-                </CardDescription>
+                <div>
+                  <CardTitle className="text-3xl font-bold">{t('onboarding.complete')}</CardTitle>
+                  <CardDescription className="mt-2 text-base">
+                    {t('onboarding.redirecting')}
+                  </CardDescription>
+                </div>
               </div>
             </CardHeader>
           </>

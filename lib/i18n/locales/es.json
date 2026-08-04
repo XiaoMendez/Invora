@@ -8,16 +8,27 @@
     "cancel": "Cancelar",
     "dashboard": "Panel de Control",
     "logout": "Cerrar sesión",
-    "loading": "Cargando..."
+    "loading": "Cargando...",
+    "lightTheme": "Claro",
+    "darkTheme": "Oscuro",
+    "systemTheme": "Sistema"
   },
   "onboarding": {
     "title": "Bienvenido a Invora",
     "description": "Personaliza tu experiencia",
-    "selectLanguage": "Selecciona tu idioma",
-    "selectTheme": "Selecciona tu tema",
+    "step1": "Selecciona tu idioma",
+    "step2": "Elige tu tema",
+    "step3": "Configura tu empresa",
+    "step4": "Listo",
     "companyName": "Nombre de la empresa",
+    "companyEmail": "Email de la empresa",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "taxId": "ID Fiscal",
     "next": "Siguiente",
-    "finish": "Finalizar"
+    "finish": "Finalizar",
+    "complete": "Configuración completada",
+    "redirecting": "Redirigiendo al panel..."
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -37,5 +48,10 @@
     "sales": "Ventas",
     "purchases": "Compras",
     "reports": "Reportes"
+  },
+  "errors": {
+    "required": "Este campo es requerido",
+    "invalidEmail": "Email inválido",
+    "setupFailed": "Error al configurar la empresa"
   }
 }

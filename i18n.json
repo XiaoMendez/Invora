@@ -1,0 +1,12 @@
+{
+  "locales": ["es", "en", "pt"],
+  "defaultLocale": "es",
+  "pathnames": {
+    "/": "/",
+    "/dashboard": "/dashboard",
+    "/onboarding": "/onboarding",
+    "/login": "/login",
+    "/register": "/register",
+    "/settings": "/settings"
+  }
+}
