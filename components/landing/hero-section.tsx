@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/hooks/useTranslation"
 import { usePreferences } from "@/contexts/PreferencesContext"
@@ -21,6 +21,62 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Black stars for light mode */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Top left star cluster */}
+        <motion.div 
+          className="absolute top-10 left-6 light:block hidden"
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        >
+          <Star className="h-8 w-8 text-black fill-black opacity-30" />
+        </motion.div>
+        
+        {/* Top right stars */}
+        <motion.div 
+          className="absolute top-20 right-12 light:block hidden"
+          animate={{ y: [0, 15, 0] }}
+          transition={{ duration: 5, repeat: Infinity }}
+        >
+          <Star className="h-6 w-6 text-black fill-black opacity-25" />
+        </motion.div>
+        
+        {/* Bottom left star */}
+        <motion.div 
+          className="absolute bottom-32 left-10 light:block hidden"
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 6, repeat: Infinity }}
+        >
+          <Star className="h-7 w-7 text-black fill-black opacity-20" />
+        </motion.div>
+
+        {/* Bottom right stars */}
+        <motion.div 
+          className="absolute bottom-24 right-8 light:block hidden"
+          animate={{ y: [0, 12, 0] }}
+          transition={{ duration: 4.5, repeat: Infinity }}
+        >
+          <Star className="h-5 w-5 text-black fill-black opacity-28" />
+        </motion.div>
+
+        {/* Center accent stars */}
+        <motion.div 
+          className="absolute top-1/3 right-1/4 light:block hidden"
+          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.35, 0.2] }}
+          transition={{ duration: 3, repeat: Infinity }}
+        >
+          <Star className="h-4 w-4 text-black fill-black" />
+        </motion.div>
+
+        <motion.div 
+          className="absolute top-2/3 left-1/4 light:block hidden"
+          animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.3, 0.15] }}
+          transition={{ duration: 3.5, repeat: Infinity }}
+        >
+          <Star className="h-5 w-5 text-black fill-black" />
+        </motion.div>
+      </div>
+
       <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
         {/* Heading */}
         <motion.h1

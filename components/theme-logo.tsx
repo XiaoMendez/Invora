@@ -12,10 +12,10 @@ interface ThemeLogoProps {
 }
 
 export function ThemeLogo({ 
-  width = 360, 
-  height = 120, 
+  width = 800, 
+  height = 200, 
   alt = 'INVORA',
-  className = ''
+  className = 'h-24 w-auto'
 }: ThemeLogoProps) {
   const { theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -26,7 +26,7 @@ export function ThemeLogo({
 
   // Use resolved theme to handle system preference
   const isDark = mounted && (theme === 'dark' || (theme === 'system' && resolvedTheme === 'dark'))
-  const logoSrc = isDark ? '/images/invora-logo.png' : '/images/invora-logo-light.png'
+  const logoSrc = isDark ? '/images/invora-logo.png' : '/images/invora-logo-light-optimal.png'
 
   return (
     <Image
