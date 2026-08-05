@@ -9,7 +9,15 @@ export async function middleware(request: NextRequest) {
   const hasLocale = locales.some(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`)
   
   // If no locale, add default locale 'es'
-  if (!hasLocale && pathname !== '/' && !pathname.startsWith('/_next')) {
+  // IMPORTANT: never prepend a locale to /api routes or Next internals —
+  // doing so turns "/api/empresa/setup" into "/es/api/empresa/setup" which
+  // 404s with an HTML page and breaks JSON parsing on the client.
+  if (
+    !hasLocale &&
+    pathname !== '/' &&
+    !pathname.startsWith('/_next') &&
+    !pathname.startsWith('/api')
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = `/es${pathname}`
     return NextResponse.redirect(url)
