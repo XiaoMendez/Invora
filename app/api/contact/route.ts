@@ -56,13 +56,13 @@ export async function POST(req: NextRequest) {
     })
 
     if (error) {
-      console.error("[v0] Resend error:", error)
+      console.error("[contact] Resend error:", error)
       return NextResponse.json({ error: "No se pudo enviar el mensaje. Intenta de nuevo." }, { status: 500 })
     }
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error("[v0] Contact route error:", err)
+    console.error("[contact] Route error:", err)
     return NextResponse.json({ error: "Error inesperado. Intenta de nuevo." }, { status: 500 })
   }
 }
