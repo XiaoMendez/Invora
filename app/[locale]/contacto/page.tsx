@@ -41,7 +41,7 @@ export default function ContactoPage() {
 
   const contactInfo = [
     { icon: Mail, title: t("staticPages.contact.emailContactTitle"), value: "invoracr@gmail.com", href: "mailto:invoracr@gmail.com" },
-    { icon: Phone, title: t("staticPages.contact.phoneTitle"), value: "+506 2567 1234", href: "tel:+50625671234" },
+    { icon: Phone, title: t("staticPages.contact.phoneTitle"), value: "+506 7055 3910", href: "tel:+50670553910" },
     { icon: MapPin, title: t("staticPages.contact.locationTitle"), value: "San José, Costa Rica", href: "#" },
   ]
 
