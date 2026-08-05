@@ -46,7 +46,7 @@
     "privacy": "Privacidad",
     "terms": "Términos",
     "contact": "Contacto",
-    "copyright": "© 2024 INVORA."
+    "copyright": "© 2026 INVORA."
   },
   "onboarding": {
     "title": "Bienvenido a Invora",
@@ -608,7 +608,7 @@
     "terms": {
       "title": "Términos de Servicio",
       "subtitle": "Por favor, lee atentamente estos términos antes de usar INVORA.",
-      "lastUpdated": "Última actualización: Marzo 2024"
+      "lastUpdated": "Última actualización: Marzo 2026"
     },
     "privacy": {
       "title": "Política de Privacidad",
@@ -621,7 +621,7 @@
     "terminos": {
       "title": "Términos de Servicio",
       "subtitle": "Por favor, lee atentamente estos términos antes de usar INVORA.",
-      "updated": "Última actualización: Marzo 2024",
+      "updated": "Última actualización: Marzo 2026",
       "s1title": "1. Aceptación de Términos",
       "s1body": "Al acceder y utilizar INVORA, aceptas estar sujeto a estos términos de servicio y todas las leyes y regulaciones aplicables. Si no estás de acuerdo con alguno de estos términos, se te prohíbe utilizar o acceder a este servicio.",
       "s2title": "2. Descripción del Servicio",
@@ -665,7 +665,7 @@
     "privacidad": {
       "title": "Política de Privacidad",
       "subtitle": "Tu privacidad es importante para nosotros. Aquí te explicamos cómo protegemos tus datos.",
-      "updated": "Última actualización: Marzo 2024",
+      "updated": "Última actualización: Marzo 2026",
       "s1title": "1. Información que Recopilamos",
       "s1body": "En INVORA recopilamos diferentes tipos de información para proporcionar y mejorar nuestros servicios:",
       "s1l1": "Información de cuenta: nombre de empresa, correo electrónico, teléfono",
