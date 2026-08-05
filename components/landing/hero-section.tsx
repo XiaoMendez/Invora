@@ -21,20 +21,13 @@ export function HeroSection() {
 
   return (
     <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Black stars for light mode using CSS */}
+      {/* Stars for light mode - styled based on color scheme */}
       <style>{`
-        @media (prefers-color-scheme: light) {
-          .hero-star-1 { display: block; }
-          .hero-star-2 { display: block; }
-          .hero-star-3 { display: block; }
-          .hero-star-4 { display: block; }
-          .hero-star-5 { display: block; }
-          .hero-star-6 { display: block; }
-        }
-        @media (prefers-color-scheme: dark) {
-          .hero-star-1, .hero-star-2, .hero-star-3, 
-          .hero-star-4, .hero-star-5, .hero-star-6 { display: none; }
-        }
+        :root .hero-star-1, :root .hero-star-2, :root .hero-star-3,
+        :root .hero-star-4, :root .hero-star-5, :root .hero-star-6 { display: block; }
+        
+        .dark .hero-star-1, .dark .hero-star-2, .dark .hero-star-3, 
+        .dark .hero-star-4, .dark .hero-star-5, .dark .hero-star-6 { display: none; }
       `}</style>
       
       <div className="absolute inset-0 pointer-events-none">
@@ -44,7 +37,7 @@ export function HeroSection() {
           animate={{ y: [0, -20, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
         >
-          <Star className="h-8 w-8 text-black fill-black opacity-30" />
+          <Star className="h-8 w-8 text-slate-700 fill-slate-700 opacity-40 dark:text-purple-300 dark:fill-purple-300 dark:opacity-30" />
         </motion.div>
         
         {/* Top right stars */}
@@ -53,7 +46,7 @@ export function HeroSection() {
           animate={{ y: [0, 15, 0] }}
           transition={{ duration: 5, repeat: Infinity }}
         >
-          <Star className="h-6 w-6 text-black fill-black opacity-25" />
+          <Star className="h-6 w-6 text-slate-600 fill-slate-600 opacity-35 dark:text-purple-300 dark:fill-purple-300 dark:opacity-25" />
         </motion.div>
         
         {/* Bottom left star */}
@@ -62,7 +55,7 @@ export function HeroSection() {
           animate={{ y: [0, -10, 0] }}
           transition={{ duration: 6, repeat: Infinity }}
         >
-          <Star className="h-7 w-7 text-black fill-black opacity-20" />
+          <Star className="h-7 w-7 text-slate-700 fill-slate-700 opacity-30 dark:text-purple-300 dark:fill-purple-300 dark:opacity-20" />
         </motion.div>
 
         {/* Bottom right stars */}
@@ -71,24 +64,24 @@ export function HeroSection() {
           animate={{ y: [0, 12, 0] }}
           transition={{ duration: 4.5, repeat: Infinity }}
         >
-          <Star className="h-5 w-5 text-black fill-black opacity-28" />
+          <Star className="h-5 w-5 text-slate-600 fill-slate-600 opacity-38 dark:text-purple-300 dark:fill-purple-300 dark:opacity-28" />
         </motion.div>
 
         {/* Center accent stars */}
         <motion.div 
           className="absolute top-1/3 right-1/4 hero-star-5 hidden"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.35, 0.2] }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.45, 0.3] }}
           transition={{ duration: 3, repeat: Infinity }}
         >
-          <Star className="h-4 w-4 text-black fill-black" />
+          <Star className="h-4 w-4 text-slate-700 fill-slate-700 dark:text-purple-300 dark:fill-purple-300" />
         </motion.div>
 
         <motion.div 
           className="absolute top-2/3 left-1/4 hero-star-6 hidden"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.3, 0.15] }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.25, 0.4, 0.25] }}
           transition={{ duration: 3.5, repeat: Infinity }}
         >
-          <Star className="h-5 w-5 text-black fill-black" />
+          <Star className="h-5 w-5 text-slate-700 fill-slate-700 dark:text-purple-300 dark:fill-purple-300" />
         </motion.div>
       </div>
 

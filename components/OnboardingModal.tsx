@@ -67,8 +67,8 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
   const themeLabels = { light: labels.light, dark: labels.dark, system: labels.system }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md border-border/50 shadow-2xl">
+    <div className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md border-border shadow-2xl bg-card dark:bg-slate-900">
         <CardHeader className="text-center space-y-2 pb-4">
           <div className="flex justify-center mb-2">
             <div className="p-3 rounded-xl bg-primary/10">
@@ -90,12 +90,12 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                   onClick={() => setSelectedLang(lang.code)}
                   className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1.5 ${
                     selectedLang === lang.code
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                      ? 'border-primary bg-primary/15 dark:bg-primary/10'
+                      : 'border-border/70 hover:border-primary/60 hover:bg-secondary/60 dark:border-border dark:hover:bg-secondary/40'
                   }`}
                 >
                   <span className="text-xs font-bold text-muted-foreground">{lang.abbr}</span>
-                  <span className="text-xs font-medium">{lang.name}</span>
+                  <span className="text-xs font-medium text-foreground">{lang.name}</span>
                 </button>
               ))}
             </div>
@@ -113,12 +113,12 @@ export function OnboardingModal({ isOpen, onClose }: OnboardingModalProps) {
                     onClick={() => setSelectedTheme(theme.value)}
                     className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
                       selectedTheme === theme.value
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50 hover:bg-secondary/50'
+                        ? 'border-primary bg-primary/15 dark:bg-primary/10'
+                        : 'border-border/70 hover:border-primary/60 hover:bg-secondary/60 dark:border-border dark:hover:bg-secondary/40'
                     }`}
                   >
-                    <ThemeIcon className="h-5 w-5" />
-                    <span className="text-xs font-medium">{themeLabels[theme.value]}</span>
+                    <ThemeIcon className="h-5 w-5 text-foreground" />
+                    <span className="text-xs font-medium text-foreground">{themeLabels[theme.value]}</span>
                   </button>
                 )
               })}
