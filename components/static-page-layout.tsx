@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { motion } from "framer-motion"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
+import { ThemeLogo } from "@/components/theme-logo"
 import { useTranslation } from "@/hooks/useTranslation"
 
 export function StaticPageLayout({
@@ -26,13 +26,11 @@ export function StaticPageLayout({
       <header className="relative z-20 border-b border-border/20 backdrop-blur-md bg-background/50">
         <div className="mx-auto max-w-5xl px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/images/invora-logo.png"
+            <ThemeLogo
+              width={800}
+              height={200}
               alt="INVORA Logo"
-              width={360}
-              height={120}
-              className="h-20 w-auto"
-              priority
+              className="h-14 dark:h-20 w-auto"
             />
           </Link>
           <Link

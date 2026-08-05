@@ -1,10 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowLeft, Mail, MapPin, Phone } from "lucide-react"
 import { StarsBackgroundCanvas } from "@/components/space-scene-canvas"
+import { ThemeLogo } from "@/components/theme-logo"
 import { useTranslation } from "@/hooks/useTranslation"
 
 export function StaticFooterLayout({
@@ -28,12 +28,11 @@ export function StaticFooterLayout({
       <nav className="relative z-20 border-b border-border/20 backdrop-blur-md">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/images/invora-logo.png"
-              alt="INVORA"
-              width={400}
-              height={133}
-              className="h-8 w-auto"
+            <ThemeLogo
+              width={800}
+              height={200}
+              alt="INVORA Logo"
+              className="h-8 dark:h-10 w-auto"
             />
           </Link>
           <Link

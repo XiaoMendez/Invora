@@ -40,7 +40,7 @@ export default function ContactoPage() {
   }
 
   const contactInfo = [
-    { icon: Mail, title: t("staticPages.contact.emailContactTitle"), value: "hola@invora.io", href: "mailto:hola@invora.io" },
+    { icon: Mail, title: t("staticPages.contact.emailContactTitle"), value: "invoracr@gmail.com", href: "mailto:invoracr@gmail.com" },
     { icon: Phone, title: t("staticPages.contact.phoneTitle"), value: "+506 2567 1234", href: "tel:+50625671234" },
     { icon: MapPin, title: t("staticPages.contact.locationTitle"), value: "San José, Costa Rica", href: "#" },
   ]
