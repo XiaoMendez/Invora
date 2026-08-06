@@ -9,7 +9,16 @@ import { Loader2 } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
 import { usePreferences } from "@/contexts/PreferencesContext"
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const fetcher = async (url: string) => {
+  const res = await fetch(url)
+  const text = await res.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    console.error("[v0] Non-JSON response from", url, ":", text.slice(0, 200))
+    return { authenticated: false }
+  }
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()

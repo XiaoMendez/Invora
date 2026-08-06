@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   try {
+    // Use regular client ONLY for auth check (reads from cookies)
     const supabase = await createClient()
 
     const {
@@ -19,16 +20,29 @@ export async function GET() {
       )
     }
 
-    // Get empresa data through usuario_empresa relationship
-    const { data: userEmpresa } = await supabase
+    // Use admin client for DB reads so RLS never blocks the session check.
+    // The regular client's RLS on empresa_select_own does a sub-SELECT on
+    // usuario_empresa which can silently return null for freshly-created
+    // accounts, causing needsOnboarding to flip true incorrectly.
+    const adminClient = createAdminClient()
+
+    const { data: userEmpresa } = await adminClient
       .from("usuario_empresa")
-      .select("id_empresa, rol, empresa:id_empresa(id, nombre, email)")
+      .select("id_empresa, rol")
       .eq("id_usuario", user.id)
       .single()
 
-    // Check if user has an empresa configured
-    const hasEmpresa = userEmpresa && userEmpresa.empresa
-    const empresa = hasEmpresa ? (userEmpresa.empresa as { id: string; nombre: string; email: string }) : null
+    let empresa = null
+    if (userEmpresa?.id_empresa) {
+      const { data: empresaData } = await adminClient
+        .from("empresa")
+        .select("id, nombre, email")
+        .eq("id", userEmpresa.id_empresa)
+        .single()
+      empresa = empresaData ?? null
+    }
+
+    const hasEmpresa = !!empresa
 
     return NextResponse.json({
       authenticated: true,
@@ -36,7 +50,7 @@ export async function GET() {
         id: user.id,
         email: user.email,
       },
-      empresa: empresa,
+      empresa,
       rol: userEmpresa?.rol || null,
       needsOnboarding: !hasEmpresa,
     })
