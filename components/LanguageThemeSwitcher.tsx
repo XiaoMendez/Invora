@@ -1,9 +1,8 @@
 'use client'
 
 import { useTheme } from 'next-themes'
-import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import { Globe, Moon, Sun, Monitor } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,18 +13,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export function LanguageThemeSwitcher() {
   const { theme, setTheme } = useTheme()
-  const t = useTranslations()
+  const { t } = useTranslation()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [mounted, setMounted] = useState(false)
 
-  // Usar useEffect para evitar hydration mismatch
-  if (typeof window !== 'undefined' && !mounted) {
+  useEffect(() => {
     setMounted(true)
-  }
+  }, [])
 
   const handleLanguageChange = (locale: string) => {
     startTransition(() => {

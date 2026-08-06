@@ -3,8 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import Image from "next/image"
 import useSWR from "swr"
+import { ThemeLogo } from "@/components/theme-logo"
 import {
   LayoutDashboard,
   Package,
@@ -83,12 +83,11 @@ export function DashboardSidebar() {
         <div className="flex items-center justify-between px-4 h-20 border-b border-sidebar-border">
           {!collapsed && (
             <Link href={`/${locale}`} className="flex items-center">
-              <Image
-                src="/images/invora-logo.png"
-                alt="INVORA"
+              <ThemeLogo
                 width={280}
                 height={94}
-                className="h-16 w-auto"
+                alt="INVORA"
+                className="h-10 w-auto"
               />
             </Link>
           )}
