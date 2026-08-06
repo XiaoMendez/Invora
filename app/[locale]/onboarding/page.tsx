@@ -205,7 +205,7 @@ export default function OnboardingPage() {
                   disabled={isLoading}
                   className="flex-1"
                 >
-                  {t('onboarding.next')}
+                  {t('onboarding.back')}
                 </Button>
                 <Button
                   onClick={() => setStep("company")}
@@ -297,6 +297,18 @@ export default function OnboardingPage() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="id_fiscal">{t('onboarding.taxId')}</Label>
+                  <Input
+                    id="id_fiscal"
+                    placeholder="RUC / RFC / NIT / CIF..."
+                    value={formData.id_fiscal}
+                    onChange={(e) => setFormData({ ...formData, id_fiscal: e.target.value })}
+                    disabled={isLoading}
+                    className="h-10"
+                  />
+                </div>
+
                 <div className="flex gap-2 pt-4">
                   <Button
                     type="button"
@@ -305,7 +317,7 @@ export default function OnboardingPage() {
                     disabled={isLoading}
                     className="flex-1"
                   >
-                    {t('onboarding.next')}
+                    {t('onboarding.back')}
                   </Button>
                   <Button
                     type="submit"

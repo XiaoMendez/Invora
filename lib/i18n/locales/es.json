@@ -60,6 +60,7 @@
     "phone": "Teléfono",
     "address": "Dirección",
     "taxId": "ID Fiscal",
+    "back": "Atrás",
     "next": "Siguiente",
     "finish": "Finalizar",
     "complete": "Configuración completada",

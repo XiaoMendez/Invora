@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       .select(`
         id, nombre, sku, descripcion, stock, stock_minimo, precio_costo, precio_venta, activo, creado_en, id_categoria, es_propio,
         categoria(id, nombre),
-        producto_proveedor(id_proveedor, precio_compra, codigo_proveedor, es_principal, proveedor(id, nombre, correo, telefono))
+        producto_proveedor(id_proveedor, precio_compra, codigo_proveedor, es_principal)
       `)
       .eq("id_empresa", empresaId)
       .order("nombre", { ascending: true })

@@ -1,4 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export class EmpresaNotConfiguredError extends Error {
   constructor() {
@@ -15,18 +16,23 @@ export class UserNotAuthenticatedError extends Error {
 }
 
 /**
- * Get the empresa ID for the authenticated user
- * Uses the user's ID to find their associated empresa in usuario_empresa table
+ * Get the empresa ID for the authenticated user.
+ * Uses the admin client for the DB lookup so RLS never blocks it —
+ * the regular client's policies on usuario_empresa can silently return
+ * null for freshly-created accounts, causing false 403/500 errors across
+ * every API route that calls this helper.
  */
 export async function getEmpresaId(supabase: SupabaseClient): Promise<string> {
+  // Auth check uses the cookie-bound client (correct)
   const { data: { user }, error: userError } = await supabase.auth.getUser()
 
   if (userError || !user) {
     throw new UserNotAuthenticatedError()
   }
 
-  // Query the usuario_empresa table to get the empresa
-  const { data: userEmpresa, error } = await supabase
+  // DB lookup uses admin client to bypass RLS
+  const adminClient = createAdminClient()
+  const { data: userEmpresa, error } = await adminClient
     .from("usuario_empresa")
     .select("id_empresa")
     .eq("id_usuario", user.id)
@@ -40,7 +46,7 @@ export async function getEmpresaId(supabase: SupabaseClient): Promise<string> {
 }
 
 /**
- * Get the user object with their empresa information
+ * Get the user object with their empresa information.
  */
 export async function getUserWithEmpresa(supabase: SupabaseClient) {
   const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -55,7 +61,7 @@ export async function getUserWithEmpresa(supabase: SupabaseClient) {
 }
 
 /**
- * Check if user has a configured empresa
+ * Check if user has a configured empresa.
  */
 export async function hasEmpresaConfigured(supabase: SupabaseClient): Promise<boolean> {
   try {
