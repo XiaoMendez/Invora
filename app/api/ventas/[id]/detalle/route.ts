@@ -84,9 +84,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       )
     }
 
-    const subtotal = cantidad * precio_unitario - descuento
-
-    // Crear detalle
+    // subtotal is a generated column (cantidad * precio_unitario - descuento) — do not insert it
     const { data: detalle, error: detalleError } = await supabase
       .from("venta_detalle")
       .insert({
@@ -95,7 +93,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         cantidad,
         precio_unitario,
         descuento,
-        subtotal,
       })
       .select("id, id_producto, cantidad, precio_unitario, descuento, subtotal")
       .single()
