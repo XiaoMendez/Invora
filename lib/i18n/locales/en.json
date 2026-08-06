@@ -60,6 +60,7 @@
     "phone": "Phone",
     "address": "Address",
     "taxId": "Tax ID",
+    "back": "Back",
     "next": "Next",
     "finish": "Finish",
     "complete": "Setup complete",

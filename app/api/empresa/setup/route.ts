@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     // Use admin client for database operations (bypasses RLS)
     const adminClient = createAdminClient()
 
-    // Check if user already has an empresa
+    // Check if user already has a fully configured empresa — if so, just return success
     const { data: existingRelation } = await adminClient
       .from("usuario_empresa")
       .select("id_empresa")
@@ -28,10 +28,17 @@ export async function POST(request: Request) {
       .single()
 
     if (existingRelation?.id_empresa) {
-      return NextResponse.json(
-        { error: "Ya tienes una empresa configurada" },
-        { status: 400 }
-      )
+      const { data: existingEmpresa } = await adminClient
+        .from("empresa")
+        .select("id, nombre, email")
+        .eq("id", existingRelation.id_empresa)
+        .single()
+
+      return NextResponse.json({
+        success: true,
+        empresa: existingEmpresa,
+        message: "Empresa ya configurada",
+      })
     }
 
     const body = await request.json()
@@ -51,12 +58,28 @@ export async function POST(request: Request) {
       )
     }
 
+    const emailNormalized = email.toLowerCase().trim()
+
+    // Check if email is already taken by another empresa
+    const { data: emailConflict } = await adminClient
+      .from("empresa")
+      .select("id")
+      .eq("email", emailNormalized)
+      .single()
+
+    if (emailConflict) {
+      return NextResponse.json(
+        { error: "Ya existe una empresa registrada con ese email. Usa otro email." },
+        { status: 409 }
+      )
+    }
+
     // Create empresa record using admin client (bypasses RLS)
     const { data: empresa, error: empresaError } = await adminClient
       .from("empresa")
       .insert({
         nombre: nombre.trim(),
-        email: email.toLowerCase().trim(),
+        email: emailNormalized,
         telefono: telefono?.trim() || null,
         direccion: direccion?.trim() || null,
         id_fiscal: id_fiscal?.trim() || null,
@@ -66,6 +89,13 @@ export async function POST(request: Request) {
 
     if (empresaError) {
       console.error("[v0] Error creating empresa:", empresaError)
+      // Handle unique email violation gracefully
+      if (empresaError.code === "23505") {
+        return NextResponse.json(
+          { error: "Ya existe una empresa con ese email. Usa otro email." },
+          { status: 409 }
+        )
+      }
       return NextResponse.json(
         { error: "Error al crear la empresa: " + empresaError.message },
         { status: 500 }
@@ -86,12 +116,12 @@ export async function POST(request: Request) {
       // Rollback empresa creation
       await adminClient.from("empresa").delete().eq("id", empresa.id)
       return NextResponse.json(
-        { error: "Error al vincular usuario con empresa" },
+        { error: "Error al vincular usuario con empresa: " + relationError.message },
         { status: 500 }
       )
     }
 
-    // Create default categories
+    // Create default categories (best-effort, don't fail setup if this errors)
     const categorias = [
       { nombre: "General", descripcion: "Categoria general" },
       { nombre: "Alimentos", descripcion: "Productos alimenticios" },
@@ -100,19 +130,20 @@ export async function POST(request: Request) {
       { nombre: "Electronica", descripcion: "Productos electronicos" },
     ]
 
-    await adminClient.from("categoria").insert(
-      categorias.map((cat) => ({
-        id_empresa: empresa.id,
-        ...cat,
-      }))
+    const { error: catError } = await adminClient.from("categoria").insert(
+      categorias.map((cat) => ({ id_empresa: empresa.id, ...cat }))
     )
+
+    if (catError) {
+      console.error("[v0] Warning: could not create default categories:", catError.message)
+    }
 
     return NextResponse.json({
       success: true,
       empresa: {
         id: empresa.id,
         nombre: nombre.trim(),
-        email: email.trim(),
+        email: emailNormalized,
       },
       message: "Empresa configurada exitosamente",
     })
