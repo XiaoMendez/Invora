@@ -174,7 +174,7 @@ export async function GET(request: Request) {
       // Exportar movimientos del período
       const { data: movsExport } = await supabase
         .from("v_historial_inventario")
-        .select("creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo")
+        .select("creado_en, producto_nombre, producto_sku, tipo, cantidad, stock_antes, stock_despues, motivo")
         .eq("id_empresa", empresaId)
         .gte("creado_en", fechaDesde.toISOString())
         .order("creado_en", { ascending: false })
@@ -182,8 +182,8 @@ export async function GET(request: Request) {
       const headers = ["Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo"]
       const rows = (movsExport || []).map((m) => [
         new Date(m.creado_en).toLocaleString("es-CR"),
-        m.producto,
-        m.sku,
+        m.producto_nombre,
+        m.producto_sku,
         m.tipo,
         m.cantidad,
         m.stock_antes,

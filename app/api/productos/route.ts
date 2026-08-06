@@ -50,6 +50,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
     const body = await request.json()
     const { nombre, sku, id_categoria, stock, stock_minimo, precio_costo, precio_venta, descripcion, es_propio } = body
@@ -71,7 +72,7 @@ export async function POST(request: Request) {
     if (id_categoria) insertData.id_categoria = id_categoria
     if (descripcion?.trim()) insertData.descripcion = descripcion.trim()
 
-    const { data: producto, error } = await supabase
+    const { data: producto, error } = await admin
       .from("producto")
       .insert(insertData)
       .select("id, nombre, sku, stock, stock_minimo, precio_costo, precio_venta, activo, id_categoria, es_propio, categoria(id, nombre)")
@@ -81,17 +82,15 @@ export async function POST(request: Request) {
 
     // Record initial stock movement
     if (parseInt(stock) > 0) {
-      await supabase
-        .from("movimiento_inventario")
-        .insert({
-          id_empresa: empresaId,
-          id_producto: producto.id,
-          tipo: "entrada",
-          cantidad: parseInt(stock),
-          stock_antes: 0,
-          stock_despues: parseInt(stock),
-          motivo: "Stock inicial al crear producto",
-        })
+      await admin.from("movimiento_inventario").insert({
+        id_empresa: empresaId,
+        id_producto: producto.id,
+        tipo: "entrada",
+        cantidad: parseInt(stock),
+        stock_antes: 0,
+        stock_despues: parseInt(stock),
+        motivo: "Stock inicial al crear producto",
+      })
     }
 
     return NextResponse.json({ producto, success: true })
@@ -106,6 +105,7 @@ export async function PUT(request: Request) {
   try {
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
     const body = await request.json()
     const { id, nombre, sku, id_categoria, stock_minimo, precio_costo, precio_venta, activo, es_propio } = body
@@ -124,7 +124,7 @@ export async function PUT(request: Request) {
     if (activo !== undefined) updateData.activo = activo
     if (es_propio !== undefined) updateData.es_propio = es_propio
 
-    const { data: producto, error } = await supabase
+    const { data: producto, error } = await admin
       .from("producto")
       .update(updateData)
       .eq("id", id)
@@ -145,6 +145,7 @@ export async function DELETE(request: Request) {
   try {
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get("id")
@@ -153,7 +154,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "ID del producto requerido" }, { status: 400 })
     }
 
-    const { error } = await supabase
+    const { error } = await admin
       .from("producto")
       .delete()
       .eq("id", id)
