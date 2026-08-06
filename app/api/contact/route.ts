@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     const resend = new Resend(apiKey)
 
     const { data, error } = await resend.emails.send({
-      from: "Invora Contacto <onboarding@resend.dev>",
+      from: "Invora Contacto <noreply@invorastock.com>",
       to: [SUPPORT_EMAIL],
       reply_to: email,
       subject: `[Contacto Invora] ${asunto}`,
