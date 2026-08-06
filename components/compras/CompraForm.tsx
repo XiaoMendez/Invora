@@ -143,7 +143,9 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
       onSuccess?.()
       onOpenChange(false)
       setDetalles([])
-      setSelectedProveedor("")
+      setSelectedProveedor("__placeholder__")
+      setCantidad("")
+      setPrecioUnitario("")
     } catch (error) {
       console.error("Error:", error)
       alert("Error al guardar la compra")

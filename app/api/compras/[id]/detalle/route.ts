@@ -4,11 +4,11 @@ import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
-    const compraId = params.id
 
     const { data: detalles, error } = await supabase
       .from("compra_detalle")
@@ -16,7 +16,6 @@ export async function GET(request: Request, { params }: { params: { id: string }
         "id, id_producto, cantidad, precio_unitario, subtotal, producto(id, nombre, sku)"
       )
       .eq("id_compra", compraId)
-      .order("creado_en", { ascending: true })
 
     if (error) throw error
 
@@ -27,11 +26,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
-    const compraId = params.id
 
     const body = await request.json()
     const { id_producto, cantidad, precio_unitario } = body
@@ -115,12 +114,13 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string; detalleId: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
-    const compraId = params.id
-    const detalleId = params.detalleId
+    const { searchParams } = new URL(request.url)
+    const detalleId = searchParams.get("detalleId") || ""
 
     // Validar que la compra existe y pertenece a la empresa
     const { data: compra, error: compraError } = await supabase

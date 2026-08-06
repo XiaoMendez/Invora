@@ -194,7 +194,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
             <Label className="text-sm">Agregar Productos</Label>
             <div className="grid grid-cols-12 gap-2">
               <Select value={selectedProducto} onValueChange={setSelectedProducto}>
-                <SelectTrigger className="col-span-5 bg-secondary/50 border-border/30">
+                <SelectTrigger className="col-span-6 bg-secondary/50 border-border/30">
                   <SelectValue placeholder="Producto" />
                 </SelectTrigger>
                 <SelectContent className="glass-card border-border/30">
@@ -215,18 +215,18 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
                 placeholder="Cantidad"
                 value={cantidad}
                 onChange={(e) => setCantidad(e.target.value)}
-                className="col-span-2.5 bg-secondary/50 border-border/30"
+                className="col-span-2 bg-secondary/50 border-border/30"
               />
               <Input
                 type="number"
                 placeholder="Precio"
                 value={precioUnitario}
                 onChange={(e) => setPrecioUnitario(e.target.value)}
-                className="col-span-2.5 bg-secondary/50 border-border/30"
+                className="col-span-2 bg-secondary/50 border-border/30"
               />
               <Input
                 type="number"
-                placeholder="Descuento"
+                placeholder="Desc."
                 value={descuento}
                 onChange={(e) => setDescuento(e.target.value)}
                 className="col-span-2 bg-secondary/50 border-border/30"

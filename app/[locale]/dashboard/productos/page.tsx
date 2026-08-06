@@ -18,6 +18,10 @@ import {
   Truck,
   Home,
   X,
+  Paperclip,
+  Upload,
+  FileText,
+  ExternalLink,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -264,12 +268,14 @@ function ProveedoresSection({
   setProveedoresSeleccionados,
   proveedoresData,
   formData,
+  onEsPropioChange,
   t,
 }: {
   proveedoresSeleccionados: Array<{ id: string; nombre: string; precio_compra: string; es_principal: boolean }>
   setProveedoresSeleccionados: (val: any) => void
   proveedoresData: any
   formData: any
+  onEsPropioChange: (val: boolean) => void
   t: (key: string) => string
 }) {
   const [open, setOpen] = useState(false)
@@ -313,7 +319,7 @@ function ProveedoresSection({
           <input
             type="checkbox"
             checked={formData.es_propio}
-            onChange={(e) => {}}
+            onChange={(e) => onEsPropioChange(e.target.checked)}
             className="w-4 h-4"
           />
           <span className="text-xs">{t("products.ownProduct")}</span>
@@ -392,6 +398,129 @@ function ProveedoresSection({
               <p className="text-xs text-muted-foreground text-center">{t("products.noSuppliersAvailable")}</p>
             </div>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface Archivo {
+  id: string
+  nombre: string
+  url: string
+  tipo: string | null
+  tamano: number | null
+  creado_en: string
+}
+
+function getFileIcon(tipo: string | null) {
+  if (!tipo) return FileText
+  if (tipo.startsWith("image/")) return Package
+  return FileText
+}
+
+function formatBytes(bytes: number | null) {
+  if (!bytes) return ""
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function ProductoArchivos({ idProducto }: { idProducto: string }) {
+  const { data, mutate: mutateArchivos, isLoading } = useSWR(
+    `/api/productos/archivos?id_producto=${idProducto}`,
+    fetcher
+  )
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const archivos: Archivo[] = data?.archivos || []
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      fd.append("id_producto", idProducto)
+      const res = await fetch("/api/productos/archivos", { method: "POST", body: fd })
+      if (res.ok) {
+        mutateArchivos()
+      } else {
+        const err = await res.json()
+        alert(err.error || "Error al subir archivo")
+      }
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ""
+    }
+  }
+
+  const handleDelete = async (id: string, nombre: string) => {
+    if (!confirm(`¿Eliminar "${nombre}"?`)) return
+    try {
+      const res = await fetch(`/api/productos/archivos?id=${id}`, { method: "DELETE" })
+      if (res.ok) mutateArchivos()
+    } catch {
+      alert("Error al eliminar archivo")
+    }
+  }
+
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <Label className="text-xs flex items-center gap-1.5">
+            <Paperclip className="h-3.5 w-3.5" />
+            Archivos adjuntos
+          </Label>
+          <p className="text-xs text-muted-foreground">Imágenes, PDFs, documentos</p>
+        </div>
+        <div>
+          <input
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            accept="image/*,.pdf,.xlsx,.xls,.docx,.doc,.txt,.csv"
+            onChange={handleUpload}
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1.5 border-border/30"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+          >
+            {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+            {uploading ? "Subiendo..." : "Subir archivo"}
+          </Button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Cargando...</p>
+      ) : archivos.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No hay archivos adjuntos</p>
+      ) : (
+        <div className="space-y-1 max-h-36 overflow-y-auto">
+          {archivos.map((archivo) => (
+            <div key={archivo.id} className="flex items-center gap-2 p-2 rounded bg-secondary/30 text-xs">
+              <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="flex-1 truncate">{archivo.nombre}</span>
+              {archivo.tamano && (
+                <span className="text-muted-foreground shrink-0">{formatBytes(archivo.tamano)}</span>
+              )}
+              <a href={archivo.url} target="_blank" rel="noopener noreferrer"
+                className="text-primary hover:text-primary/80 shrink-0">
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <button type="button" onClick={() => handleDelete(archivo.id, archivo.nombre)}
+                className="text-red-400 hover:text-red-500 shrink-0">
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -660,9 +789,16 @@ export default function ProductosPage() {
                   setProveedoresSeleccionados={setProveedoresSeleccionados}
                   proveedoresData={proveedoresData}
                   formData={formData}
+                  onEsPropioChange={(val) => setFormData({ ...formData, es_propio: val })}
                   t={t}
                 />
               </div>
+
+              {editingProduct && (
+                <div className="border-t border-border/20 pt-4">
+                  <ProductoArchivos idProducto={editingProduct.id} />
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm() }} className="border-border/30">

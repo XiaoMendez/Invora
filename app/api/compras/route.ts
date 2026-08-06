@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     }
 
     if (search) {
-      query = query.or(`numero.ilike.%${search}%,proveedor.nombre.ilike.%${search}%`)
+      query = query.or(`notas.ilike.%${search}%,proveedor.nombre.ilike.%${search}%`)
     }
 
     const { data, error } = await query
