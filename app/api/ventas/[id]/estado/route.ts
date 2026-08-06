@@ -4,11 +4,11 @@ import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id: ventaId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
-    const ventaId = params.id
 
     const body = await request.json()
     const { estado } = body
