@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 
     let query = supabase
       .from("v_historial_inventario")
-      .select("id, creado_en, producto, sku, tipo, cantidad, stock_antes, stock_despues, motivo, id_cliente, cliente_nombre, cliente_apellido, id_proveedor, proveedor_nombre, comprobante_url")
+      .select("id, creado_en, producto_nombre, producto_sku, tipo, cantidad, stock_antes, stock_despues, motivo, id_cliente, cliente_nombre, id_proveedor, proveedor_nombre, comprobante_url")
       .eq("id_empresa", empresaId)
       .order("creado_en", { ascending: false })
 
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
 
     // Búsqueda por producto, cliente o proveedor
     if (search) {
-      query = query.or(`producto.ilike.%${search}%,cliente_nombre.ilike.%${search}%,proveedor_nombre.ilike.%${search}%`)
+      query = query.or(`producto_nombre.ilike.%${search}%,cliente_nombre.ilike.%${search}%,proveedor_nombre.ilike.%${search}%`)
     }
 
     const { data: movimientos, error } = await query.limit(500)
@@ -95,14 +95,14 @@ export async function GET(request: Request) {
       const rows = data.map((m) => [
         m.id,
         new Date(m.creado_en).toLocaleString("es-CR"),
-        m.producto,
-        m.sku,
+        m.producto_nombre,
+        m.producto_sku,
         m.tipo,
         m.cantidad,
         m.stock_antes,
         m.stock_despues,
         m.motivo,
-        m.cliente_nombre ? `${m.cliente_nombre} ${m.cliente_apellido || ""}`.trim() : "",
+        m.cliente_nombre || "",
         m.proveedor_nombre || "",
       ])
       const csv = generateCSV(headers, rows)

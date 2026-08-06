@@ -30,7 +30,7 @@ export async function GET() {
     // Get recent movements with product info
     const { data: rawMovements, error: movError } = await supabase
       .from("v_historial_inventario")
-      .select("id, tipo, cantidad, creado_en, producto")
+      .select("id, tipo, cantidad, creado_en, producto_nombre")
       .eq("id_empresa", empresaId)
       .order("creado_en", { ascending: false })
       .limit(10)
@@ -42,7 +42,7 @@ export async function GET() {
       tipo: m.tipo,
       cantidad: m.cantidad,
       creado_en: m.creado_en,
-      producto: m.producto,
+      producto: m.producto_nombre,
     }))
 
     // Get movements today count
