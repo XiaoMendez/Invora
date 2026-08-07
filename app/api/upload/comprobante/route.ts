@@ -5,7 +5,6 @@ import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
 
@@ -16,28 +15,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 })
     }
 
-    // Validar tipo de archivo (imágenes y PDFs)
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"]
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ 
-        error: "Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF) y PDF." 
-      }, { status: 400 })
+      return NextResponse.json(
+        { error: "Tipo de archivo no permitido. Solo se aceptan imágenes (JPG, PNG, WebP, GIF) y PDF." },
+        { status: 400 }
+      )
     }
 
-    // Limitar tamaño a 10MB
-    const maxSize = 10 * 1024 * 1024
+    const maxSize = 10 * 1024 * 1024 // 10 MB
     if (file.size > maxSize) {
-      return NextResponse.json({ error: "El archivo excede el tamaño máximo de 10MB" }, { status: 400 })
+      return NextResponse.json(
+        { error: "El archivo excede el tamaño máximo de 10MB" },
+        { status: 400 }
+      )
     }
 
-    // Generar nombre único
     const timestamp = Date.now()
-    const extension = file.name.split(".").pop() || "jpg"
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg"
     const filename = `comprobantes/${empresaId}/${timestamp}.${extension}`
 
-    // Subir a Vercel Blob (público para fácil acceso)
+    // The Blob store is provisioned as private — must use access: "private"
     const blob = await put(filename, file, {
-      access: "public",
+      access: "private",
     })
 
     return NextResponse.json({ url: blob.url })

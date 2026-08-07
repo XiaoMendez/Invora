@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
@@ -9,12 +9,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { id: ventaId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
-    const { data: detalles, error } = await supabase
+    const { data: detalles, error } = await admin
       .from("venta_detalle")
-      .select(
-        "id, id_producto, cantidad, precio_unitario, descuento, subtotal, producto(id, nombre, sku)"
-      )
+      .select("id, id_producto, cantidad, precio_unitario, descuento, subtotal, producto(id, nombre, sku)")
       .eq("id_venta", ventaId)
 
     if (error) throw error
@@ -31,6 +30,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id: ventaId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
     const body = await request.json()
     const { id_producto, cantidad, precio_unitario, descuento = 0 } = body
@@ -42,8 +42,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       )
     }
 
-    // Validar que la venta existe
-    const { data: venta, error: ventaError } = await supabase
+    // Validate venta exists and belongs to this empresa
+    const { data: venta, error: ventaError } = await admin
       .from("venta")
       .select("id, estado")
       .eq("id", ventaId)
@@ -54,16 +54,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Venta no encontrada" }, { status: 404 })
     }
 
-    // No permitir agregar detalles si la venta ya fue completada
-    if (venta.estado === "completada") {
+    if ((venta.estado as string) === "completada") {
       return NextResponse.json(
         { error: "No se pueden agregar productos a una venta completada" },
         { status: 400 }
       )
     }
 
-    // Validar que el producto existe y obtener stock
-    const { data: producto } = await supabase
+    // Validate product exists and has enough stock
+    const { data: producto } = await admin
       .from("producto")
       .select("id, stock")
       .eq("id", id_producto)
@@ -74,45 +73,40 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 })
     }
 
-    // Validar stock disponible
-    if (cantidad > producto.stock) {
+    const qty = parseInt(cantidad)
+    if (qty > producto.stock) {
       return NextResponse.json(
-        {
-          error: `Stock insuficiente. Disponible: ${producto.stock}, Solicitado: ${cantidad}`,
-        },
+        { error: `Stock insuficiente. Disponible: ${producto.stock}, Solicitado: ${qty}` },
         { status: 400 }
       )
     }
 
     // subtotal is a generated column (cantidad * precio_unitario - descuento) — do not insert it
-    const { data: detalle, error: detalleError } = await supabase
+    const { data: detalle, error: detalleError } = await admin
       .from("venta_detalle")
       .insert({
         id_venta: ventaId,
         id_producto,
-        cantidad,
-        precio_unitario,
-        descuento,
+        cantidad: qty,
+        precio_unitario: parseFloat(precio_unitario),
+        descuento: parseFloat(descuento) || 0,
       })
       .select("id, id_producto, cantidad, precio_unitario, descuento, subtotal")
       .single()
 
     if (detalleError) throw detalleError
 
-    // Actualizar totales de la venta
-    const { data: detalles } = await supabase
+    // Recalculate and update venta totals
+    const { data: todosDetalles } = await admin
       .from("venta_detalle")
       .select("subtotal")
       .eq("id_venta", ventaId)
 
-    const nuevoSubtotal = (detalles || []).reduce((sum, d) => sum + (d.subtotal || 0), 0)
+    const nuevoSubtotal = (todosDetalles || []).reduce((sum, d) => sum + (Number(d.subtotal) || 0), 0)
 
-    await supabase
+    await admin
       .from("venta")
-      .update({
-        subtotal: nuevoSubtotal,
-        monto_total: nuevoSubtotal,
-      })
+      .update({ subtotal: nuevoSubtotal, monto_total: nuevoSubtotal })
       .eq("id", ventaId)
 
     return NextResponse.json({ detalle })
@@ -127,11 +121,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id: ventaId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
     const { searchParams } = new URL(request.url)
     const detalleId = searchParams.get("detalleId") || ""
 
-    // Validar que la venta existe y pertenece a la empresa
-    const { data: venta, error: ventaError } = await supabase
+    const { data: venta, error: ventaError } = await admin
       .from("venta")
       .select("id, estado")
       .eq("id", ventaId)
@@ -142,16 +136,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "Venta no encontrada" }, { status: 404 })
     }
 
-    // No permitir eliminar detalles si la venta ya fue completada
-    if (venta.estado === "completada") {
+    if ((venta.estado as string) === "completada") {
       return NextResponse.json(
         { error: "No se pueden eliminar productos de una venta completada" },
         { status: 400 }
       )
     }
 
-    // Eliminar detalle
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await admin
       .from("venta_detalle")
       .delete()
       .eq("id", detalleId)
@@ -159,20 +151,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     if (deleteError) throw deleteError
 
-    // Actualizar totales de la venta
-    const { data: detalles } = await supabase
+    const { data: todosDetalles } = await admin
       .from("venta_detalle")
       .select("subtotal")
       .eq("id_venta", ventaId)
 
-    const nuevoSubtotal = (detalles || []).reduce((sum, d) => sum + (d.subtotal || 0), 0)
+    const nuevoSubtotal = (todosDetalles || []).reduce((sum, d) => sum + (Number(d.subtotal) || 0), 0)
 
-    await supabase
+    await admin
       .from("venta")
-      .update({
-        subtotal: nuevoSubtotal,
-        monto_total: nuevoSubtotal,
-      })
+      .update({ subtotal: nuevoSubtotal, monto_total: nuevoSubtotal })
       .eq("id", ventaId)
 
     return NextResponse.json({ success: true })
