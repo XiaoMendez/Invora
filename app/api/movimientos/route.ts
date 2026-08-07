@@ -1,6 +1,108 @@
 import { NextResponse } from "next/server"
+import ExcelJS from "exceljs"
+import { jsPDF } from "jspdf"
+import autoTable from "jspdf-autotable"
 import { createClient } from "@/lib/supabase/server"
 import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
+
+// Encabezados y forma de fila compartidos entre los 3 formatos de exportación
+const EXPORT_HEADERS = [
+  "ID",
+  "Fecha",
+  "Producto",
+  "SKU",
+  "Tipo",
+  "Cantidad",
+  "Stock Antes",
+  "Stock Después",
+  "Motivo",
+  "Cliente",
+  "Proveedor",
+]
+
+function buildExportRows(data: any[]): (string | number)[][] {
+  return data.map((m) => [
+    m.id ?? "",
+    new Date(m.creado_en).toLocaleString("es-CR"),
+    m.producto_nombre ?? "",
+    m.producto_sku ?? "",
+    m.tipo ?? "",
+    m.cantidad ?? "",
+    m.stock_antes ?? "",
+    m.stock_despues ?? "",
+    m.motivo ?? "",
+    m.cliente_nombre ?? "",
+    m.proveedor_nombre ?? "",
+  ])
+}
+
+// Genera un .xlsx con columnas centradas y ancho automático según el
+// contenido más largo de cada columna (esto es lo que un CSV plano nunca
+// puede hacer, porque es texto sin ningún tipo de formato).
+async function generateXLSX(headers: string[], rows: (string | number)[][]): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook()
+  workbook.creator = "Invora"
+  workbook.created = new Date()
+
+  const sheet = workbook.addWorksheet("Movimientos", {
+    views: [{ state: "frozen", ySplit: 1 }],
+  })
+
+  sheet.columns = headers.map((header, i) => {
+    const longest = rows.reduce((max, row) => {
+      const len = String(row[i] ?? "").length
+      return len > max ? len : max
+    }, header.length)
+    return {
+      header,
+      key: `col${i}`,
+      // +4 de aire para que ningún valor quede pegado al borde ni se corte
+      width: Math.min(Math.max(longest + 4, 10), 45),
+    }
+  })
+
+  rows.forEach((row) => sheet.addRow(row))
+
+  const headerRow = sheet.getRow(1)
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } }
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } }
+    cell.alignment = { horizontal: "center", vertical: "middle" }
+  })
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true }
+    })
+  })
+
+  const arrayBuffer = await workbook.xlsx.writeBuffer()
+  return Buffer.from(arrayBuffer)
+}
+
+// Genera un PDF horizontal con una tabla auto-ajustada de los movimientos
+function generatePDF(headers: string[], rows: (string | number)[][]): Buffer {
+  const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" })
+
+  doc.setFontSize(14)
+  doc.text("Movimientos de inventario", 40, 30)
+  doc.setFontSize(9)
+  doc.setTextColor(120)
+  doc.text(`Generado el ${new Date().toLocaleString("es-CR")}`, 40, 45)
+
+  autoTable(doc, {
+    head: [headers],
+    body: rows.map((row) => row.map((v) => (v === null || v === undefined ? "" : String(v)))),
+    startY: 58,
+    styles: { fontSize: 8, cellPadding: 4, halign: "center", valign: "middle" },
+    headStyles: { fillColor: [31, 41, 55], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [245, 245, 245] },
+    theme: "grid",
+  })
+
+  return Buffer.from(doc.output("arraybuffer"))
+}
 
 export const dynamic = "force-dynamic"
 
@@ -35,7 +137,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const tipo = searchParams.get("tipo") || "todos"
     const periodo = searchParams.get("periodo") || "30d"
-    const exportCsv = searchParams.get("export") === "csv"
+    const exportFormat = searchParams.get("export") // "csv" | "xlsx" | "pdf" | null
     const clienteId = searchParams.get("cliente")
     const proveedorId = searchParams.get("proveedor")
     const search = searchParams.get("search")
@@ -99,26 +201,36 @@ export async function GET(request: Request) {
       sku: m.producto_sku ?? m.sku ?? null,
     }))
 
-    if (exportCsv) {
-      const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo", "Cliente", "Proveedor"]
-      const rows = data.map((m) => [
-        m.id,
-        new Date(m.creado_en).toLocaleString("es-CR"),
-        m.producto_nombre,
-        m.producto_sku,
-        m.tipo,
-        m.cantidad,
-        m.stock_antes,
-        m.stock_despues,
-        m.motivo,
-        m.cliente_nombre || "",
-        m.proveedor_nombre || "",
-      ])
-      const csv = generateCSV(headers, rows)
-      return new Response(csv, {
+    if (exportFormat === "csv" || exportFormat === "xlsx" || exportFormat === "pdf") {
+      const dateStamp = new Date().toISOString().split("T")[0]
+      const rows = buildExportRows(data)
+
+      if (exportFormat === "csv") {
+        const csv = generateCSV(EXPORT_HEADERS, rows)
+        return new Response(csv, {
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": `attachment; filename="movimientos-${dateStamp}.csv"`,
+          },
+        })
+      }
+
+      if (exportFormat === "xlsx") {
+        const buffer = await generateXLSX(EXPORT_HEADERS, rows)
+        return new Response(buffer, {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename="movimientos-${dateStamp}.xlsx"`,
+          },
+        })
+      }
+
+      // exportFormat === "pdf"
+      const buffer = generatePDF(EXPORT_HEADERS, rows)
+      return new Response(buffer, {
         headers: {
-          "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="movimientos-${new Date().toISOString().split("T")[0]}.csv"`,
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="movimientos-${dateStamp}.pdf"`,
         },
       })
     }

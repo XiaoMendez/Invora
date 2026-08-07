@@ -39,6 +39,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -301,6 +307,14 @@ export default function MovimientosPage() {
     window.open(`/api/movimientos?tipo=${tipo}&periodo=${periodo}&export=csv`, "_blank")
   }
 
+  const handleExportExcel = () => {
+    window.open(`/api/movimientos?tipo=${tipo}&periodo=${periodo}&export=xlsx`, "_blank")
+  }
+
+  const handleExportPDF = () => {
+    window.open(`/api/movimientos?tipo=${tipo}&periodo=${periodo}&export=pdf`, "_blank")
+  }
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -553,7 +567,7 @@ export default function MovimientosPage() {
                       <FileText className="h-3.5 w-3.5" />
                       {t("movements.fileUploaded")}
                       <a
-                        href={formData.comprobante_url}
+                        href={`/api/archivos?url=${encodeURIComponent(formData.comprobante_url)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="underline hover:text-green-300"
@@ -589,10 +603,28 @@ export default function MovimientosPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline" className="border-border/30 gap-2 text-sm" onClick={handleExportCSV}>
-            <Download className="h-4 w-4" />
-            {t("movements.exportCSV")}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-border/30 gap-2 text-sm">
+                <Download className="h-4 w-4" />
+                {t("movements.export")}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportCSV} className="gap-2">
+                <FileText className="h-4 w-4" />
+                {t("movements.exportCSV")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                <FileText className="h-4 w-4" />
+                {t("movements.exportExcel")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                <FileText className="h-4 w-4" />
+                {t("movements.exportPDF")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -777,7 +809,7 @@ export default function MovimientosPage() {
                         <TableCell className="text-xs">
                           {mov.comprobante_url ? (
                             <a
-                              href={mov.comprobante_url}
+                              href={`/api/archivos?url=${encodeURIComponent(mov.comprobante_url)}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 text-primary hover:underline"
