@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split(".").pop() || "bin"
     const filename = `productos/${empresaId}/${idProducto}/${timestamp}.${ext}`
 
-    const blob = await put(filename, file, { access: "public" })
+    const blob = await put(filename, file, { access: "private" })
 
     const { data: archivo, error: dbError } = await admin
       .from("producto_archivo")

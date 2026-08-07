@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
-import { getEmpresaId } from "@/lib/supabase/empresa"
+import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
+import { sendLowStockEmail } from "@/app/api/alertas/route"
 
 export const dynamic = "force-dynamic"
 
@@ -96,9 +97,38 @@ export async function POST(request: Request) {
 
     if (stockError) throw stockError
 
+    // Auto-send low-stock alert email if the updated product is now below minimum
+    try {
+      const { data: prodActualizado } = await admin
+        .from("producto")
+        .select("id, nombre, sku, stock, stock_minimo, categoria(nombre)")
+        .eq("id", id_producto)
+        .single()
+
+      if (prodActualizado && prodActualizado.stock_minimo > 0 && prodActualizado.stock <= prodActualizado.stock_minimo) {
+        const { data: empresa } = await admin
+          .from("empresa")
+          .select("nombre, email")
+          .eq("id", empresaId)
+          .single()
+
+        if (empresa?.email) {
+          // Fire-and-forget — don't block the response
+          sendLowStockEmail(empresa.nombre || "Tu empresa", empresa.email, [prodActualizado]).catch(
+            (err) => console.error("[ajuste-inventario] auto-alert error:", err)
+          )
+        }
+      }
+    } catch (alertErr) {
+      // Never fail the main request due to alert sending
+      console.error("[ajuste-inventario] alert check failed:", alertErr)
+    }
+
     return NextResponse.json({ movimiento, stockActual: stockDespues })
   } catch (error) {
     console.error("[ajuste-inventario POST]", error)
+    if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
     const msg = error instanceof Error ? error.message : "Error al registrar ajuste"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

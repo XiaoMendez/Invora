@@ -33,7 +33,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { createClient } from "@/lib/supabase/client"
-import { LanguageThemeSwitcher } from "@/components/LanguageThemeSwitcher"
+import { SettingsDialog } from "@/components/SettingsDialog"
 import { useTranslation } from "@/hooks/useTranslation"
 import { usePreferences } from "@/contexts/PreferencesContext"
 
@@ -165,7 +165,7 @@ export function DashboardSidebar() {
         {/* User Section */}
         <div className="border-t border-sidebar-border p-3 space-y-2">
           <div className="flex items-center justify-center">
-            <LanguageThemeSwitcher />
+            <SettingsDialog inline />
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
