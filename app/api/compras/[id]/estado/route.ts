@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
-import { sendLowStockEmail } from "@/app/api/alertas/route"
+import { sendLowStockEmail } from "@/lib/alertas"
 
 export const dynamic = "force-dynamic"
 
