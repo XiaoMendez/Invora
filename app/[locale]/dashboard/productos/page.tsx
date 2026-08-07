@@ -22,6 +22,7 @@ import {
   Upload,
   FileText,
   ExternalLink,
+  FileSpreadsheet,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -60,6 +61,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
+import { ImportExcelDialog } from "@/components/productos/import-excel-dialog"
 
 interface Categoria {
   id: string
@@ -550,11 +552,12 @@ export default function ProductosPage() {
   >([])
   const [proveedorSearch, setProveedorSearch] = useState("")
   const [proveedoresOpen, setProveedoresOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   const { data: proveedoresData } = useSWR("/api/proveedores", fetcher)
 
   const apiUrl = `/api/productos?search=${encodeURIComponent(searchQuery)}&categoria=${selectedCategory}`
-  const { data, error, isLoading } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
+  const { data, error, isLoading, mutate: mutateProductos } = useSWR(apiUrl, fetcher, { refreshInterval: 30000 })
   const { data: catData, mutate: mutateCategorias } = useSWR("/api/categorias", fetcher)
 
   const productos: Producto[] = data?.productos || []
@@ -687,6 +690,15 @@ export default function ProductosPage() {
           <h1 className="text-2xl font-bold text-foreground">{t("products.title")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("products.subtitle")}</p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="border-border/30 gap-2"
+            onClick={() => setImportOpen(true)}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            {t("products.import.button")}
+          </Button>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
           <DialogTrigger asChild>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
@@ -815,7 +827,15 @@ export default function ProductosPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      <ImportExcelDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImportComplete={() => { mutateProductos(); mutateCategorias() }}
+        t={t}
+      />
 
       {/* Filters */}
       <Card className="glass-card border-border/30">
