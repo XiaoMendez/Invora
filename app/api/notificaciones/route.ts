@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server"
 import { Resend } from "resend"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId } from "@/lib/supabase/empresa"
 import {
   lowStockEmailHtml,
@@ -12,11 +11,9 @@ import {
 
 export const dynamic = "force-dynamic"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 /**
  * GET /api/notificaciones
- * Returns current low-stock and out-of-stock products for the empresa.
+ * Returns current low-stock and out-of-stock products.
  */
 export async function GET() {
   try {
@@ -24,12 +21,13 @@ export async function GET() {
     const empresaId = await getEmpresaId(supabase)
     const admin = createAdminClient()
 
-    // Fetch all active products then filter in JS (stock <= stock_minimo)
-    const { data: allProductos } = await admin
+    const { data: allProductos, error } = await admin
       .from("producto")
       .select("id, nombre, sku, stock, stock_minimo, activo")
       .eq("id_empresa", empresaId)
       .eq("activo", true)
+
+    if (error) throw error
 
     const alertas = (allProductos || [])
       .filter((p) => p.stock <= p.stock_minimo)
@@ -40,7 +38,10 @@ export async function GET() {
         stock: p.stock,
         stock_minimo: p.stock_minimo,
         tipo: p.stock === 0 ? "agotado" : "stock_bajo",
-        sugerido: Math.max(p.stock_minimo * 3 - p.stock, p.stock_minimo * 2),
+        sugerido: Math.max(
+          p.stock_minimo * 3 - p.stock,
+          p.stock_minimo * 2
+        ),
       }))
 
     return NextResponse.json({
@@ -51,17 +52,34 @@ export async function GET() {
     })
   } catch (error) {
     console.error("[notificaciones GET]", error)
-    return NextResponse.json({ error: "Error al obtener notificaciones" }, { status: 500 })
+
+    return NextResponse.json(
+      { error: "Error al obtener notificaciones" },
+      { status: 500 }
+    )
   }
 }
 
 /**
  * POST /api/notificaciones
- * Sends an email notification.
- * Body: { tipo: "low_stock" | "restock_suggestion" | "test" }
+ * Body:
+ * {
+ *   tipo: "low_stock" | "restock_suggestion" | "test"
+ * }
  */
 export async function POST(request: Request) {
   try {
+    if (!process.env.RESEND_API_KEY) {
+      console.error("RESEND_API_KEY no está configurada")
+
+      return NextResponse.json(
+        { error: "RESEND_API_KEY no está configurada" },
+        { status: 500 }
+      )
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
     const admin = createAdminClient()
@@ -69,26 +87,28 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { tipo = "low_stock" } = body
 
-    // Get empresa info for email target
-    const { data: empresa } = await admin
+    const { data: empresa, error: empresaError } = await admin
       .from("empresa")
       .select("nombre, email")
       .eq("id", empresaId)
       .single()
 
+    if (empresaError) throw empresaError
+
     if (!empresa?.email) {
       return NextResponse.json(
-        { error: "La empresa no tiene correo configurado" },
+        { error: "La empresa no tiene un correo configurado." },
         { status: 400 }
       )
     }
 
-    // Get low stock products
-    const { data: allProductos } = await admin
+    const { data: allProductos, error: productosError } = await admin
       .from("producto")
       .select("id, nombre, sku, stock, stock_minimo, activo")
       .eq("id_empresa", empresaId)
       .eq("activo", true)
+
+    if (productosError) throw productosError
 
     const lowStockProducts: LowStockProduct[] = (allProductos || [])
       .filter((p) => p.stock <= p.stock_minimo)
@@ -102,54 +122,89 @@ export async function POST(request: Request) {
     if (tipo !== "test" && lowStockProducts.length === 0) {
       return NextResponse.json({
         sent: false,
-        message: "No hay productos con stock bajo. No se envió correo.",
+        message: "No hay productos con stock bajo.",
       })
     }
 
-    let subject: string
-    let html: string
-    let text: string
+    let subject = ""
+    let html = ""
+    let text = ""
 
-    if (tipo === "restock_suggestion") {
-      subject = `INVORA — Sugerencias de Reposición: ${empresa.nombre}`
-      html = restockSuggestionHtml(empresa.nombre, lowStockProducts)
-      text = `Sugerencias de reposición para ${empresa.nombre}: ${lowStockProducts.length} productos.`
-    } else if (tipo === "test") {
-      subject = `INVORA — Prueba de Notificaciones: ${empresa.nombre}`
-      html = lowStockEmailHtml(empresa.nombre, [
-        { nombre: "Producto de Prueba", sku: "TEST-001", stock: 2, stock_minimo: 10 },
-      ])
-      text = "Correo de prueba desde INVORA."
-    } else {
-      subject = `INVORA — Alerta de Stock: ${lowStockProducts.length} producto(s) requieren atención`
-      html = lowStockEmailHtml(empresa.nombre, lowStockProducts)
-      text = lowStockEmailText(empresa.nombre, lowStockProducts)
+    switch (tipo) {
+      case "restock_suggestion":
+        subject = `INVORA — Sugerencias de Reposición: ${empresa.nombre}`
+        html = restockSuggestionHtml(
+          empresa.nombre,
+          lowStockProducts
+        )
+        text = `Se encontraron ${lowStockProducts.length} productos para reposición.`
+        break
+
+      case "test":
+        subject = `INVORA — Correo de prueba`
+
+        html = lowStockEmailHtml(empresa.nombre, [
+          {
+            nombre: "Producto de prueba",
+            sku: "TEST-001",
+            stock: 2,
+            stock_minimo: 10,
+          },
+        ])
+
+        text = "Correo de prueba enviado correctamente."
+        break
+
+      default:
+        subject = `INVORA — Alerta de Stock (${lowStockProducts.length})`
+        html = lowStockEmailHtml(
+          empresa.nombre,
+          lowStockProducts
+        )
+        text = lowStockEmailText(
+          empresa.nombre,
+          lowStockProducts
+        )
     }
 
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "INVORA Alertas <alertas@invora.io>",
-      to: [empresa.email],
+    const { data, error } = await resend.emails.send({
+      // CAMBIA ESTE CORREO POR EL DOMINIO QUE TIENES VERIFICADO
+      from: "INVORA Alertas <alertas@invoracr.com>",
+      to: empresa.email,
       subject,
       html,
       text,
     })
 
-    if (emailError) {
-      console.error("[notificaciones POST] Resend error:", emailError)
+    if (error) {
+      console.error("[Resend]", error)
+
       return NextResponse.json(
-        { error: "Error al enviar el correo", detail: emailError },
+        {
+          error: "No se pudo enviar el correo.",
+          detail: error,
+        },
         { status: 500 }
       )
     }
 
     return NextResponse.json({
       sent: true,
-      emailId: emailData?.id,
+      emailId: data?.id,
       to: empresa.email,
       productos: lowStockProducts.length,
     })
   } catch (error) {
     console.error("[notificaciones POST]", error)
-    return NextResponse.json({ error: "Error al enviar notificación" }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Error interno del servidor",
+      },
+      { status: 500 }
+    )
   }
 }
