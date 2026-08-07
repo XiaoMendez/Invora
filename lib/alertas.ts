@@ -27,54 +27,80 @@ export async function sendLowStockEmail(
   const criticos = bajosStock.filter((p) => p.stock === 0).length
   const bajos = bajosStock.filter((p) => p.stock > 0 && p.stock <= p.stock_minimo).length
 
+  // Cada producto es una "fila" hecha con una tabla de 100% de ancho (compatible
+  // con la mayoría de clientes de correo) en vez de columnas fijas en px, así el
+  // contenido se acomoda igual de bien en celular que en computadora, y nada
+  // se corta lateralmente.
   const rows = bajosStock
-    .map(
-      (p) => `
-    <tr style="border-bottom:1px solid #e5e7eb;">
-      <td style="padding:10px 8px;font-weight:500;color:#111827;">${p.nombre}</td>
-      <td style="padding:10px 8px;color:#6b7280;">${p.sku || "—"}</td>
-      <td style="padding:10px 8px;color:#6b7280;">${(p.categoria as { nombre: string } | null)?.nombre || "—"}</td>
-      <td style="padding:10px 8px;text-align:center;font-weight:700;color:${p.stock === 0 ? "#dc2626" : "#d97706"};">${p.stock}</td>
-      <td style="padding:10px 8px;text-align:center;color:#6b7280;">${p.stock_minimo}</td>
-      <td style="padding:10px 8px;text-align:center;font-weight:700;color:#dc2626;">-${p.stock_minimo - p.stock}</td>
+    .map((p) => {
+      const faltante = p.stock_minimo - p.stock
+      const critico = p.stock === 0
+      const categoria = (p.categoria as { nombre: string } | null)?.nombre || "—"
+      return `
+    <tr>
+      <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="vertical-align:top;">
+              <p style="margin:0;font-size:14px;font-weight:600;color:#111827;">${p.nombre}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">
+                SKU: ${p.sku || "—"} &nbsp;·&nbsp; ${categoria}
+              </p>
+            </td>
+            <td style="vertical-align:top;text-align:right;white-space:nowrap;padding-left:12px;">
+              <span style="display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;background:${critico ? "#fee2e2" : "#fef3c7"};color:${critico ? "#dc2626" : "#d97706"};">
+                ${p.stock} / ${p.stock_minimo} min.
+              </span>
+              <p style="margin:4px 0 0;font-size:11px;color:#dc2626;font-weight:600;">Faltan ${faltante}</p>
+            </td>
+          </tr>
+        </table>
+      </td>
     </tr>`
-    )
+    })
     .join("")
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:32px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <div style="max-width:660px;margin:0 auto;">
-    <div style="background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);border-radius:12px 12px 0 0;padding:28px 32px;">
-      <h1 style="margin:0;color:white;font-size:20px;font-weight:700;">Alerta de Stock — Invora</h1>
-      <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">${empresaNombre} · ${new Date().toLocaleDateString("es-CR", { dateStyle: "long" })}</p>
-    </div>
-    <div style="background:white;padding:24px 32px;">
-      <p style="margin:0 0 16px;color:#374151;font-size:15px;">
-        Se detectaron <strong>${bajosStock.length} producto${bajosStock.length !== 1 ? "s" : ""}</strong> que requieren atención:
-        ${criticos > 0 ? `<span style="color:#dc2626;font-weight:600;"> ${criticos} agotado${criticos !== 1 ? "s" : ""}</span>` : ""}
-        ${criticos > 0 && bajos > 0 ? " y" : ""}
-        ${bajos > 0 ? `<span style="color:#d97706;font-weight:600;"> ${bajos} con stock bajo</span>` : ""}
-      </p>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
-            <th style="padding:10px 8px;text-align:left;color:#374151;font-weight:600;">Producto</th>
-            <th style="padding:10px 8px;text-align:left;color:#374151;font-weight:600;">SKU</th>
-            <th style="padding:10px 8px;text-align:left;color:#374151;font-weight:600;">Categoría</th>
-            <th style="padding:10px 8px;text-align:center;color:#374151;font-weight:600;">Stock</th>
-            <th style="padding:10px 8px;text-align:center;color:#374151,font-weight:600;">Mínimo</th>
-            <th style="padding:10px 8px;text-align:center;color:#374151,font-weight:600;">Faltante</th>
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+    <tr>
+      <td style="padding:16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);padding:24px 20px;">
+              <h1 style="margin:0;color:#ffffff;font-size:18px;font-weight:700;">Alerta de Stock — Invora</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">${empresaNombre} · ${new Date().toLocaleDateString("es-CR", { dateStyle: "long" })}</p>
+            </td>
           </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div style="background:#f9fafb;border-radius:0 0 12px 12px;padding:16px 32px;border-top:1px solid #e5e7eb;">
-      <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
-        Alerta automática generada por <strong>Invora</strong> · Sistema de Gestión de Inventario
-      </p>
-    </div>
-  </div>
+          <tr>
+            <td style="padding:20px 20px 8px;">
+              <p style="margin:0;color:#374151;font-size:14px;line-height:1.5;">
+                Se detectaron <strong>${bajosStock.length} producto${bajosStock.length !== 1 ? "s" : ""}</strong> que requieren atención:
+                ${criticos > 0 ? `<span style="color:#dc2626;font-weight:600;"> ${criticos} agotado${criticos !== 1 ? "s" : ""}</span>` : ""}
+                ${criticos > 0 && bajos > 0 ? " y" : ""}
+                ${bajos > 0 ? `<span style="color:#d97706;font-weight:600;"> ${bajos} con stock bajo</span>` : ""}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 4px 4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                ${rows}
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f9fafb;padding:16px 20px;border-top:1px solid #e5e7eb;">
+              <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
+                Alerta automática generada por <strong>Invora</strong> · Sistema de Gestión de Inventario
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body></html>`
 
   try {

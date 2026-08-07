@@ -9,7 +9,6 @@ node_modules/
 .DS_Store
 
 # Environment variables (NEVER commit these)
-variables.txt
 .env
 .env.local
 .env.development.local

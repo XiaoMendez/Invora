@@ -18,7 +18,6 @@ import {
   Plus,
   Truck,
   Users,
-  ShoppingCart,
   TrendingUp,
   FileText,
 } from "lucide-react"
@@ -52,9 +51,8 @@ export function DashboardSidebar() {
   const sidebarLinks = [
     { labelKey: "sidebar.dashboard", href: `/${locale}/dashboard`, icon: LayoutDashboard },
     { labelKey: "sidebar.products", href: `/${locale}/dashboard/productos`, icon: Package },
-    { labelKey: "sidebar.purchases", href: `/${locale}/dashboard/compras`, icon: ShoppingCart },
     { labelKey: "sidebar.purchaseOrders", href: `/${locale}/dashboard/ordenes-compra`, icon: FileText },
-    { labelKey: "sidebar.sales", href: `/${locale}/dashboard/ventas`, icon: TrendingUp },
+    { labelKey: "sidebar.salesOrders", href: `/${locale}/dashboard/ordenes-venta`, icon: TrendingUp },
     { labelKey: "sidebar.suppliers", href: `/${locale}/dashboard/proveedores`, icon: Truck },
     { labelKey: "sidebar.customers", href: `/${locale}/dashboard/clientes`, icon: Users },
     { labelKey: "sidebar.movements", href: `/${locale}/dashboard/movimientos`, icon: ArrowLeftRight },

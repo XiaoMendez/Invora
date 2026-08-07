@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
+import { describeError } from "@/lib/api-error"
 
 export const dynamic = "force-dynamic"
 
@@ -25,7 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     console.error("[compra detalle GET]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al obtener detalles" }, { status: 500 })
+    return NextResponse.json({ error: "Error al obtener detalles", detalle: describeError(error) }, { status: 500 })
   }
 }
 
@@ -110,7 +111,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     console.error("[compra detalle POST]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al agregar producto" }, { status: 500 })
+    return NextResponse.json({ error: "Error al agregar producto", detalle: describeError(error) }, { status: 500 })
   }
 }
 
@@ -166,6 +167,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     console.error("[compra detalle DELETE]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al eliminar producto" }, { status: 500 })
+    return NextResponse.json({ error: "Error al eliminar producto", detalle: describeError(error) }, { status: 500 })
   }
 }
