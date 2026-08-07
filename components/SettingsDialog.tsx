@@ -5,6 +5,7 @@ import { Settings, X, Sun, Moon, Monitor, Globe } from 'lucide-react'
 import { usePreferences } from '@/contexts/PreferencesContext'
 import { useTheme } from 'next-themes'
 import { useToast } from '@/contexts/ToastContext'
+import { cn } from '@/lib/utils'
 
 const themes = [
   { value: 'light', label: 'Claro', icon: Sun, description: 'Tema claro para mejor legibilidad' },
@@ -18,7 +19,12 @@ const languages = [
   { code: 'pt', name: 'Português', flag: 'BR', description: 'Português - Brasil' },
 ]
 
-export function SettingsDialog() {
+interface SettingsDialogProps {
+  /** When true, renders an inline button (for sidebar use) instead of fixed bottom-right */
+  inline?: boolean
+}
+
+export function SettingsDialog({ inline = false }: SettingsDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { preferences, setLocale, setTheme } = usePreferences()
   const { setTheme: setNTheme } = useTheme()
@@ -41,10 +47,15 @@ export function SettingsDialog() {
 
   return (
     <>
-      {/* Floating Settings Button */}
+      {/* Settings Button — fixed floating for homepage, inline for sidebar */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl hover:shadow-2xl transition-all hover:scale-110 active:scale-95"
+        className={cn(
+          "p-3 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-110 active:scale-95",
+          inline
+            ? "relative shadow-md"
+            : "fixed bottom-6 right-6 z-40 shadow-xl hover:shadow-2xl"
+        )}
         aria-label="Configuración"
       >
         <Settings className="h-6 w-6" />

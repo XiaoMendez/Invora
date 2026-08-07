@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
-import { getEmpresaId } from "@/lib/supabase/empresa"
+import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
 
@@ -23,6 +23,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ detalles: detalles || [] })
   } catch (error) {
     console.error("[compra detalle GET]", error)
+    if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
     return NextResponse.json({ error: "Error al obtener detalles" }, { status: 500 })
   }
 }
@@ -106,6 +108,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ detalle })
   } catch (error) {
     console.error("[compra detalle POST]", error)
+    if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
     return NextResponse.json({ error: "Error al agregar producto" }, { status: 500 })
   }
 }
@@ -160,6 +164,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[compra detalle DELETE]", error)
+    if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
     return NextResponse.json({ error: "Error al eliminar producto" }, { status: 500 })
   }
 }

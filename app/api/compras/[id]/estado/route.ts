@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
-import { getEmpresaId } from "@/lib/supabase/empresa"
+import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
+import { sendLowStockEmail } from "@/app/api/alertas/route"
 
 export const dynamic = "force-dynamic"
 
@@ -53,9 +54,44 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     if (updateError) throw updateError
 
+    // When a compra is received, update stock for each product and check low-stock alerts
+    if (estado === "recibida" && updated?.compra_detalle?.length) {
+      try {
+        for (const detalle of updated.compra_detalle as Array<{ id_producto: string; cantidad: number; producto: { stock: number } | null }>) {
+          await admin
+            .from("producto")
+            .update({ stock: (detalle.producto?.stock || 0) + detalle.cantidad })
+            .eq("id", detalle.id_producto)
+            .eq("id_empresa", empresaId)
+        }
+
+        // Check if any product is still low after restocking (edge case)
+        const { data: empresa } = await admin.from("empresa").select("nombre, email").eq("id", empresaId).single()
+        if (empresa?.email) {
+          const { data: bajosStock } = await admin
+            .from("producto")
+            .select("nombre, sku, stock, stock_minimo, categoria(nombre)")
+            .eq("id_empresa", empresaId)
+            .eq("activo", true)
+            .gt("stock_minimo", 0)
+
+          const aun_bajos = (bajosStock || []).filter((p) => p.stock <= p.stock_minimo)
+          if (aun_bajos.length > 0) {
+            sendLowStockEmail(empresa.nombre || "Tu empresa", empresa.email, aun_bajos).catch(
+              (err) => console.error("[compras estado] auto-alert error:", err)
+            )
+          }
+        }
+      } catch (stockErr) {
+        console.error("[compras estado] stock update error:", stockErr)
+      }
+    }
+
     return NextResponse.json({ compra: updated })
   } catch (error) {
     console.error("[compras PUT estado]", error)
+    if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
     return NextResponse.json({ error: "Error al actualizar estado" }, { status: 500 })
   }
 }
