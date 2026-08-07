@@ -173,7 +173,7 @@ export async function POST(request: Request) {
       subject,
       html,
       text,
-    }) l
+    })
 
     if (error) {
       console.error("[Resend]", error)
