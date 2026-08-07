@@ -511,7 +511,7 @@ function ProductoArchivos({ idProducto }: { idProducto: string }) {
               {archivo.tamano && (
                 <span className="text-muted-foreground shrink-0">{formatBytes(archivo.tamano)}</span>
               )}
-              <a href={archivo.url} target="_blank" rel="noopener noreferrer"
+              <a href={`/api/archivos?url=${encodeURIComponent(archivo.url)}`} target="_blank" rel="noopener noreferrer"
                 className="text-primary hover:text-primary/80 shrink-0">
                 <ExternalLink className="h-3 w-3" />
               </a>
