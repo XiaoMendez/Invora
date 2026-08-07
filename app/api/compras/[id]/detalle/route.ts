@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId } from "@/lib/supabase/empresa"
 
 export const dynamic = "force-dynamic"
@@ -9,8 +9,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
-    const { data: detalles, error } = await supabase
+    const { data: detalles, error } = await admin
       .from("compra_detalle")
       .select(
         "id, id_producto, cantidad, precio_unitario, subtotal, producto(id, nombre, sku)"
@@ -31,6 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
 
     const body = await request.json()
     const { id_producto, cantidad, precio_unitario } = body
@@ -42,8 +44,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       )
     }
 
-    // Validar que la compra existe
-    const { data: compra, error: compraError } = await supabase
+    // Validar que la compra existe y pertenece a la empresa
+    const { data: compra, error: compraError } = await admin
       .from("compra")
       .select("id, estado")
       .eq("id", compraId)
@@ -55,15 +57,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // No permitir agregar detalles si la compra ya fue recibida
-    if (compra.estado === "recibida") {
+    if ((compra.estado as string) === "recibida") {
       return NextResponse.json(
         { error: "No se pueden agregar productos a una compra recibida" },
         { status: 400 }
       )
     }
 
-    // Validar que el producto existe
-    const { data: producto } = await supabase
+    // Validar que el producto existe y pertenece a la empresa
+    const { data: producto } = await admin
       .from("producto")
       .select("id")
       .eq("id", id_producto)
@@ -75,33 +77,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // subtotal is a generated column (cantidad * precio_unitario) — do not insert it
-    const { data: detalle, error: detalleError } = await supabase
+    const { data: detalle, error: detalleError } = await admin
       .from("compra_detalle")
       .insert({
         id_compra: compraId,
         id_producto,
-        cantidad,
-        precio_unitario,
+        cantidad: parseInt(cantidad),
+        precio_unitario: parseFloat(precio_unitario),
       })
       .select("id, id_producto, cantidad, precio_unitario, subtotal")
       .single()
 
     if (detalleError) throw detalleError
 
-    // Actualizar totales de la compra
-    const { data: detalles } = await supabase
+    // Recalcular y actualizar totales de la compra
+    const { data: todosDetalles } = await admin
       .from("compra_detalle")
       .select("subtotal")
       .eq("id_compra", compraId)
 
-    const nuevoSubtotal = (detalles || []).reduce((sum, d) => sum + (d.subtotal || 0), 0)
+    const nuevoSubtotal = (todosDetalles || []).reduce((sum, d) => sum + (Number(d.subtotal) || 0), 0)
 
-    await supabase
+    await admin
       .from("compra")
-      .update({
-        subtotal: nuevoSubtotal,
-        monto_total: nuevoSubtotal, // Sin impuesto por ahora
-      })
+      .update({ subtotal: nuevoSubtotal, monto_total: nuevoSubtotal })
       .eq("id", compraId)
 
     return NextResponse.json({ detalle })
@@ -116,11 +115,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id: compraId } = await params
     const supabase = await createClient()
     const empresaId = await getEmpresaId(supabase)
+    const admin = createAdminClient()
     const { searchParams } = new URL(request.url)
     const detalleId = searchParams.get("detalleId") || ""
 
-    // Validar que la compra existe y pertenece a la empresa
-    const { data: compra, error: compraError } = await supabase
+    const { data: compra, error: compraError } = await admin
       .from("compra")
       .select("id, estado")
       .eq("id", compraId)
@@ -131,16 +130,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "Compra no encontrada" }, { status: 404 })
     }
 
-    // No permitir eliminar detalles si la compra ya fue recibida
-    if (compra.estado === "recibida") {
+    if ((compra.estado as string) === "recibida") {
       return NextResponse.json(
         { error: "No se pueden eliminar productos de una compra recibida" },
         { status: 400 }
       )
     }
 
-    // Eliminar detalle
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await admin
       .from("compra_detalle")
       .delete()
       .eq("id", detalleId)
@@ -148,20 +145,16 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     if (deleteError) throw deleteError
 
-    // Actualizar totales de la compra
-    const { data: detalles } = await supabase
+    const { data: todosDetalles } = await admin
       .from("compra_detalle")
       .select("subtotal")
       .eq("id_compra", compraId)
 
-    const nuevoSubtotal = (detalles || []).reduce((sum, d) => sum + (d.subtotal || 0), 0)
+    const nuevoSubtotal = (todosDetalles || []).reduce((sum, d) => sum + (Number(d.subtotal) || 0), 0)
 
-    await supabase
+    await admin
       .from("compra")
-      .update({
-        subtotal: nuevoSubtotal,
-        monto_total: nuevoSubtotal,
-      })
+      .update({ subtotal: nuevoSubtotal, monto_total: nuevoSubtotal })
       .eq("id", compraId)
 
     return NextResponse.json({ success: true })

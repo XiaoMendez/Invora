@@ -336,7 +336,7 @@ export default function MovimientosPage() {
     setSaving(true)
 
     try {
-      const res = await fetch("/api/movimientos", {
+      const res = await fetch("/api/ajuste-inventario", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
