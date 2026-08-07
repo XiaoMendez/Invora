@@ -168,8 +168,7 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await resend.emails.send({
-      // CAMBIA ESTE CORREO POR EL DOMINIO QUE TIENES VERIFICADO
-      from: "INVORA Alertas <alertas@invoracr.com>",
+      from: "INVORA Alertas <alertas@invorastock.com>",
       to: empresa.email,
       subject,
       html,
