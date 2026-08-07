@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import useSWR from "swr"
-import { BarChart3, TrendingUp, Package, DollarSign, Loader2, AlertTriangle, Download, FileSpreadsheet, X } from "lucide-react"
+import { BarChart3, TrendingUp, Package, DollarSign, Loader2, AlertTriangle, Download, FileSpreadsheet, X, Search, ChevronDown, Check } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -35,6 +35,7 @@ import {
   Bar,
 } from "recharts"
 import { useTranslation } from "@/hooks/useTranslation"
+import { cn } from "@/lib/utils"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -47,13 +48,141 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
+// Combobox con buscador integrado: el input de busqueda solo aparece dentro
+// de la lista desplegable (igual que el selector de categorias de productos).
+function EntitySearchFilter({
+  items,
+  value,
+  onChange,
+  placeholder,
+  searchPlaceholder,
+  noResultsLabel,
+}: {
+  items: { id: string; nombre: string }[]
+  value: string | null
+  onChange: (val: string | null) => void
+  placeholder: string
+  searchPlaceholder: string
+  noResultsLabel: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const ref = useRef<HTMLDivElement>(null)
+
+  const selected = items.find((i) => i.id === value)
+  const filtrados = items.filter((i) =>
+    i.nombre.toLowerCase().includes(search.toLowerCase())
+  )
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false)
+        setSearch("")
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 text-sm bg-secondary/50 border border-border/30 rounded hover:bg-secondary/70 transition-colors outline-none",
+          open && "ring-1 ring-ring/50 border-ring/50"
+        )}
+      >
+        {selected ? (
+          <>
+            <span>{selected.nombre}</span>
+            <X
+              className="h-3.5 w-3.5 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onChange(null)
+                setOpen(false)
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <span className="text-muted-foreground">{placeholder}</span>
+            <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
+          </>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-56 rounded-md border border-border/40 bg-[oklch(0.13_0.015_280)] shadow-xl overflow-hidden">
+          <div className="p-2 border-b border-border/20">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                autoFocus
+                type="text"
+                className="w-full pl-7 pr-2 py-1.5 text-sm bg-[oklch(0.18_0.02_280)] border border-border/30 rounded text-foreground placeholder:text-muted-foreground outline-none focus:border-ring/50"
+                placeholder={searchPlaceholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") { setOpen(false); setSearch("") }
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="max-h-48 overflow-y-auto py-1">
+            <button
+              type="button"
+              onClick={() => { onChange(null); setOpen(false); setSearch("") }}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent/20 transition-colors",
+                !value && "bg-primary text-primary-foreground hover:bg-primary/90"
+              )}
+            >
+              {!value && <Check className="h-3.5 w-3.5 shrink-0" />}
+              <span className={!value ? "" : "pl-5"}>{placeholder}</span>
+            </button>
+
+            {filtrados.map((item) => {
+              const isSelected = item.id === value
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { onChange(item.id); setOpen(false); setSearch("") }}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent/20 transition-colors",
+                    isSelected && "bg-primary text-primary-foreground hover:bg-primary/90"
+                  )}
+                >
+                  {isSelected
+                    ? <Check className="h-3.5 w-3.5 shrink-0" />
+                    : <span className="w-3.5 shrink-0" />
+                  }
+                  {item.nombre}
+                </button>
+              )
+            })}
+
+            {filtrados.length === 0 && (
+              <p className="px-3 py-2 text-xs text-muted-foreground">{noResultsLabel}</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ReportesPage() {
   const { t } = useTranslation()
   const [periodo, setPeriodo] = useState("7m")
   const [clienteId, setClienteId] = useState<string | null>(null)
   const [proveedorId, setProveedorId] = useState<string | null>(null)
-  const [clienteSearch, setClienteSearch] = useState("")
-  const [proveedorSearch, setProveedorSearch] = useState("")
 
   const { data: clientesData } = useSWR("/api/clientes", fetcher)
   const { data: proveedoresData } = useSWR("/api/proveedores", fetcher)
@@ -69,16 +198,6 @@ export default function ReportesPage() {
 
   const clientes = clientesData?.clientes || []
   const proveedores = proveedoresData?.proveedores || []
-
-  const clienteFiltrado = clientes.find((c: any) => c.id === clienteId)
-  const proveedorFiltrado = proveedores.find((p: any) => p.id === proveedorId)
-
-  const clientesFiltrados = clientes.filter(
-    (c: any) => c.nombre.toLowerCase().includes(clienteSearch.toLowerCase()) && c.id !== clienteId
-  )
-  const proveedoresFiltrados = proveedores.filter(
-    (p: any) => p.nombre.toLowerCase().includes(proveedorSearch.toLowerCase()) && p.id !== proveedorId
-  )
 
   const kpis = data?.kpis || { valorInventario: 0, skusActivos: 0, rotacion: "0.0x / mes" }
   const monthlyTrend = data?.monthlyTrend || []
@@ -160,78 +279,24 @@ export default function ReportesPage() {
           </Select>
 
           {/* Cliente Filter */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setClienteSearch("")}
-              className="px-3 py-2 text-sm bg-secondary/50 border border-border/30 rounded hover:bg-secondary/70 flex items-center gap-2"
-            >
-              {clienteFiltrado ? (
-                <>
-                  <span>{clienteFiltrado.nombre}</span>
-                  <X className="h-3.5 w-3.5 cursor-pointer" onClick={(e) => { e.stopPropagation(); setClienteId(null) }} />
-                </>
-              ) : (
-                t("reports.allCustomers")
-              )}
-            </button>
-            {clienteFiltrado ? null : (
-              <input
-                type="text"
-                placeholder={t("reports.searchCustomer")}
-                value={clienteSearch}
-                onChange={(e) => setClienteSearch(e.target.value)}
-                className="absolute z-50 top-10 left-0 w-48 px-3 py-2 text-sm bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg"
-              />
-            )}
-            {!clienteFiltrado && clienteSearch && clientesFiltrados.length > 0 && (
-              <div className="absolute z-50 top-20 left-0 w-48 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg max-h-40 overflow-y-auto">
-                {clientesFiltrados.map((c: any) => (
-                  <button key={c.id} type="button" onClick={() => { setClienteId(c.id); setClienteSearch("") }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors">
-                    {c.nombre}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <EntitySearchFilter
+            items={clientes}
+            value={clienteId}
+            onChange={setClienteId}
+            placeholder={t("reports.allCustomers")}
+            searchPlaceholder={t("reports.searchCustomer")}
+            noResultsLabel={t("common.noResults")}
+          />
 
           {/* Proveedor Filter */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setProveedorSearch("")}
-              className="px-3 py-2 text-sm bg-secondary/50 border border-border/30 rounded hover:bg-secondary/70 flex items-center gap-2"
-            >
-              {proveedorFiltrado ? (
-                <>
-                  <span>{proveedorFiltrado.nombre}</span>
-                  <X className="h-3.5 w-3.5 cursor-pointer" onClick={(e) => { e.stopPropagation(); setProveedorId(null) }} />
-                </>
-              ) : (
-                t("reports.allSuppliers")
-              )}
-            </button>
-            {proveedorFiltrado ? null : (
-              <input
-                type="text"
-                placeholder={t("reports.searchSupplier")}
-                value={proveedorSearch}
-                onChange={(e) => setProveedorSearch(e.target.value)}
-                className="absolute z-50 top-10 left-0 w-48 px-3 py-2 text-sm bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg"
-              />
-            )}
-            {!proveedorFiltrado && proveedorSearch && proveedoresFiltrados.length > 0 && (
-              <div className="absolute z-50 top-20 left-0 w-48 bg-[oklch(0.13_0.015_280)] border border-border/30 rounded shadow-lg max-h-40 overflow-y-auto">
-                {proveedoresFiltrados.map((p: any) => (
-                  <button key={p.id} type="button" onClick={() => { setProveedorId(p.id); setProveedorSearch("") }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-accent/20 transition-colors">
-                    {p.nombre}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <EntitySearchFilter
+            items={proveedores}
+            value={proveedorId}
+            onChange={setProveedorId}
+            placeholder={t("reports.allSuppliers")}
+            searchPlaceholder={t("reports.searchSupplier")}
+            noResultsLabel={t("common.noResults")}
+          />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
