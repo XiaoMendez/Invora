@@ -331,10 +331,10 @@ export function ImportExcelDialog({
             </div>
 
             {/* Zona central: única parte que se desplaza (arrastra) */}
-            <div className="flex-1 min-h-0 rounded-lg border border-border/30 overflow-hidden flex flex-col bg-background/40">
+            <div className="flex-1 min-h-0 rounded-lg border border-border/30 overflow-hidden flex flex-col bg-card">
               <div className="overflow-auto flex-1 min-h-0">
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-secondary/80 backdrop-blur-sm">
+                  <TableHeader className="sticky top-0 z-10 bg-secondary">
                     <TableRow className="hover:bg-transparent border-border/40">
                       {preview.headers.map((header, colIdx) => {
                         const campoAsignado = (Object.entries(mapping) as [CampoId, number | null][])
@@ -395,7 +395,7 @@ export function ImportExcelDialog({
                     {preview.rows.slice(0, 30).map((row, rowIdx) => (
                       <TableRow
                         key={rowIdx}
-                        className={cn("border-border/15", rowIdx % 2 === 1 && "bg-secondary/15")}
+                        className={cn("border-border/15", rowIdx % 2 === 1 && "bg-secondary/25")}
                       >
                         {preview.headers.map((_, colIdx) => {
                           const asignado = (Object.keys(mapping) as CampoId[]).some((k) => mapping[k] === colIdx)
@@ -419,7 +419,7 @@ export function ImportExcelDialog({
                 </Table>
               </div>
               {preview.rows.length > 30 && (
-                <div className="shrink-0 border-t border-border/30 px-3 py-2 text-xs font-medium text-foreground/70 text-center bg-secondary/40">
+                <div className="shrink-0 border-t border-border/30 px-3 py-2 text-xs font-semibold text-primary text-center bg-primary/5">
                   {t("products.import.previewTitle")} · +{preview.rows.length - 30}
                 </div>
               )}

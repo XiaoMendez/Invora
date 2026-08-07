@@ -3,7 +3,7 @@
 import useSWR from "swr"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { DashboardSidebar, DashboardHeader } from "@/components/dashboard/sidebar"
+import { DashboardSidebar, DashboardHeader, DashboardSidebarProvider } from "@/components/dashboard/sidebar"
 import { StarsBackground } from "@/components/space-scene"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -54,13 +54,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
-      <StarsBackground />
-      <DashboardSidebar />
-      <div className="md:pl-64 transition-all duration-300">
-        <DashboardHeader empresa={session.empresa} />
-        <main className="p-3 md:p-6 min-h-screen w-full overflow-x-hidden">{children}</main>
+    <DashboardSidebarProvider>
+      <div className="relative min-h-screen bg-background">
+        <StarsBackground />
+        <DashboardSidebar />
+        <div className="md:pl-64 transition-all duration-300 min-w-0">
+          <DashboardHeader empresa={session.empresa} />
+          <main className="p-3 md:p-6 min-h-screen w-full max-w-full overflow-x-hidden">{children}</main>
+        </div>
       </div>
-    </div>
+    </DashboardSidebarProvider>
   )
 }

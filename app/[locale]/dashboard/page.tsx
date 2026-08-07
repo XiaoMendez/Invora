@@ -122,7 +122,7 @@ export default function DashboardPage() {
             <CardDescription>{t("dashboard.entriesVsExits")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-56 sm:h-64">
               {monthlyTrend.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={monthlyTrend}>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
             <CardDescription>{t("dashboard.categoryDistribution")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
+            <div className="h-56 sm:h-64">
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={categoryData} layout="vertical">
@@ -189,35 +189,37 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {recentMovements.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/30 hover:bg-transparent">
-                    <TableHead className="text-xs">{t("dashboard.product")}</TableHead>
-                    <TableHead className="text-xs">{t("dashboard.type")}</TableHead>
-                    <TableHead className="text-xs text-right">{t("common.quantity")}</TableHead>
-                    <TableHead className="text-xs">{t("dashboard.date")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentMovements.map((mov: { id: string; producto: string; tipo: string; cantidad: number; creado_en: string }) => {
-                    const movType = formatMovementType(mov.tipo, t)
-                    return (
-                      <TableRow key={mov.id} className="border-border/20">
-                        <TableCell className="text-xs text-foreground">{mov.producto}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={`text-[10px] ${movType.variant === "entrada" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
-                            {movType.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-xs text-right text-foreground">{mov.cantidad}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
-                          {new Date(mov.creado_en).toLocaleDateString("es-CR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto -mx-2 px-2">
+                <Table className="min-w-[480px]">
+                  <TableHeader>
+                    <TableRow className="border-border/30 hover:bg-transparent">
+                      <TableHead className="text-xs">{t("dashboard.product")}</TableHead>
+                      <TableHead className="text-xs">{t("dashboard.type")}</TableHead>
+                      <TableHead className="text-xs text-right">{t("common.quantity")}</TableHead>
+                      <TableHead className="text-xs">{t("dashboard.date")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {recentMovements.map((mov: { id: string; producto: string; tipo: string; cantidad: number; creado_en: string }) => {
+                      const movType = formatMovementType(mov.tipo, t)
+                      return (
+                        <TableRow key={mov.id} className="border-border/20">
+                          <TableCell className="text-xs text-foreground">{mov.producto}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className={`text-[10px] ${movType.variant === "entrada" ? "bg-green-500/10 text-green-400 border-green-500/20" : "bg-red-500/10 text-red-400 border-red-500/20"}`}>
+                              {movType.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-right text-foreground">{mov.cantidad}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                            {new Date(mov.creado_en).toLocaleDateString("es-CR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             ) : (
               <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
                 {t("dashboard.noMovements")}
