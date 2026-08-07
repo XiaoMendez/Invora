@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
 import { getLowStockProductos, sendLowStockEmail } from "@/lib/alertas"
+import { describeError } from "@/lib/api-error"
 
 export const dynamic = "force-dynamic"
 
@@ -57,7 +58,7 @@ export async function GET() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError)
       return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al cargar alertas" }, { status: 500 })
+    return NextResponse.json({ error: "Error al cargar alertas", detalle: describeError(error) }, { status: 500 })
   }
 }
 
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
     const result = await sendLowStockEmail(empresa?.nombre || "Tu empresa", emailDestino, bajosStock)
 
     if (result.error) {
-      return NextResponse.json({ error: "Error al enviar email. Verifica RESEND_API_KEY." }, { status: 500 })
+      return NextResponse.json({ error: "Error al enviar email. Verifica RESEND_API_KEY.", detalle: describeError(result.error) }, { status: 500 })
     }
 
     return NextResponse.json({

@@ -138,7 +138,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
 
       // Agregar detalles
       for (const detalle of detalles) {
-        await fetch(`/api/ventas/${nuevaVenta.id}/detalle`, {
+        const detalleRes = await fetch(`/api/ventas/${nuevaVenta.id}/detalle`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -148,6 +148,13 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
             descuento: detalle.descuento,
           }),
         })
+
+        if (!detalleRes.ok) {
+          const body = await detalleRes.json().catch(() => null)
+          console.error("[VentaForm] fallo al agregar detalle:", body)
+          const detailMsg = body?.detalle?.message ? ` (${body.detalle.message})` : ""
+          throw new Error((body?.error || "No se pudo agregar un producto a la venta") + detailMsg)
+        }
       }
 
       onSuccess?.()
@@ -156,7 +163,7 @@ export function VentaForm({ open, onOpenChange, venta, onSuccess }: VentaFormPro
       setSelectedCliente("__none__")
     } catch (error) {
       console.error("Error:", error)
-      alert("Error al guardar la venta")
+      alert(error instanceof Error && error.message ? error.message : "Error al guardar la venta")
     } finally {
       setLoading(false)
     }

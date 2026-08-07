@@ -88,7 +88,16 @@ export async function GET(request: Request) {
     const { data: movimientos, error } = await query.limit(500)
     if (error) throw error
 
-    const data = movimientos || []
+    const rawData = movimientos || []
+
+    // La vista v_historial_inventario devuelve producto_nombre/producto_sku,
+    // pero el frontend espera producto/sku. Se remapea aquí explícitamente
+    // en vez de depender de que los nombres de columna coincidan.
+    const data = rawData.map((m: any) => ({
+      ...m,
+      producto: m.producto_nombre ?? m.producto ?? null,
+      sku: m.producto_sku ?? m.sku ?? null,
+    }))
 
     if (exportCsv) {
       const headers = ["ID", "Fecha", "Producto", "SKU", "Tipo", "Cantidad", "Stock Antes", "Stock Después", "Motivo", "Cliente", "Proveedor"]
@@ -140,14 +149,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   // Los movimientos NO se crean manualmente desde aquí.
-  // Se crean automáticamente mediante triggers cuando:
-  // 1. Una compra cambia de estado a "recibida"
-  // 2. Una venta cambia de estado a "completada"
-  // 3. Se cancela/anula una venta que estaba completada (devolucion_venta)
+  // Se crean automáticamente cuando:
+  // 1. Una orden de compra cambia de estado a "entregada" (entrada de stock)
+  // 2. Una orden de venta cambia de estado a "entregada" (salida de stock)
+  // 3. Se registra un ajuste manual desde /api/ajuste-inventario
 
   return NextResponse.json(
     {
-      error: "Los movimientos se crean automáticamente mediante compras y ventas. Use /api/compras o /api/ventas en su lugar.",
+      error: "Los movimientos se crean automáticamente mediante órdenes de compra/venta o ajustes manuales. Use /api/ordenes-compra, /api/ordenes-venta o /api/ajuste-inventario en su lugar.",
     },
     { status: 403 }
   )

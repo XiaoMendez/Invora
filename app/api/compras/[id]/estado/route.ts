@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, UserNotAuthenticatedError, EmpresaNotConfiguredError } from "@/lib/supabase/empresa"
 import { sendLowStockEmail } from "@/lib/alertas"
+import { describeError } from "@/lib/api-error"
 
 export const dynamic = "force-dynamic"
 
@@ -54,17 +55,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     if (updateError) throw updateError
 
-    // When a compra is received, update stock for each product and check low-stock alerts
+    // El aumento de stock ya lo hace el trigger trg_compra_estado (vía fn_registrar_movimiento)
+    // al ejecutarse el UPDATE de arriba. Aquí solo revisamos alertas de stock bajo, sin volver
+    // a tocar el stock (antes se sumaba dos veces: una el trigger, otra este bloque).
     if (estado === "recibida" && updated?.compra_detalle?.length) {
       try {
-        for (const detalle of updated.compra_detalle as Array<{ id_producto: string; cantidad: number; producto: { stock: number } | null }>) {
-          await admin
-            .from("producto")
-            .update({ stock: (detalle.producto?.stock || 0) + detalle.cantidad })
-            .eq("id", detalle.id_producto)
-            .eq("id_empresa", empresaId)
-        }
-
         // Check if any product is still low after restocking (edge case)
         const { data: empresa } = await admin.from("empresa").select("nombre, email").eq("id", empresaId).single()
         if (empresa?.email) {
@@ -92,6 +87,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     console.error("[compras PUT estado]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al actualizar estado" }, { status: 500 })
+    return NextResponse.json({ error: "Error al actualizar estado", detalle: describeError(error) }, { status: 500 })
   }
 }

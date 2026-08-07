@@ -129,7 +129,7 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
 
       // Agregar detalles
       for (const detalle of detalles) {
-        await fetch(`/api/compras/${nuevaCompra.id}/detalle`, {
+        const detalleRes = await fetch(`/api/compras/${nuevaCompra.id}/detalle`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -138,6 +138,13 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
             precio_unitario: detalle.precio_unitario,
           }),
         })
+
+        if (!detalleRes.ok) {
+          const body = await detalleRes.json().catch(() => null)
+          console.error("[CompraForm] fallo al agregar detalle:", body)
+          const detailMsg = body?.detalle?.message ? ` (${body.detalle.message})` : ""
+          throw new Error((body?.error || "No se pudo agregar un producto a la compra") + detailMsg)
+        }
       }
 
       onSuccess?.()
@@ -148,7 +155,7 @@ export function CompraForm({ open, onOpenChange, compra, onSuccess }: CompraForm
       setPrecioUnitario("")
     } catch (error) {
       console.error("Error:", error)
-      alert("Error al guardar la compra")
+      alert(error instanceof Error && error.message ? error.message : "Error al guardar la compra")
     } finally {
       setLoading(false)
     }

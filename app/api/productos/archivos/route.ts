@@ -2,6 +2,7 @@ import { put, del } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getEmpresaId, EmpresaNotConfiguredError, UserNotAuthenticatedError } from "@/lib/supabase/empresa"
+import { describeError } from "@/lib/api-error"
 
 export const dynamic = "force-dynamic"
 
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     console.error("[producto archivos GET]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al obtener archivos" }, { status: 500 })
+    return NextResponse.json({ error: "Error al obtener archivos", detalle: describeError(error) }, { status: 500 })
   }
 }
 
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
     console.error("[producto archivos POST]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al subir archivo" }, { status: 500 })
+    return NextResponse.json({ error: "Error al subir archivo", detalle: describeError(error) }, { status: 500 })
   }
 }
 
@@ -144,6 +145,6 @@ export async function DELETE(request: NextRequest) {
     console.error("[producto archivos DELETE]", error)
     if (error instanceof UserNotAuthenticatedError) return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     if (error instanceof EmpresaNotConfiguredError) return NextResponse.json({ error: "Empresa no configurada" }, { status: 403 })
-    return NextResponse.json({ error: "Error al eliminar archivo" }, { status: 500 })
+    return NextResponse.json({ error: "Error al eliminar archivo", detalle: describeError(error) }, { status: 500 })
   }
 }
