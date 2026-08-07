@@ -68,15 +68,15 @@ export function LanguageThemeSwitcher() {
         </DropdownMenuLabel>
         <DropdownMenuItem onClick={() => setTheme('light')}>
           <Sun className="h-4 w-4 mr-2" />
-          <span className="text-sm">{t('common.light')}</span>
+          <span className="text-sm">{t('common.lightTheme')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')}>
           <Moon className="h-4 w-4 mr-2" />
-          <span className="text-sm">{t('common.dark')}</span>
+          <span className="text-sm">{t('common.darkTheme')}</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
           <Monitor className="h-4 w-4 mr-2" />
-          <span className="text-sm">{t('common.system')}</span>
+          <span className="text-sm">{t('common.systemTheme')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
