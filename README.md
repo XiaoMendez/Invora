@@ -210,7 +210,7 @@ Este proyecto fue desarrollado como parte del curso de Desarrollo Web por el est
 </p>
 
 <p align="center">
-  <a href="https://invorastock.vercel.app">Demo en Vivo</a> •
+  <a href="https://invorastock.com">Demo en Vivo</a> •
   <a href="docs/DEPLOYMENT.md">Guía de Despliegue</a> •
   <a href="docs/API.md">Documentación API</a>
 </p>
